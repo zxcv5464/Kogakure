@@ -1,17 +1,22 @@
-name: Deploy Kogakure to GitHub Pages
+name: Publish Kogakure website
+
 on:
   push:
     branches: [main]
   workflow_dispatch:
+
 permissions:
   contents: read
   pages: write
   id-token: write
+
 concurrency:
   group: github-pages
   cancel-in-progress: true
+
 jobs:
-  deploy:
+  publish:
+    name: Build and deploy
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -22,24 +27,31 @@ jobs:
         with:
           node-version: '24'
           cache: npm
-      - run: npm ci
-      - name: Build website
+      - name: Verify public Supabase configuration
         env:
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
-          REPOSITORY_NAME: ${{ github.event.repository.name }}
-          OWNER: ${{ github.repository_owner }}
         run: |
-          if [ "$REPOSITORY_NAME" = "$OWNER.github.io" ]; then
-            export VITE_BASE_PATH="/"
-          else
-            export VITE_BASE_PATH="/$REPOSITORY_NAME/"
+          if [ -z "$VITE_SUPABASE_URL" ] || [ -z "$VITE_SUPABASE_PUBLISHABLE_KEY" ]; then
+            echo "::error::Set repository Actions variables VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY before publishing."
+            exit 1
           fi
-          npm run build
+          if [[ "$VITE_SUPABASE_PUBLISHABLE_KEY" != sb_publishable_* ]]; then
+            echo "::error::Use only the Supabase publishable key, never a secret/service_role key."
+            exit 1
+          fi
+      - name: Install dependencies
+        run: npm ci
+      - name: Build for GitHub Pages
+        env:
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          VITE_BASE_PATH: /Kogakure/
+        run: npm run build
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
         with:
           path: ./dist
-      - name: Publish Pages
+      - name: Publish to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

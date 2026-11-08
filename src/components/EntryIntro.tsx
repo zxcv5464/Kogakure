@@ -65,7 +65,7 @@ export default function EntryIntro() {
  return <div className={'entry-intro' + (phase === 'clear' ? ' is-clearing' : phase === 'reveal' ? ' is-revealing' : '')} role="status" aria-label="正在進入狐隱" aria-live="off">
   <div className="intro-brand" aria-hidden="true">
    <div className="intro-seal">
-    <img src={asset('images/logo-intro.webp')} alt="" width="300" height="300" fetchPriority="high" decoding="async" />
+    <img src={asset('images/brand/logo-intro.webp')} alt="" width="300" height="300" fetchPriority="high" decoding="async" />
    </div>
    <span className="intro-wordmark">KOGAKURE</span>
    <span className="intro-divider" />

@@ -58,7 +58,7 @@ export default function Layout({children}:{children:React.ReactNode}){
   <header className="site-header">
    <div className="header-inner">
     <Link to="/" className="brand" onClick={()=>setMoreOpen(false)} aria-label="狐隱首頁">
-     <img src={asset('images/logo-mark-small.webp')} alt="" width="44" height="44"/>
+     <img src={asset('images/brand/logo-header.webp')} alt="" width="44" height="44"/>
      <span><strong>狐隱</strong><small>KOGAKURE</small></span>
     </Link>
     <nav className="desktop-nav" aria-label="主要導覽">{links.map(({to,label})=><NavLink key={to} to={to} end={to==='/'} className={({isActive})=>isActive?'active':''}>{label}</NavLink>)}</nav>
