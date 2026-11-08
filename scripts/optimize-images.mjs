@@ -43,12 +43,14 @@ await exportImage('員工圖/99.png', 'staff/staff-02-card.webp', { width: 800, 
 const scenes = (await readdir(join(root, '場景照')))
  .filter(name => /\.(png|jpe?g|webp)$/i.test(name))
  .sort()
-if (scenes.length < 2) throw new Error('At least two original scene photos are required')
-// Only two scenes are referenced by the current homepage/placeholder pages.
-// Other 12 original photos stay untouched for the future gallery.
-for (let i = 0; i < 2; i++) {
+const BACKGROUND_SCENE_COUNT = 7
+if (scenes.length < BACKGROUND_SCENE_COUNT) throw new Error('At least seven original scene photos are required')
+// Seven lightweight scenes are available for cross-fading on route changes.
+// Original screenshots and the other seven scenes remain local and untouched.
+for (let i = 0; i < BACKGROUND_SCENE_COUNT; i++) {
  const n = String(i + 1).padStart(2, '0')
- await exportImage(join('場景照', scenes[i]), 'scenes/scene-' + n + '.webp', { width: 1900, quality: 92 })
+ const settings = i < 2 ? { width: 1900, quality: 92 } : { width: 1600, quality: 83 }
+ await exportImage(join('場景照', scenes[i]), 'scenes/scene-' + n + '.webp', settings)
 }
 
 const total = report.reduce((n, x) => n + x.after, 0)

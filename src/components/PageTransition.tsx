@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import type { Location } from 'react-router-dom'
+import SceneBackdrop from './SceneBackdrop'
 import './page-transition.css'
 
 // The route changes only once the background is opaque. This prevents a
@@ -79,6 +80,7 @@ export default function PageTransition({
  }, [phase !== 'idle'])
 
  return <>
+  <SceneBackdrop />
   {children(displayed)}
   <div
    aria-hidden="true"

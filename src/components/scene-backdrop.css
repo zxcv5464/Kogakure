@@ -1,0 +1,55 @@
+/* Shared photographic backdrop: one photograph at a time, with a soft
+   two-layer cross-fade during page navigation. No timed slideshow. */
+/* Isolate at the site root, not on <main>: staff dialogs must still
+   layer above the header and the fixed mobile navigation. */
+.site { isolation: isolate; }
+.site > main { position: relative; }
+.scene-backdrop {
+ position: fixed;
+ inset: 0;
+ z-index: -1;
+ overflow: hidden;
+ pointer-events: none;
+ background: #12121c;
+ opacity: 1;
+ transition: opacity 650ms ease;
+}
+.scene-backdrop--hidden { opacity: 0; }
+.scene-backdrop__photo {
+ position: absolute;
+ inset: 0;
+ background-repeat: no-repeat;
+ background-size: cover;
+ background-position: center 46%;
+ opacity: 0;
+ filter: saturate(.86) brightness(.78);
+ transition: opacity 1450ms cubic-bezier(.42, 0, .25, 1);
+}
+.scene-backdrop__photo.is-active { opacity: 1; }
+.scene-backdrop__shade {
+ position: absolute;
+ inset: 0;
+ background: linear-gradient(180deg,
+  rgba(13,13,22,.22) 0%,
+  rgba(13,13,22,.36) 52%,
+  rgba(13,13,22,.67) 100%);
+}
+/* Page-specific tonal overlays replace separate hard-coded background photos.
+   This keeps the same image persistent while the route content fades. */
+.site > main .home-image {
+ background: linear-gradient(90deg, rgba(12,12,20,.76), rgba(12,12,20,.23)) !important;
+ filter: none;
+}
+.site > main .coming-photo {
+ background: linear-gradient(180deg, rgba(12,12,20,.57), rgba(12,12,20,.75)) !important;
+ filter: none;
+}
+.site > main .staff-hero {
+ background: radial-gradient(ellipse at 50% 0%,
+  rgba(42,35,50,.88), rgba(17,17,27,.92));
+}
+/* Keep the staff directory transparent to avoid a hard-edged tinted
+   rectangle at the container's max width. Cards remain on dark panels. */
+@media (prefers-reduced-motion: reduce) {
+ .scene-backdrop, .scene-backdrop__photo { transition: none !important; }
+}
