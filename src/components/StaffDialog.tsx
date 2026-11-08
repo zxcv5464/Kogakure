@@ -1,10 +1,27 @@
-import { useEffect, useRef } from 'react'
-import { X, ArrowUpRight, Flower2, MoonStar } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { X, ArrowUpRight, ArrowDown, Flower2, MoonStar } from 'lucide-react'
 import type { CSSProperties } from 'react'
 import type { Staff } from '../types'
 import { safeExternalUrl } from '../lib/url'
+import './staff-dialog-scroll.css'
 export default function StaffDialog({staff,onClose}:{staff:Staff;onClose:()=>void}){
  const closeRef=useRef<HTMLButtonElement>(null)
+ const dialogRef=useRef<HTMLElement>(null)
+ const contentRef=useRef<HTMLDivElement>(null)
+ const [hasMore,setHasMore]=useState(false)
+ const scrollingElement=()=>window.matchMedia('(max-width: 570px)').matches?dialogRef.current:contentRef.current
+ useEffect(()=>{
+  const check=()=>{
+   const area=scrollingElement()
+   setHasMore(Boolean(area&&area.scrollHeight-area.scrollTop-area.clientHeight>26))
+  }
+  const observer=new ResizeObserver(check)
+  if(dialogRef.current)observer.observe(dialogRef.current)
+  if(contentRef.current)observer.observe(contentRef.current)
+  window.addEventListener('resize',check)
+  const frame=requestAnimationFrame(check)
+  return()=>{observer.disconnect();window.removeEventListener('resize',check);cancelAnimationFrame(frame)}
+ },[staff])
  useEffect(()=>{
   closeRef.current?.focus()
   function escape(e:KeyboardEvent){if(e.key==='Escape')onClose()}
@@ -13,10 +30,10 @@ export default function StaffDialog({staff,onClose}:{staff:Staff;onClose:()=>voi
   return ()=>{document.removeEventListener('keydown',escape);document.body.style.overflow=old}
  },[onClose])
  return <div className="dialog-overlay" onMouseDown={e=>{if(e.target===e.currentTarget)onClose()}}>
-  <section className="staff-dialog" role="dialog" aria-modal="true" aria-labelledby="detail-name" style={{'--accent':staff.themeColor} as CSSProperties}>
+  <section ref={dialogRef} tabIndex={0} onScroll={()=>{const area=scrollingElement();setHasMore(Boolean(area&&area.scrollHeight-area.scrollTop-area.clientHeight>26))}} className="staff-dialog" role="dialog" aria-modal="true" aria-labelledby="detail-name" style={{'--accent':staff.themeColor} as CSSProperties}>
    <button className="dialog-close" ref={closeRef} type="button" onClick={onClose} aria-label="關閉介紹"><X size={22}/></button>
    <div className="dialog-photo"><img src={staff.imageUrl||staff.thumbnailUrl} alt={staff.name+'的角色照片'}/><span/></div>
-   <div className="dialog-content">
+   <div ref={contentRef} tabIndex={0} role="region" aria-label="完整員工介紹，可捲動" className="dialog-content" onScroll={()=>{const area=scrollingElement();setHasMore(Boolean(area&&area.scrollHeight-area.scrollTop-area.clientHeight>26))}}>
     <div className="detail-stamp" aria-hidden="true">狐<br/>隱</div>
     <p className="detail-role">{staff.role||'接待者'}</p>
     <h2 id="detail-name">{staff.name}</h2>
@@ -30,6 +47,7 @@ export default function StaffDialog({staff,onClose}:{staff:Staff;onClose:()=>voi
       <div className="detail-socials">{staff.socials.map(s=>{const href=safeExternalUrl(s.url);return href?<a key={s.id} href={href} target="_blank" rel="noopener noreferrer">{s.label}<ArrowUpRight size={17}/></a>:null})}</div>
      </>}
    </div>
+   {hasMore&&<button className="dialog-scroll-hint" type="button" onClick={()=>{const area=scrollingElement();area?.scrollBy({top:Math.max(260,area.clientHeight*.58),behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'})}}><span>繼續閱讀</span><ArrowDown size={16}/></button>}
   </section>
  </div>
 }

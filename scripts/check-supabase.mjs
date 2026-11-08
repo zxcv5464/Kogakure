@@ -41,4 +41,4 @@ if (admin.data?.length) {
  process.exit(1)
 }
 console.log('✓ 匿名使用者無法取得管理員名單。')
-console.log('✓ 公開連線檢查完成。請至 /#/admin 測試實際管理員登入、上傳及儲存。')
+console.log('✓ 公開連線檢查完成。請至 /admin 測試實際管理員登入、上傳及儲存。')

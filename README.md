@@ -13,10 +13,10 @@ npm install
 npm run dev
 ```
 
-- 首頁：`http://localhost:5173/#/`
-- 人員介紹：`http://localhost:5173/#/staff`
-- 管理後台：`http://localhost:5173/#/admin`（必須先連線 Supabase 才能登入）
-- 強制預覽開場動畫：`http://localhost:5173/?intro=1#/`
+- 首頁：`http://localhost:5173/`
+- 人員介紹：`http://localhost:5173/staff`
+- 管理後台：`http://localhost:5173/admin`（必須先連線 Supabase 才能登入）
+- 強制預覽開場動畫：`http://localhost:5173/?intro=1`
 - 檢查編譯：`npm run build`
 
 首次安裝或更換原始素材後，執行 `npm run assets:build` 更新網站用 WebP。這個指令會**重建** `public/images`，其中不可放手工新增的原圖。
@@ -51,8 +51,8 @@ npm run dev
    insert into public.admin_users(user_id) values ('YOUR_AUTH_USER_UUID');
    ```
 4. 複製 `.env.example` 成 `.env.local`，只填入 **Project URL**、**Publishable Key**。
-5. 先執行 `npm run db:check` 驗證資料庫與匿名讀取權限；再啟動 `npm run dev`，登入 `http://localhost:5173/#/admin` 新增與編輯員工。
-6. 前台 `/#/staff` 將改成由 Supabase 讀取已公開員工；未設定 Supabase 時只會顯示兩筆示範資料。
+5. 先執行 `npm run db:check` 驗證資料庫與匿名讀取權限；再啟動 `npm run dev`，登入 `http://localhost:5173/admin` 新增與編輯員工。
+6. 前台 `/staff` 由 Supabase 讀取已公開員工；未設定 Supabase 時才使用示範資料。
 
 **安全：** `VITE_*` 只能放允許公開的金鑰，切勿放 Supabase `service_role`、密碼等敏感資訊。資料修改權限由資料庫 RLS 控制，不依賴前端是否隱藏按鈕。
 
@@ -60,7 +60,7 @@ npm run dev
 
 - 手機版底部五格導覽；電腦版頂部完整導覽。
 - 暗色主題保持高對比，手機基礎字體 17px，桌面 18px，寬螢幕更大。
-- 人員介紹是純展示頁，不附帶預約；每位員工可由後台設定照片、稱號、社群連結與特效。
+- 人員介紹是純展示頁，不附帶預約；每位員工可由後台設定照片、稱號、社群連結與特效。長篇介紹採隱藏捲軸的柔和閱讀區，桌面固定照片、手機整張卡可滑動，保留「繼續閱讀」提示。
 - 使用 WebP 多尺寸縮圖，原始 PNG/JPG 不修改；`public/images` 只放**現在用得到**的檔案。
 - 首次進站的 Logo 開場動畫約 3 秒（比原版延長約 1 秒）；頁面切換以約 1.4 秒的深色背景淡出、換頁、淡入。動畫不下載影片或增加大型套件，尊重 `prefers-reduced-motion`，需要再次預覽可用 `?intro=1#/`。
 - 其他六個頁面持續開發；尚未實作的功能不應讓訪客誤認已可使用。
@@ -69,6 +69,6 @@ npm run dev
 
 店長儲存庫：`https://github.com/zxcv5464/Kogakure`；預計公開網址：`https://zxcv5464.github.io/Kogakure/`。程式推送至 `main` 後，GitHub Actions 會編譯並部署。需先由儲存庫管理者在 **Settings → Pages** 啟用 **GitHub Actions**，並將 Supabase URL 及 Publishable Key 設為 Actions repository variables。**完整操作請見 `docs/GITHUB_PUBLISH.md`。**
 
-網站程式更新需重新推送；管理員從後台修改員工資訊直接寫入 Supabase，通常不必推送 GitHub。原始素材、`.env.local`、資料庫密碼和 `node_modules` 都不加入儲存庫，也不再以壓縮檔為主要交接方式。
+網址已改為不帶 `#` 的乾淨路徑，例如 `/Kogakure/staff`、`/Kogakure/admin`；正式建置會產生每個頁面的靜態入口，直接開啟、重新整理不會 404，舊的 `/#/staff` 書籤可自動轉換。網站程式更新需重新推送；管理員從後台修改員工資訊直接寫入 Supabase，通常不必推送 GitHub。原始素材、`.env.local`、資料庫密碼和 `node_modules` 都不加入儲存庫，也不再以壓縮檔為主要交接方式。
 
 詳細開發階段請查看 `docs/ROADMAP.md`。

@@ -32,6 +32,12 @@ git push -u origin main
 
 新儲存庫建立時是空的，可以直接推送現有歷史；推送後，如 Pages 或 Variables 尚未設定，Actions 會提示設定缺漏。完成 GitHub Pages 設定後可以在 Actions 重新執行 workflow，不需要修改程式碼。
 
+## 乾淨網址（不需要 #）
+
+網站採用 BrowserRouter，正式執行 `npm run build` 時，會為 `about`、`services`、`staff`、`shifts`、`menu`、`booking`、`admin` 產生各自的 `dist/<頁面>/index.html`，解決 GitHub Pages 無 SPA rewrite 時，直接開啟或重新整理會 404 的問題。
+
+正式網址例如 `https://zxcv5464.github.io/Kogakure/staff`、`https://zxcv5464.github.io/Kogakure/admin`（GitHub Pages 可能在直接載入時補上結尾 `/`）；舊的 `/#/staff` 書籤會自動轉換。未知路徑使用 `404.html` 導回 SPA，不會改變網址列中顯示的乾淨路徑。
+
 ## 日常流程
 
 1. 在 DevSpace `D:\kogakure` 修改程式。
@@ -44,7 +50,7 @@ git push -u origin main
 ## 多個網站與管理員
 
 - 舊測試帳號 `ffxivtesthub/kogakure` 與店長專案是**不同**儲存庫；以店長專案為正式來源。
-- 訪客網站與 `/#/admin` 共用同一個網域，管理員仍須使用 Supabase 帳號登入。
+- 訪客網站與 `/Kogakure/admin` 共用同一個網域，管理員仍須使用 Supabase 帳號登入。
 - GitHub Pages 是公開網站，不能將網站登入頁面當作資料安全邊界。資料庫依 Supabase RLS 驗證操作權限。
 - GitHub Pages 推送後可能有短暫的 GitHub/CDN 快取延遲，請以 Actions 成功、硬重新整理或無痕模式檢查。
 

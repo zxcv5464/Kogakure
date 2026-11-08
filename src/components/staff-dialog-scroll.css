@@ -1,0 +1,68 @@
+/* The photo stays still while long biographies scroll unobtrusively. */
+@media (min-width: 571px) {
+ .dialog-overlay .staff-dialog {
+  height: min(85dvh, 760px);
+  max-height: 850px;
+  overflow: hidden;
+ }
+ .dialog-overlay .dialog-photo {
+  min-height: 0;
+  height: 100%;
+ }
+ .dialog-overlay .dialog-content {
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  padding-bottom: 82px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+ }
+ .dialog-content::-webkit-scrollbar { display: none; }
+}
+
+/* On phones, the full card scrolls naturally, including the photograph. */
+@media (max-width: 570px) {
+ .dialog-overlay .staff-dialog {
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+ }
+ .dialog-overlay .staff-dialog::-webkit-scrollbar { display: none; }
+ .dialog-overlay .dialog-content {
+  overflow: visible;
+  height: auto;
+  min-height: 0;
+  padding-bottom: 77px;
+ }
+}
+.dialog-overlay .detail-bio,
+.dialog-overlay .dialog-content blockquote {
+ overflow-wrap: anywhere;
+}
+.dialog-scroll-hint {
+ position: absolute;
+ right: 26px;
+ bottom: 16px;
+ z-index: 9;
+ display: inline-flex;
+ align-items: center;
+ gap: 7px;
+ min-height: 37px;
+ padding: 7px 12px;
+ border: 1px solid rgba(216,181,129,.38);
+ border-radius: 999px;
+ background: rgba(25,23,32,.94);
+ color: #e5cdab;
+ box-shadow: 0 5px 24px rgba(0,0,0,.36);
+ font-size: .77rem;
+ line-height: 1.2;
+ letter-spacing: .05em;
+ backdrop-filter: blur(9px);
+}
+.dialog-scroll-hint:hover { background: #302b34; color: #fff0d5; }
+@media (max-width: 570px) {
+ .dialog-scroll-hint { right: 17px; bottom: 12px; }
+}

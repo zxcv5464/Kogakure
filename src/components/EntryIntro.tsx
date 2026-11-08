@@ -12,7 +12,7 @@ const REVEAL_MS = 560
 function shouldPlay(): boolean {
  if (typeof window === 'undefined') return false
  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false
- if (window.location.hash.startsWith('#/admin')) return false
+ if (window.location.pathname.replace(/\/+$/, '').endsWith('/admin')) return false
  // For visual QA; normal visitors see the intro once per browser tab session.
  if (new URLSearchParams(window.location.search).get('intro') === '1') return true
  try { return window.sessionStorage.getItem(INTRO_KEY) !== 'seen' }

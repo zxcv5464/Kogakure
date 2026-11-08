@@ -7,7 +7,7 @@ const chrome=process.platform==='win32'
  ? 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
  : '/usr/bin/google-chrome'
 const port=9368
-const url=process.argv[2] || 'http://127.0.0.1:5194/#/staff'
+const url=process.argv[2] || 'http://127.0.0.1:5194/staff'
 const proc=spawn(chrome,[
  '--headless=new','--disable-gpu','--no-first-run','--no-default-browser-check',
  '--remote-allow-origins=*','--remote-debugging-port='+port,
