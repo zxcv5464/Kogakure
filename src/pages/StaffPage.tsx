@@ -5,6 +5,7 @@ import StaffCard from '../components/StaffCard'
 import StaffDialog from '../components/StaffDialog'
 import { demoStaff } from '../data/demo'
 import { configured } from '../lib/config'
+import './staff-page.css'
 export default function StaffPage(){
  const [staff,setStaff]=useState<Staff[]>(configured?[]:demoStaff)
  const [loading,setLoading]=useState(configured)
@@ -17,15 +18,17 @@ export default function StaffPage(){
  const categories=useMemo(()=>['全部',...Array.from(new Set(staff.flatMap(x=>x.services)))],[staff])
  const visible=useMemo(()=>staff.filter(s=>(filter==='全部'||s.services.includes(filter))&&[s.name,s.role,s.tagline,...s.services].join(' ').toLocaleLowerCase().includes(query.toLocaleLowerCase())),[staff,query,filter])
  return <>
+ <div className="staff-page">
   <section className="staff-hero">
    <div className="hero-inner">
+    <p className="staff-overline">KOGAKURE · CAST</p>
     <h1>狐隱名帖</h1>
     <span className="hero-line" aria-hidden="true"/>
     <p className="hero-description">循狐而入，與狐隱之人相遇。</p>
    </div>
   </section>
   <section className="staff-section container" aria-label="員工名錄">
-   <div className="section-header"><div><h2>接待者</h2><p>每一張名帖，都藏著一段故事。</p></div></div>
+   <div className="staff-list-heading"><span>接待者名帖</span></div>
    {staff.length>4&&<div className="staff-toolbar">
     <div className="filter-list" role="group" aria-label="依服務篩選">{categories.map(item=><button key={item} type="button" className={item===filter?'selected':''} onClick={()=>setFilter(item)}>{item}</button>)}</div>
     <label className="staff-search"><Search size={18}/><span className="sr-only">搜尋員工</span><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="搜尋姓名或服務..." /></label>
@@ -36,6 +39,7 @@ export default function StaffPage(){
     <div className="empty-staff"><UsersRound size={28}/><h3>暫無符合條件的人員</h3><p>試著切換其他分類或搜尋條件。</p><button type="button" onClick={()=>{setFilter('全部');setQuery('')}}>清除篩選</button></div>}
    {!configured&&<p className="staff-demo-disclaimer">目前姓名與簡介為版面展示資料，正式資料將於日後更新。</p>}
   </section>
+ </div>
   {opened&&<StaffDialog staff={opened} onClose={close}/>}
  </>
 }
