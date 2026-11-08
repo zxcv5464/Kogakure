@@ -42,15 +42,16 @@ try{
    const photo=card.querySelector('.omamori-art').getBoundingClientRect()
    const panel=card.querySelector('.card-text').getBoundingClientRect()
    const elements=[...card.querySelectorAll('.card-role,.card-name,.card-tagline,.card-cta')].map(e=>({kind:e.className,top:e.getBoundingClientRect().top,bottom:e.getBoundingClientRect().bottom,scrollHeight:e.scrollHeight,clientHeight:e.clientHeight}))
-   return {width:Math.round(b.width),height:Math.round(b.height),panelY:Math.round(panel.top-b.top),panelHeight:Math.round(panel.height),photoBottom:Math.round(photo.bottom-b.top),panelBottom:Math.round(panel.bottom),font:getComputedStyle(card.querySelector('.card-name')).fontSize,elements}
+   return {width:Math.round(b.width),height:Math.round(b.height),bodyTop:b.top,captionStart:Math.round(panel.top-b.top),captionHeight:Math.round(panel.height),photoBottom:Math.round(photo.bottom-b.top),captionBottom:Math.round(panel.bottom),captionBg:getComputedStyle(card.querySelector('.card-text')).backgroundImage,captionBorder:getComputedStyle(card.querySelector('.card-text')).borderTopWidth,font:getComputedStyle(card.querySelector('.card-name')).fontSize,elements}
   })`)
   console.log('VIEWPORT',width,JSON.stringify(rows))
   if(rows.length!==2)throw Error('Missing cards at '+width)
   for(const card of rows){
-   if(card.panelY<=card.height*.53||card.panelY>=card.height*.7)throw Error('Wrong panel region at '+width)
+   if(card.photoBottom < card.height*.99)throw Error('Portrait no longer fills the whole card at '+width)
+   if(card.captionBorder!=='0px'||!card.captionBg.includes('rgba(0, 0, 0, 0)'))throw Error('Hard caption seam remains at '+width)
    const e=card.elements
-   if(e.some(row=>row.top<e[0].top-1||row.bottom>card.panelBottom+1))throw Error('Text overflows card at '+width)
-   if(e[0].top<e[0].bottom-card.panelHeight-3)throw Error('Text starts outside panel at '+width)
+   if(e[0].top-card.bodyTop<card.height*.51)throw Error('Text starts too close to the face at '+width)
+   if(e.some(row=>row.bottom>card.captionBottom+1))throw Error('Text overflows card at '+width)
   }
  }
  // Long labels should be elided inside the panel, never pushed over the face.
@@ -60,12 +61,11 @@ try{
  const longCard=await evaluate(`(()=>{
   const card=document.querySelector('.staff-entry')
   const panel=card.querySelector('.card-text').getBoundingClientRect()
-  const role=card.querySelector('.card-role').getBoundingClientRect()
-  const name=card.querySelector('.card-name')
+    const name=card.querySelector('.card-name')
   const tagline=card.querySelector('.card-tagline')
-  return {panelTop:panel.top,nameTop:name.getBoundingClientRect().top,nameBottom:name.getBoundingClientRect().bottom,taglineBottom:tagline.getBoundingClientRect().bottom,panelBottom:panel.bottom,nameEllipsis:getComputedStyle(name).textOverflow,taglineClamp:getComputedStyle(tagline).webkitLineClamp}
+  return {panelTop:panel.top,nameTop:name.getBoundingClientRect().top,nameBottom:name.getBoundingClientRect().bottom,taglineBottom:tagline.getBoundingClientRect().bottom,panelBottom:panel.bottom,nameEllipsis:getComputedStyle(name).textOverflow,taglineEllipsis:getComputedStyle(tagline).textOverflow,taglineWhiteSpace:getComputedStyle(tagline).whiteSpace}
  })()`)
  console.log('LONG TEXT',JSON.stringify(longCard))
- if(longCard.nameTop<longCard.panelTop || longCard.taglineBottom>longCard.panelBottom || longCard.nameEllipsis!=='ellipsis'||longCard.taglineClamp!=='2')throw Error('Long text escapes caption panel')
- console.log('PASS: dedicated portrait region and contained text at five screen sizes, long labels')
+ if(longCard.nameTop<longCard.panelTop || longCard.taglineBottom>longCard.panelBottom || longCard.nameEllipsis!=='ellipsis'||longCard.taglineEllipsis!=='ellipsis'||longCard.taglineWhiteSpace!=='nowrap')throw Error('Long text escapes caption panel')
+ console.log('PASS: continuous portrait, soft text scrim and contained captions at five screen sizes, long labels')
 }finally{ws?.close();chrome.kill()}
