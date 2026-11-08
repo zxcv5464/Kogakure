@@ -1,14 +1,27 @@
-/* The photo stays still while long biographies scroll unobtrusively. */
+/* A dedicated, non-scrolling dialog shell anchors the controls. The reading
+   region scrolls independently, so controls cannot drift into the biography. */
+.dialog-shell {
+ position: relative;
+ width: 100%;
+ max-width: 1050px;
+ min-width: 0;
+}
+.dialog-shell .staff-dialog { width: 100%; }
+.dialog-mobile-header {
+ position: absolute;
+ top: 15px;
+ right: 15px;
+ z-index: 12;
+}
+.dialog-mobile-label { display: none; }
+.dialog-mobile-header .dialog-close { position: static; }
 @media (min-width: 571px) {
  .dialog-overlay .staff-dialog {
   height: min(85dvh, 760px);
   max-height: 850px;
   overflow: hidden;
  }
- .dialog-overlay .dialog-photo {
-  min-height: 0;
-  height: 100%;
- }
+ .dialog-overlay .dialog-photo { min-height: 0; height: 100%; }
  .dialog-overlay .dialog-content {
   min-width: 0;
   min-height: 0;
@@ -20,49 +33,123 @@
   scrollbar-width: none;
  }
  .dialog-content::-webkit-scrollbar { display: none; }
+ .dialog-scroll-footer {
+  position: absolute;
+  z-index: 10;
+  bottom: 16px;
+  right: 26px;
+  pointer-events: none;
+ }
+ .dialog-scroll-footer .dialog-scroll-hint { pointer-events: auto; }
+ .dialog-scroll-footer.is-complete { display: none; }
 }
 
-/* On phones, the full card scrolls naturally, including the photograph. */
+/* Mobile: the entire photo and biography scroll inside the dialog, while the
+   footer is a separate strip that NEVER overlaps text. */
 @media (max-width: 570px) {
+ .dialog-overlay .dialog-shell {
+  max-height: 94dvh;
+  overflow: hidden;
+  border: 1px solid rgba(222,177,120,.55);
+  border-radius: 8px;
+  background: #1c1a21;
+  box-shadow: 0 25px 90px rgba(0,0,0,.7);
+  animation: dialogIn .25s ease;
+ }
+ .dialog-overlay .dialog-mobile-header {
+  position: relative;
+  top: auto;
+  right: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  height: 54px;
+  padding: 0 13px 0 20px;
+  border-bottom: 1px solid rgba(222,177,120,.18);
+  background: #1c1a21;
+ }
+ .dialog-overlay .dialog-mobile-label {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 9px;
+  color: #e5cdab;
+  font-family: 'Noto Serif TC',serif;
+  font-size: .84rem;
+  letter-spacing: .08em;
+ }
+ .dialog-overlay .dialog-mobile-label small {
+  color: #a99a8b;
+  font-family: Georgia,serif;
+  font-size: .57rem;
+  letter-spacing: .14em;
+ }
  .dialog-overlay .staff-dialog {
+  max-height: calc(94dvh - 116px);
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  animation: none;
  }
  .dialog-overlay .staff-dialog::-webkit-scrollbar { display: none; }
  .dialog-overlay .dialog-content {
   overflow: visible;
   height: auto;
   min-height: 0;
-  padding-bottom: 77px;
+  padding-bottom: 28px;
+ }
+ .dialog-overlay .dialog-mobile-header .dialog-close {
+  position: relative;
+  top: auto;
+  right: auto;
+  z-index: 12;
+  width: 37px;
+  height: 37px;
+  flex: 0 0 auto;
+ }
+ .dialog-scroll-footer {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 62px;
+  padding: 7px 16px 8px;
+  border-top: 1px solid rgba(222,177,120,.18);
+  background: #1c1a21;
+ }
+ .dialog-scroll-footer.has-more {
+  background: linear-gradient(180deg,#24202a,#1c1a21);
  }
 }
 .dialog-overlay .detail-bio,
-.dialog-overlay .dialog-content blockquote {
- overflow-wrap: anywhere;
-}
+.dialog-overlay .dialog-content blockquote { overflow-wrap: anywhere; }
 .dialog-scroll-hint {
- position: absolute;
- right: 26px;
- bottom: 16px;
- z-index: 9;
+ position: relative;
  display: inline-flex;
  align-items: center;
- gap: 7px;
- min-height: 37px;
- padding: 7px 12px;
- border: 1px solid rgba(216,181,129,.38);
+ justify-content: center;
+ gap: 9px;
+ min-height: 39px;
+ padding: 8px 15px;
+ border: 1px solid rgba(216,181,129,.44);
  border-radius: 999px;
- background: rgba(25,23,32,.94);
+ background: rgba(25,23,32,.96);
  color: #e5cdab;
- box-shadow: 0 5px 24px rgba(0,0,0,.36);
+ box-shadow: 0 5px 24px rgba(0,0,0,.25);
  font-size: .77rem;
  line-height: 1.2;
  letter-spacing: .05em;
- backdrop-filter: blur(9px);
 }
 .dialog-scroll-hint:hover { background: #302b34; color: #fff0d5; }
-@media (max-width: 570px) {
- .dialog-scroll-hint { right: 17px; bottom: 12px; }
+.dialog-scroll-end {
+ color: rgba(216,181,129,.42);
+ font-family: Georgia,serif;
+ font-size: .85rem;
+ line-height: 1;
 }

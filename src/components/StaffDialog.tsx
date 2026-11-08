@@ -30,8 +30,12 @@ export default function StaffDialog({staff,onClose}:{staff:Staff;onClose:()=>voi
   return ()=>{document.removeEventListener('keydown',escape);document.body.style.overflow=old}
  },[onClose])
  return <div className="dialog-overlay" onMouseDown={e=>{if(e.target===e.currentTarget)onClose()}}>
+  <div className="dialog-shell">
+   <div className="dialog-mobile-header">
+    <span className="dialog-mobile-label">狐隱名帖 <small>KOGAKURE</small></span>
+    <button className="dialog-close" ref={closeRef} type="button" onClick={onClose} aria-label="關閉介紹"><X size={22}/></button>
+   </div>
   <section ref={dialogRef} tabIndex={0} onScroll={()=>{const area=scrollingElement();setHasMore(Boolean(area&&area.scrollHeight-area.scrollTop-area.clientHeight>26))}} className="staff-dialog" role="dialog" aria-modal="true" aria-labelledby="detail-name" style={{'--accent':staff.themeColor} as CSSProperties}>
-   <button className="dialog-close" ref={closeRef} type="button" onClick={onClose} aria-label="關閉介紹"><X size={22}/></button>
    <div className="dialog-photo"><img src={staff.imageUrl||staff.thumbnailUrl} alt={staff.name+'的角色照片'}/><span/></div>
    <div ref={contentRef} tabIndex={0} role="region" aria-label="完整員工介紹，可捲動" className="dialog-content" onScroll={()=>{const area=scrollingElement();setHasMore(Boolean(area&&area.scrollHeight-area.scrollTop-area.clientHeight>26))}}>
     <div className="detail-stamp" aria-hidden="true">狐<br/>隱</div>
@@ -47,7 +51,10 @@ export default function StaffDialog({staff,onClose}:{staff:Staff;onClose:()=>voi
       <div className="detail-socials">{staff.socials.map(s=>{const href=safeExternalUrl(s.url);return href?<a key={s.id} href={href} target="_blank" rel="noopener noreferrer">{s.label}<ArrowUpRight size={17}/></a>:null})}</div>
      </>}
    </div>
-   {hasMore&&<button className="dialog-scroll-hint" type="button" onClick={()=>{const area=scrollingElement();area?.scrollBy({top:Math.max(260,area.clientHeight*.58),behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'})}}><span>繼續閱讀</span><ArrowDown size={16}/></button>}
   </section>
+   <div className={'dialog-scroll-footer' + (hasMore ? ' has-more' : ' is-complete')}>
+    {hasMore ? <button className="dialog-scroll-hint" type="button" onClick={()=>{const area=scrollingElement();area?.scrollBy({top:Math.max(260,area.clientHeight*.58),behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'})}}><span>繼續閱讀</span><ArrowDown size={16}/></button> : <span className="dialog-scroll-end" aria-hidden="true">✦</span>}
+   </div>
+  </div>
  </div>
 }
