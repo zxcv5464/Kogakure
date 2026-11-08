@@ -7,6 +7,7 @@ import { EFFECTS } from '../types'
 import { supabase } from '../lib/supabase'
 import { configured } from '../lib/config'
 import { deleteStaff, getStaff, saveStaff } from '../lib/staff'
+import { invalidatePublicStaffCache } from '../lib/public-staff'
 import { safeExternalUrl } from '../lib/url'
 import { uploadStaffImage } from '../lib/upload'
 function blankStaff():Staff {
@@ -55,7 +56,7 @@ export default function AdminPage(){
   const invalid=selected.socials.find(s=>s.url.trim()&&!safeExternalUrl(s.url))
   if(invalid){setMessage('請檢查社群網址：'+invalid.label);return}
   setBusy(true);setMessage('')
-  try{await saveStaff({...selected,name:selected.name.trim()});await refresh();setIsNew(false);setMessage('名帖已儲存。');}
+  try{await saveStaff({...selected,name:selected.name.trim()});invalidatePublicStaffCache();await refresh();setIsNew(false);setMessage('名帖已儲存。');}
   catch(e){setMessage('儲存失敗：'+(e instanceof Error?e.message:'未知錯誤'))}
   finally{setBusy(false)}
  }
@@ -63,7 +64,7 @@ export default function AdminPage(){
   if(!selected||!client||isNew)return
   if(!window.confirm('確定要永久刪除「'+selected.name+'」的名帖？'))return
   setBusy(true)
-  try{await deleteStaff(selected.id);await refresh();setSelected(null);setMessage('名帖已刪除。')}
+  try{await deleteStaff(selected.id);invalidatePublicStaffCache();await refresh();setSelected(null);setMessage('名帖已刪除。')}
   catch(e){setMessage('刪除失敗：'+(e instanceof Error?e.message:'未知錯誤'))}
   finally{setBusy(false)}
  }

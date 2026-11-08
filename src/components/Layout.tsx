@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import { Home, UsersRound, CalendarDays, UtensilsCrossed, Grid2X2, X, AtSign, ArrowUpRight, Compass, Sparkles, CalendarCheck2 } from 'lucide-react'
 import { asset } from '../lib/paths'
+import { prefetchStaffPage } from '../lib/prefetch'
 
 const links = [
  {to:'/',label:'首頁'},
@@ -61,7 +62,7 @@ export default function Layout({children}:{children:React.ReactNode}){
      <img src={asset('images/brand/logo-header.webp')} alt="" width="44" height="44"/>
      <span><strong>狐隱</strong><small>KOGAKURE</small></span>
     </Link>
-    <nav className="desktop-nav" aria-label="主要導覽">{links.map(({to,label})=><NavLink key={to} to={to} end={to==='/'} className={({isActive})=>isActive?'active':''}>{label}</NavLink>)}</nav>
+    <nav className="desktop-nav" aria-label="主要導覽">{links.map(({to,label})=><NavLink key={to} to={to} end={to==='/'} onMouseEnter={to==='/staff'?prefetchStaffPage:undefined} onFocus={to==='/staff'?prefetchStaffPage:undefined} onTouchStart={to==='/staff'?prefetchStaffPage:undefined} className={({isActive})=>isActive?'active':''}>{label}</NavLink>)}</nav>
     <a className="social-header" target="_blank" rel="noopener noreferrer" href="https://www.threads.com/@kogakure_ffxiv" aria-label="狐隱 Threads"><AtSign size={19}/></a>
    </div>
   </header>
@@ -83,7 +84,7 @@ export default function Layout({children}:{children:React.ReactNode}){
    </nav>
   </>}
   <nav className="mobile-bottom-nav" aria-label="手機主要導覽">
-   {mobileMain.map(({to,label,icon:Icon})=><NavLink key={to} to={to} end={to==='/'} className={({isActive})=>'mobile-bottom-item'+(isActive?' active':'')} onClick={()=>setMoreOpen(false)}><Icon size={22} strokeWidth={1.8}/><span>{label}</span></NavLink>)}
+   {mobileMain.map(({to,label,icon:Icon})=><NavLink key={to} to={to} end={to==='/'} onMouseEnter={to==='/staff'?prefetchStaffPage:undefined} onFocus={to==='/staff'?prefetchStaffPage:undefined} onTouchStart={to==='/staff'?prefetchStaffPage:undefined} className={({isActive})=>'mobile-bottom-item'+(isActive?' active':'')} onClick={()=>setMoreOpen(false)}><Icon size={22} strokeWidth={1.8}/><span>{label}</span></NavLink>)}
    <button ref={moreButton} type="button" className={'mobile-bottom-item'+(extraActive?' active':moreOpen?' expanded':'')} aria-expanded={moreOpen} aria-controls="mobile-more-menu" onClick={event=>{openedByKeyboard.current=event.detail===0;setMoreOpen(value=>!value)}}>
     <Grid2X2 size={22} strokeWidth={1.8}/><span>更多</span>
    </button>

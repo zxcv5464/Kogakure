@@ -3,6 +3,7 @@ import { Route, Routes } from 'react-router-dom'
 import Layout from './components/Layout'
 import EntryIntro from './components/EntryIntro'
 import PageTransition from './components/PageTransition'
+import StaffLoading from './components/StaffLoading'
 import { HomePage, OtherPage } from './pages/OtherPages'
 
 const AdminPage = lazy(() => import('./pages/AdminPage'))
@@ -13,7 +14,7 @@ export default function App() {
   <Layout>
    <PageTransition>
     {location => (
-     <Suspense fallback={<div className="empty-staff">正在載入頁面…</div>}>
+     <Suspense fallback={location.pathname==='/staff'?<StaffLoading/>:<div className="empty-staff">正在載入頁面…</div>}>
       <Routes location={location}>
        <Route path="/" element={<HomePage />} />
        <Route path="/staff" element={<StaffPage />} />

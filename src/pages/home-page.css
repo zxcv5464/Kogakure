@@ -1,0 +1,65 @@
+/* A single composed hero; the small status line belongs to the artwork,
+   not a separate full-width strip below it. */
+.site { display: flex; flex-direction: column; min-height: 100dvh; }
+.site > main { flex: 1 0 auto; display: flex; flex-direction: column; min-height: 0; }
+.site > main > .home-page { flex: 1 0 auto; display: flex; flex-direction: column; }
+.site > main .home-page .home-hero {
+ flex: 1;
+ min-height: 0;
+ width: 100%;
+}
+.site > main .home-page .home-content {
+ padding: clamp(26px, 5vh, 58px) 22px;
+ width: 100%;
+ max-width: 760px;
+}
+.site > main .home-page .home-logo {
+ width: min(100%, 590px);
+ max-height: clamp(110px, 21vh, 205px);
+ margin: 0 auto clamp(16px, 3vh, 27px);
+}
+.site > main .home-page .home-verse {
+ font-size: clamp(1.06rem, 2.4vw, 1.42rem);
+ line-height: 1.9;
+ margin: 0 0 16px;
+ text-shadow: 0 3px 18px rgba(0,0,0,.65);
+}
+.site > main .home-page .home-blurb {
+ margin: 0 0 20px;
+ max-width: 610px;
+ line-height: 1.9;
+ text-shadow: 0 3px 13px rgba(0,0,0,.75);
+}
+.site > main .home-page .home-note {
+ display: flex;
+ justify-content: center;
+ align-items: center;
+ gap: 9px;
+ padding: 0;
+ margin: 26px 0 0;
+ font-size: .77rem;
+ color: rgba(227,202,164,.84);
+ line-height: 1.7;
+ text-shadow: 0 2px 12px rgba(0,0,0,.75);
+}
+.site > main .home-page .home-note svg { flex: 0 0 auto; }
+@media (max-height: 800px) and (min-width: 851px) {
+ .site > main .home-page .home-content { padding-top: 18px; padding-bottom: 18px; }
+ .site > main .home-page .home-logo { max-height: 135px; margin-bottom: 12px; }
+ .site > main .home-page .home-verse { margin-bottom: 9px; }
+ .site > main .home-page .home-blurb { margin-bottom: 14px; line-height: 1.75; }
+ .site > main .home-page .home-note { margin-top: 12px; }
+}
+@media (max-width: 850px) {
+ .site > main .home-page .home-hero { min-height: min(690px, calc(100dvh - 74px)); }
+ .site > main .home-page .home-content { padding: 44px 22px 36px; }
+ .site > main .home-page .home-logo { max-height: 160px; }
+}
+@media (max-width: 570px) {
+ .site > main .home-page .home-hero { min-height: min(650px, calc(100dvh - 71px)); }
+ .site > main .home-page .home-content { padding: 34px 18px 28px; }
+ .site > main .home-page .home-logo { width: min(100%, 460px); max-height: 145px; margin-bottom: 17px; }
+ .site > main .home-page .home-verse { font-size: 1.1rem; line-height: 1.9; margin-bottom: 17px; }
+ .site > main .home-page .home-blurb { font-size: .85rem; line-height: 1.85; margin-bottom: 21px; }
+ .site > main .home-page .home-note { margin-top: 21px; font-size: .75rem; }
+}
