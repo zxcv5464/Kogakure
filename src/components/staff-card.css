@@ -1,0 +1,141 @@
+/* Keep the original double gold frame visible above the new panel. */
+.staff-entry .omamori-body::before,
+.staff-entry .omamori-border { z-index: 8; }
+
+/* The portrait and copy are deliberately separate regions. A solid
+   lower inscription panel keeps every face free of names and descriptions. */
+.staff-entry .omamori-art {
+ height: 66%;
+ bottom: auto;
+ overflow: hidden;
+ background: #15121b;
+}
+.staff-entry .omamori-art img {
+ object-position: center 24%;
+}
+.staff-entry .photo-shadow {
+ background: linear-gradient(180deg,
+  rgba(12,10,18,.05) 0%,
+  transparent 40%,
+  rgba(18,13,23,.24) 66%,
+  rgba(18,13,23,.96) 100%);
+}
+.staff-entry .card-text {
+ top: 62%;
+ bottom: 0;
+ left: 0;
+ right: 0;
+ display: flex;
+ flex-direction: column;
+ justify-content: flex-end;
+ align-items: center;
+ min-width: 0;
+ padding: 14px clamp(12px, 7%, 22px) clamp(14px, 6%, 24px);
+ border-top: 1px solid rgba(215,178,119,.42);
+ background: linear-gradient(180deg,
+  rgba(23,18,29,.98) 0%,
+  rgba(18,16,25,.99) 48%,
+  #111019 100%);
+ text-align: center;
+}
+.staff-entry .card-text::before {
+ content: '';
+ position: absolute;
+ bottom: 100%;
+ left: 0;
+ right: 0;
+ height: 28px;
+ background: linear-gradient(180deg, transparent, rgba(23,18,29,.86));
+ pointer-events: none;
+}
+.staff-entry .card-role {
+ display: inline-flex;
+ justify-content: center;
+ align-items: center;
+ max-width: 100%;
+ padding: 2px 12px;
+ border-radius: 999px;
+ border: 1px solid rgba(218,184,132,.28);
+ background: rgba(216,174,113,.08);
+ color: #ebcfa6;
+ font-size: .72rem;
+ font-weight: 500;
+ letter-spacing: .14em;
+ line-height: 1.5;
+ white-space: nowrap;
+ overflow: hidden;
+ text-overflow: ellipsis;
+}
+.staff-entry .card-name {
+ display: block;
+ max-width: 100%;
+ margin: 4px 0 3px;
+ color: #fff2df;
+ font-size: clamp(1.25rem, 2.3vw, 1.66rem);
+ font-weight: 600;
+ line-height: 1.38;
+ letter-spacing: .1em;
+ white-space: nowrap;
+ overflow: hidden;
+ text-overflow: ellipsis;
+}
+.staff-entry .card-tagline {
+ display: -webkit-box;
+ -webkit-box-orient: vertical;
+ -webkit-line-clamp: 2;
+ line-clamp: 2;
+ overflow: hidden;
+ max-width: 100%;
+ width: 100%;
+ min-height: 0;
+ margin: 0;
+ color: #ddcfc1;
+ font-size: .77rem;
+ line-height: 1.55;
+ overflow-wrap: anywhere;
+ text-overflow: ellipsis;
+}
+.staff-entry .card-cta {
+ display: inline-flex;
+ align-items: center;
+ justify-content: center;
+ gap: 2px;
+ min-width: 0;
+ width: 83%;
+ max-width: 160px;
+ margin-top: 9px;
+ padding-top: 7px;
+ border-top: 1px solid rgba(216,180,125,.33);
+ color: #ebc998;
+ font-size: .79rem;
+ line-height: 1.4;
+ letter-spacing: .09em;
+}
+.staff-entry .card-cta svg { flex: 0 0 auto; }
+.staff-entry .omamori-card:hover .card-text {
+ background: linear-gradient(180deg,
+  rgba(30,23,34,.99) 0%,
+  rgba(21,18,29,.99) 48%,
+  #14121c 100%);
+}
+@media (max-width: 1100px) {
+ .staff-entry .card-text { top: 60%; padding: 9px 10px 12px; }
+ .staff-entry .card-role { font-size: .63rem; padding: 1px 9px; }
+ .staff-entry .card-name { font-size: clamp(1.05rem, 2.1vw, 1.35rem); margin: 3px 0 1px; }
+ .staff-entry .card-tagline { font-size: .67rem; line-height: 1.45; }
+ .staff-entry .card-cta { margin-top: 6px; padding-top: 5px; font-size: .67rem; }
+}
+@media (max-width: 570px) {
+ .staff-entry .card-text { top: 62%; padding: 12px 15px 17px; }
+ .staff-entry .card-role { font-size: .72rem; padding: 2px 12px; }
+ .staff-entry .card-name { font-size: 1.5rem; margin: 5px 0 3px; }
+ .staff-entry .card-tagline { font-size: .75rem; line-height: 1.55; }
+ .staff-entry .card-cta { margin-top: 9px; padding-top: 7px; font-size: .78rem; }
+}
+@media (max-width: 360px) {
+ .staff-entry .card-text { top: 59%; padding: 9px 11px 13px; }
+ .staff-entry .card-name { font-size: 1.2rem; margin: 3px 0 2px; }
+ .staff-entry .card-role { font-size: .62rem; }
+ .staff-entry .card-tagline { font-size: .67rem; }
+ .staff-entry .card-cta { font-size: .69rem; margin-top: 6px; padding-top: 5px; }
+}

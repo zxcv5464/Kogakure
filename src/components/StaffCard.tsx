@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { ChevronRight } from 'lucide-react'
 import type { CSSProperties } from 'react'
 import type { Staff } from '../types'
+import './staff-card.css'
 type Props={staff:Staff;onOpen:(staff:Staff)=>void;index:number}
 export default function StaffCard({staff,onOpen,index}:Props){
  const ref=useRef<HTMLElement>(null)
