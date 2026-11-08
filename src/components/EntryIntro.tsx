@@ -3,10 +3,11 @@ import { asset } from '../lib/paths'
 import './entry-intro.css'
 
 type Phase = 'enter' | 'clear' | 'reveal' | 'done'
-const INTRO_KEY = 'kogakure-intro-v2'
-const HOLD_MS = 1280
-const CLEAR_MS = 180
-const REVEAL_MS = 480
+const INTRO_KEY = 'kogakure-intro-v3'
+// Let the emblem and motto linger before the page is uncovered.
+const HOLD_MS = 2250
+const CLEAR_MS = 200
+const REVEAL_MS = 560
 
 function shouldPlay(): boolean {
  if (typeof window === 'undefined') return false

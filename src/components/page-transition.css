@@ -1,0 +1,28 @@
+/* Quiet, full-screen background fade between routes.
+   The destination route mounts only while this is fully opaque. */
+.page-transition-curtain {
+ position: fixed;
+ inset: 0;
+ z-index: 150;
+ background: radial-gradient(ellipse at 50% 42%, #25212d 0%, #181721 52%, #0f1019 100%);
+ opacity: 0;
+ pointer-events: none;
+ transition: opacity 650ms cubic-bezier(.42, 0, .58, 1);
+}
+.page-transition-curtain.is-covering,
+.page-transition-curtain.is-revealing {
+ will-change: opacity;
+}
+.page-transition-curtain.is-covering {
+ opacity: 1;
+ pointer-events: auto;
+}
+.page-transition-curtain.is-revealing {
+ opacity: 0;
+ pointer-events: auto;
+ transition-duration: 760ms;
+ transition-timing-function: cubic-bezier(.35, 0, .22, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+ .page-transition-curtain { transition: none !important; display: none !important; }
+}
