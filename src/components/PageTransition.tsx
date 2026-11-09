@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom'
 import type { Location } from 'react-router-dom'
 import SceneBackdrop from './SceneBackdrop'
 import './page-transition.css'
+import './route-motion.css'
 
 // The route changes only once the background is opaque. This prevents a
 // flash of the destination page before the fade-in begins.
@@ -21,8 +22,10 @@ function resetScroll() {
 
 export default function PageTransition({
  children,
+ introReady,
 }: {
  children: (displayedLocation: Location) => React.ReactNode
+ introReady: boolean
 }) {
  const location = useLocation()
  const [displayed, setDisplayed] = useState(location)
@@ -80,8 +83,10 @@ export default function PageTransition({
  }, [phase !== 'idle'])
 
  return <>
-  <SceneBackdrop />
-  {children(displayed)}
+  <SceneBackdrop introReady={introReady} />
+  <div key={`${displayed.pathname}-${introReady}`} className={'route-stage' + (introReady ? '' : ' intro-waiting')}>
+   {children(displayed)}
+  </div>
   <div
    aria-hidden="true"
    className={'page-transition-curtain' + (phase === 'cover' ? ' is-covering' : phase === 'reveal' ? ' is-revealing' : '')}

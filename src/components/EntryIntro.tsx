@@ -5,11 +5,11 @@ import './entry-intro.css'
 type Phase = 'enter' | 'clear' | 'reveal' | 'done'
 const INTRO_KEY = 'kogakure-intro-v3'
 // Let the emblem and motto linger before the page is uncovered.
-const HOLD_MS = 2250
-const CLEAR_MS = 200
-const REVEAL_MS = 560
+const HOLD_MS = 1280
+const CLEAR_MS = 180
+const REVEAL_MS = 480
 
-function shouldPlay(): boolean {
+export function shouldPlay(): boolean {
  if (typeof window === 'undefined') return false
  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false
  if (window.location.pathname.replace(/\/+$/, '').endsWith('/admin')) return false
@@ -19,7 +19,7 @@ function shouldPlay(): boolean {
  catch { return true }
 }
 
-export default function EntryIntro() {
+export default function EntryIntro({ onReveal }: { onReveal?: () => void }) {
  const [phase, setPhase] = useState<Phase>(() => shouldPlay() ? 'enter' : 'done')
 
  useEffect(() => {
@@ -51,7 +51,7 @@ export default function EntryIntro() {
  useEffect(() => {
   if (phase !== 'clear') return
   // Fade out the artwork while the solid background still covers the page.
-  const timer = window.setTimeout(() => setPhase('reveal'), CLEAR_MS)
+  const timer = window.setTimeout(() => { setPhase('reveal'); onReveal?.() }, CLEAR_MS)
   return () => window.clearTimeout(timer)
  }, [phase])
 

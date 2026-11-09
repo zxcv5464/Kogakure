@@ -32,10 +32,25 @@ export default function Layout({children}:{children:React.ReactNode}){
  const location=useLocation()
  const firstExtra=useRef<HTMLAnchorElement>(null)
  const moreButton=useRef<HTMLButtonElement>(null)
+ const desktopNav=useRef<HTMLElement>(null)
+ const [indicator,setIndicator]=useState({left:0,width:0,ready:false})
  const openedByKeyboard=useRef(false)
  const extraActive=mobileExtra.some(link=>location.pathname===link.to)
 
  useEffect(()=>{setMoreOpen(false)},[location.pathname])
+
+ useEffect(()=>{
+  const nav=desktopNav.current
+  if(!nav)return
+  const update=()=>{
+   const active=nav.querySelector<HTMLElement>('a.active')
+   if(active)setIndicator({left:active.offsetLeft+active.offsetWidth*.2,width:active.offsetWidth*.6,ready:true})
+  }
+  update()
+  const observer=new ResizeObserver(update)
+  observer.observe(nav)
+  return()=>observer.disconnect()
+ },[location.pathname])
 
  useEffect(()=>{
   if(!moreOpen)return
@@ -62,7 +77,7 @@ export default function Layout({children}:{children:React.ReactNode}){
      <img src={asset('images/brand/logo-header.webp')} alt="" width="44" height="44"/>
      <span><strong>狐隱</strong><small>KOGAKURE</small></span>
     </Link>
-    <nav className="desktop-nav" aria-label="主要導覽">{links.map(({to,label})=><NavLink key={to} to={to} end={to==='/'} onMouseEnter={to==='/staff'?prefetchStaffPage:undefined} onFocus={to==='/staff'?prefetchStaffPage:undefined} onTouchStart={to==='/staff'?prefetchStaffPage:undefined} className={({isActive})=>isActive?'active':''}>{label}</NavLink>)}</nav>
+    <nav ref={desktopNav} className="desktop-nav" aria-label="主要導覽">{links.map(({to,label})=><NavLink key={to} to={to} end={to==='/'} onMouseEnter={to==='/staff'?prefetchStaffPage:undefined} onFocus={to==='/staff'?prefetchStaffPage:undefined} onTouchStart={to==='/staff'?prefetchStaffPage:undefined} className={({isActive})=>isActive?'active':''}>{label}</NavLink>)}<span className={'nav-slider'+(indicator.ready?' is-ready':'')} style={{left:indicator.left,width:indicator.width}} aria-hidden="true"/></nav>
     <a className="social-header" target="_blank" rel="noopener noreferrer" href="https://www.threads.com/@kogakure_ffxiv" aria-label="狐隱 Threads"><AtSign size={19}/></a>
    </div>
   </header>

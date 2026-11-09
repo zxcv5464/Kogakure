@@ -1,5 +1,4 @@
-/* Shared photographic backdrop: one photograph at a time, with a soft
-   two-layer cross-fade during page navigation. No timed slideshow. */
+/* Shared photographic backdrop: five-second rotation, slow crossfade. */
 /* Isolate at the site root, not on <main>: staff dialogs must still
    layer above the header and the fixed mobile navigation. */
 .site { isolation: isolate; }
@@ -12,9 +11,9 @@
  pointer-events: none;
  background: #12121c;
  opacity: 1;
- transition: opacity 650ms ease;
+ transition: opacity 2050ms cubic-bezier(.22, .65, .25, 1);
 }
-.scene-backdrop--hidden { opacity: 0; }
+.scene-backdrop--hidden,.scene-backdrop--intro-waiting { opacity: 0; }
 .scene-backdrop__photo {
  position: absolute;
  inset: 0;
@@ -23,7 +22,7 @@
  background-position: center 46%;
  opacity: 0;
  filter: saturate(.86) brightness(.78);
- transition: opacity 1450ms cubic-bezier(.42, 0, .25, 1);
+ transition: opacity 2400ms cubic-bezier(.42, 0, .24, 1);
 }
 .scene-backdrop__photo.is-active { opacity: 1; }
 .scene-backdrop__shade {
