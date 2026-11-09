@@ -27,6 +27,17 @@ const mobileExtra = [
  {to:'/booking',label:'預約',icon:CalendarCheck2},
 ]
 
+const pageTitles: Record<string, string> = {
+ '/': '首頁',
+ '/about': '館內介紹',
+ '/services': '服務內容',
+ '/staff': '狐隱名帖',
+ '/shifts': '值班排班',
+ '/menu': '點菜',
+ '/booking': '預約',
+ '/admin': '後台管理',
+}
+
 export default function Layout({children}:{children:React.ReactNode}){
  const [moreOpen,setMoreOpen]=useState(false)
  const location=useLocation()
@@ -38,6 +49,9 @@ export default function Layout({children}:{children:React.ReactNode}){
  const extraActive=mobileExtra.some(link=>location.pathname===link.to)
 
  useEffect(()=>{setMoreOpen(false)},[location.pathname])
+ useEffect(()=>{
+  document.title = '狐隱 KOGAKURE｜' + (pageTitles[location.pathname] ?? '狐隱')
+ },[location.pathname])
 
  useEffect(()=>{
   const nav=desktopNav.current

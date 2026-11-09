@@ -1,5 +1,6 @@
 /* Portrait-first omamori. The photograph stays full height, and the lower
    calligraphy floats over a gradual ink-wash rather than a hard-edged panel. */
+.staff-entry .omamori-card { padding-top: 0; }
 .staff-entry .omamori-art {
  inset: 0;
  width: 100%;
