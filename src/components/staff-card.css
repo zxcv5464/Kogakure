@@ -1,6 +1,13 @@
 /* Portrait-first omamori. The photograph stays full height, and the lower
    calligraphy floats over a gradual ink-wash rather than a hard-edged panel. */
 .staff-entry .omamori-card { padding-top: 0; }
+/* Keep the pointed omamori silhouette but remove EVERY horizontal gold line
+   across its top. Only the left, right and bottom ornamental strokes remain. */
+.staff-entry .omamori-body::before,
+.staff-entry .omamori-border {
+ border-top: 0;
+}
+/* The portrait crop removes the yellow backdrop that used to show in the tip. */
 .staff-entry .omamori-art {
  inset: 0;
  width: 100%;
@@ -12,6 +19,11 @@
  height: 100%;
  object-fit: cover;
  object-position: center 26%;
+ transform: scale(1.16);
+ transform-origin: center bottom;
+}
+.staff-entry .omamori-card:hover .omamori-art img {
+ transform: scale(1.19);
 }
 .staff-entry .photo-shadow {
  background: linear-gradient(180deg,
