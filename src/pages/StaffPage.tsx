@@ -7,6 +7,7 @@ import StaffLoading from '../components/StaffLoading'
 import { demoStaff } from '../data/demo'
 import { configured } from '../lib/config'
 import { getCachedPublicStaff, loadPublicStaff } from '../lib/public-staff'
+import { STAFF_PAGE_READY_EVENT } from '../lib/route-events'
 import './staff-page.css'
 export default function StaffPage(){
  const [staff,setStaff]=useState<Staff[]>(()=>configured?(getCachedPublicStaff()??[]):demoStaff)
@@ -17,6 +18,7 @@ export default function StaffPage(){
  const [opened,setOpened]=useState<Staff|null>(null)
  const close=useCallback(()=>setOpened(null),[])
  useEffect(()=>{if(!configured)return;let mounted=true;loadPublicStaff().then(rows=>{if(mounted)setStaff(rows)}).catch(e=>{if(mounted)setError('無法載入員工資料：'+e.message)}).finally(()=>{if(mounted)setLoading(false)});return()=>{mounted=false}},[])
+ useEffect(()=>{if(!loading)window.dispatchEvent(new Event(STAFF_PAGE_READY_EVENT))},[loading])
  const categories=useMemo(()=>['全部',...Array.from(new Set(staff.flatMap(x=>x.services)))],[staff])
  const visible=useMemo(()=>staff.filter(s=>(filter==='全部'||s.services.includes(filter))&&[s.name,s.role,s.tagline,...s.services].join(' ').toLocaleLowerCase().includes(query.toLocaleLowerCase())),[staff,query,filter])
  return <>

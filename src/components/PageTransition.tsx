@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import type { Location } from 'react-router-dom'
 import SceneBackdrop from './SceneBackdrop'
+import { STAFF_PAGE_READY_EVENT } from '../lib/route-events'
 import './page-transition.css'
 import './route-motion.css'
 
@@ -9,6 +10,7 @@ import './route-motion.css'
 // flash of the destination page before the fade-in begins.
 const COVER_MS = 650
 const REVEAL_MS = 760
+const STAFF_READY_TIMEOUT_MS = 8000
 
 function resetScroll() {
  // The site uses smooth anchor scrolling, but route changes should not scroll
@@ -49,18 +51,42 @@ export default function PageTransition({
    return
   }
 
+  // Keep the curtain closed while the first staff route bundle and its
+  // directory data load. Otherwise the temporary fallback appears between
+  // the old page and the real portrait cards.
+  let swapped = false
+  let ready = location.pathname !== '/staff'
+  let revealed = false
+  let fallback: number | undefined
+  let finish: number | undefined
+  const reveal = () => {
+   if (!swapped || !ready || revealed) return
+   revealed = true
+   setPhase('reveal')
+   finish = window.setTimeout(() => setPhase('idle'), REVEAL_MS + 40)
+  }
+  const onStaffReady = () => {
+   ready = true
+   if (fallback !== undefined) window.clearTimeout(fallback)
+   reveal()
+  }
+  if (!ready) window.addEventListener(STAFF_PAGE_READY_EVENT, onStaffReady)
+
   setPhase('cover')
   const swap = window.setTimeout(() => {
    currentPath.current = location.pathname
    setDisplayed(location)
    resetScroll()
-   setPhase('reveal')
+   swapped = true
+   if (!ready) fallback = window.setTimeout(onStaffReady, STAFF_READY_TIMEOUT_MS)
+   reveal()
   }, COVER_MS)
-  const finish = window.setTimeout(() => setPhase('idle'), COVER_MS + REVEAL_MS + 40)
 
   return () => {
    window.clearTimeout(swap)
-   window.clearTimeout(finish)
+   if (fallback !== undefined) window.clearTimeout(fallback)
+   if (finish !== undefined) window.clearTimeout(finish)
+   window.removeEventListener(STAFF_PAGE_READY_EVENT, onStaffReady)
   }
  }, [location.pathname, location.search, location.hash])
 
