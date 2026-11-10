@@ -83,7 +83,7 @@ try {
  const navigate = async path => {
   await command('Page.navigate', { url: 'http://127.0.0.1:' + port + path })
   await wait(1400)
-  const state = await evaluate('({url:location.pathname+location.search+location.hash,title:document.querySelector("main h1")?.textContent,site:!!document.querySelector(".site")})')
+  const state = await evaluate('({url:location.pathname+location.search+location.hash,title:document.querySelector("main h1")?.textContent,site:!!document.querySelector(".site,.admin-shell"),admin:!!document.querySelector(".admin-shell")})')
   console.log(path, JSON.stringify(state))
   if (!state.site) throw new Error('No React app at ' + path)
   return state
@@ -91,7 +91,7 @@ try {
  await command('Page.enable')
  await command('Runtime.enable')
  const admin = await navigate('/Kogakure/admin')
- if (!admin.url.startsWith('/Kogakure/admin') || admin.title !== '狐隱管理後台') throw new Error('Clean admin route failed')
+ if (!admin.url.startsWith('/Kogakure/admin') || admin.title !== '狐隱管理後台' || !admin.admin) throw new Error('Clean isolated admin route failed')
  const staff = await navigate('/Kogakure/staff')
  if (!staff.url.startsWith('/Kogakure/staff') || staff.title !== '狐隱名帖') throw new Error('Clean staff route failed')
  const legacy = await navigate('/Kogakure/#/staff')

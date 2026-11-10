@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
-import { Link } from 'react-router-dom'
-import { ArrowLeft, ImagePlus, LogOut, Plus, Save, ShieldCheck, Trash2, X } from 'lucide-react'
+import { ImagePlus, LogOut, Plus, Save, ShieldCheck, Trash2, X } from 'lucide-react'
 import type { Staff, Effect } from '../types'
 import { EFFECTS } from '../types'
 import { supabase } from '../lib/supabase'
@@ -81,11 +80,11 @@ export default function AdminPage(){
  function patch<K extends keyof Staff>(field:K,value:Staff[K]){
   setSelected(s=>s?{...s,[field]:value}:s)
  }
- if(!configured)return <section className="admin-gate container"><ShieldCheck size={36}/><h1>狐隱管理後台</h1><p>目前是本機預覽模式。請依照專案 README 設定 Supabase URL、Publishable Key，並執行資料庫 SQL 後才能使用管理後台。</p><Link to="/staff">返回人員介紹</Link></section>
+ if(!configured)return <section className="admin-gate container"><ShieldCheck size={36}/><h1>狐隱管理後台</h1><p>目前尚未設定 Supabase。請依照專案 README 設定專案連線資訊與資料庫權限。</p></section>
  if(state!=='ready')return <section className="admin-gate container"><ShieldCheck size={35}/><p className="eyebrow">KOGAKURE ADMINISTRATION</p><h1>狐隱管理後台</h1>
   {state==='loading'?<p>正在確認登入權限…</p>:state==='forbidden'?<><p>此帳號沒有管理權限。請在 Supabase 中將帳號加入 admin_users。</p><button className="action-button" onClick={logout}>登出</button></>:<form onSubmit={login} className="login-form"><label>管理者 Email<input type="email" autoComplete="username" value={email} onChange={e=>setEmail(e.target.value)} required/></label><label>密碼<input type="password" autoComplete="current-password" value={password} onChange={e=>setPassword(e.target.value)} required/></label><button className="action-button" disabled={busy} type="submit">登入管理後台</button></form>}
   {message&&<p className="admin-message" role="alert">{message}</p>}
-  <Link to="/staff" className="gate-link"><ArrowLeft size={17}/> 返回名帖</Link></section>
+</section>
  return <section className="admin-page container">
   <div className="admin-top"><div><p className="eyebrow">KOGAKURE · CONTENT MANAGEMENT</p><h1>人員名帖管理</h1><p>共 {rows.length} 位員工 · 管理公開資料、個人特效與社群連結</p></div><button className="text-button" onClick={logout}><LogOut size={17}/> 登出</button></div>
   {message&&<p className="admin-message" role="status">{message}</p>}
