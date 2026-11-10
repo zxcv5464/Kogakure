@@ -8,7 +8,7 @@ const links = [
  {to:'/',label:'首頁'},
  {to:'/about',label:'館內介紹'},
  {to:'/services',label:'服務內容'},
- {to:'/staff',label:'人員介紹'},
+ {to:'/staff',label:'狐姬名冊'},
  {to:'/shifts',label:'值班排班'},
  {to:'/menu',label:'點菜'},
  {to:'/booking',label:'預約'},
@@ -16,7 +16,7 @@ const links = [
 
 const mobileMain = [
  {to:'/',label:'首頁',icon:Home},
- {to:'/staff',label:'人員',icon:UsersRound},
+ {to:'/staff',label:'狐姬',icon:UsersRound},
  {to:'/shifts',label:'值班',icon:CalendarDays},
  {to:'/menu',label:'點菜',icon:UtensilsCrossed},
 ]
@@ -31,7 +31,7 @@ const pageTitles: Record<string, string> = {
  '/': '首頁',
  '/about': '館內介紹',
  '/services': '服務內容',
- '/staff': '狐隱名帖',
+ '/staff': '狐姬名冊',
  '/shifts': '值班排班',
  '/menu': '點菜',
  '/booking': '預約',

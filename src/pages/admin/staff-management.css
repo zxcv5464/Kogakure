@@ -295,3 +295,80 @@
  .staff-editor-footer .editor-actions > button { flex: 1; min-width: 0; padding: 10px 8px; font-size: .75rem; white-space: nowrap; }
  .staff-editor-footer .action-button { min-width: 0; }
 }
+
+/* Ordering is a separate, deliberate mode; profile editing stays uncluttered. */
+.staff-roster-actions { display: inline-flex; align-items: center; gap: 5px; flex: none; }
+.admin-shell .roster-title .staff-order-toggle {
+ display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+ min-width: 0; padding: 5px 8px;
+ border-color: rgba(215,211,206,.16);
+ color: #c9c3b9; background: rgba(255,255,255,.025);
+}
+.admin-shell .roster-title .staff-order-toggle.is-active {
+ color: #f0d1a0; border-color: rgba(218,178,126,.5);
+ background: rgba(218,178,126,.12);
+}
+.admin-shell .roster-title button:disabled { opacity: .45; cursor: not-allowed; }
+.staff-sort-instructions {
+ display: flex; align-items: flex-start; gap: 7px;
+ margin: 0; padding: 13px;
+ border-bottom: 1px solid rgba(216,181,129,.19);
+ background: rgba(213,176,125,.055); color: #d6c8b6;
+ font-size: .73rem; line-height: 1.7;
+}
+.staff-sort-instructions svg { flex: none; margin-top: 2px; color: #ddba84; }
+.staff-roster-line {
+ display: flex; align-items: stretch; min-width: 0;
+ border-bottom: 1px solid rgba(217,179,128,.1);
+ transition: background .16s ease,opacity .16s ease;
+}
+.staff-roster-line:last-of-type { border-bottom: 0; }
+.staff-roster-line .roster-item {
+ flex: 1 1 auto; min-width: 0;
+ border-bottom: 0; background: transparent;
+}
+.staff-roster-line:has(.roster-item.current) {
+ box-shadow: inset 3px 0 #d6b483;
+ background: rgba(218,178,126,.13);
+}
+.staff-roster-line:has(.roster-item.current) .roster-item.current {
+ box-shadow: none; background: transparent;
+}
+.staff-roster-line:hover { background: rgba(208,170,123,.085); }
+.staff-roster-list.is-ordering .staff-roster-line {
+ cursor: grab; touch-action: pan-y;
+}
+.staff-roster-list.is-ordering .staff-roster-line:active { cursor: grabbing; }
+.staff-roster-list.is-ordering .roster-item { cursor: grab; }
+.staff-roster-line.is-dragging { opacity: .4; }
+.staff-roster-line.is-drop-target { outline: 1px solid rgba(232,190,125,.75); outline-offset: -1px; background: rgba(218,178,126,.13); }
+.staff-roster-grip {
+ display: grid; place-items: center; flex: 0 0 23px;
+ color: #c4a276; padding-left: 4px; cursor: grab;
+}
+.staff-roster-list.is-ordering .roster-item { padding-left: 3px; padding-right: 5px; }
+.staff-roster-move-buttons {
+ display: flex; flex-direction: column; justify-content: center; flex: 0 0 36px; gap: 2px; padding: 4px 4px 4px 0;
+}
+.staff-roster-move-buttons button {
+ display: grid; place-items: center; width: 30px; height: 28px;
+ border: 1px solid rgba(220,185,137,.22); border-radius: 4px;
+ color: #ebcda0; background: rgba(16,16,25,.38);
+ cursor: pointer;
+}
+.staff-roster-move-buttons button:hover:not(:disabled) { background: rgba(210,170,119,.19); }
+.staff-roster-move-buttons button:disabled { opacity: .24; cursor: default; }
+@media (max-width: 850px) {
+ .staff-roster-list.is-ordering { max-height: min(52dvh,480px); }
+ .staff-roster-move-buttons { flex-direction: row; flex-basis: auto; align-items: center; padding-right: 9px; gap: 6px; }
+ .staff-roster-move-buttons button { width: 39px; height: 39px; }
+}
+@media (max-width: 570px) {
+ .staff-roster-actions { gap: 4px; }
+ .admin-shell .roster-title .staff-order-toggle { font-size: .73rem; padding: 6px 7px; }
+ .staff-sort-instructions { font-size: .7rem; padding: 10px 11px; }
+ .staff-roster-move-buttons { gap: 4px; padding-right: 7px; }
+ .staff-roster-move-buttons button { width: 37px; height: 37px; }
+ .staff-roster-grip { flex-basis: 20px; }
+ .staff-roster-list.is-ordering .roster-item { padding: 8px 2px; }
+}

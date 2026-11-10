@@ -98,8 +98,23 @@ try {
     if(method==='POST'||method==='PATCH'){
      if(qa.failSave)return response({code:'QA_FAIL',message:'mock save failure'},400)
      const body=JSON.parse(options.body)
+     if(method==='PATCH'&&Object.keys(body).length===1&&'sort_order' in body){
+      const id=new URL(url).searchParams.get('id')?.replace(/^eq\./,'')
+      const found=qa.rows.find(r=>r.id===id)
+      qa.requests.push({method:'ORDER_WRITE',id,body:JSON.stringify(body)})
+      if(qa.emptySave || !found)return response([])
+      found.sort_order=body.sort_order
+      return response([{id}])
+     }
      qa.requests.push({method:'WRITTEN',body:JSON.stringify(body)})
      if(qa.emptySave)return response([])
+     if(method==='PATCH'){
+      const id=new URL(url).searchParams.get('id')?.replace(/^eq\./,'')
+      const found=qa.rows.find(r=>r.id===id)
+      if(!found)return response([])
+      Object.assign(found,body)
+      return response([{id}])
+     }
      const next=qa.rows.filter(r=>r.id!==body.id)
      next.push({...body})
      qa.rows=next
@@ -124,6 +139,50 @@ try {
  await call('Page.navigate',{url:base+'admin/staff'})
  await until('document.querySelectorAll(".staff-roster-list .roster-item").length===2')
  console.log('INITIAL',await run('({rows:document.querySelectorAll(".staff-roster-list .roster-item").length,auth:!!document.querySelector(".admin-workspace"),widgets:!!document.querySelector(".staff-roster-search"),queries:window.__qa.requests.length})'))
+ // The sort mode must move a card without rewriting the whole profile.
+ await run('document.querySelector(".staff-order-toggle").click()')
+ await until('document.querySelector(".staff-roster-list.is-ordering")!==null')
+ const sortDesktop=await call('Page.captureScreenshot',{format:'jpeg',quality:72,fromSurface:true})
+ await writeFile(join(tmpdir(),'kogakure-staff-sorting-desktop.jpg'),Buffer.from(sortDesktop.data,'base64'))
+ await call('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true})
+ await run('document.querySelector(".staff-admin-roster").scrollIntoView({block:"start"})')
+ await pause(260)
+ const sortMobile=await call('Page.captureScreenshot',{format:'jpeg',quality:74,fromSurface:true})
+ await writeFile(join(tmpdir(),'kogakure-staff-sorting-mobile.jpg'),Buffer.from(sortMobile.data,'base64'))
+ await call('Emulation.setDeviceMetricsOverride',{width:1440,height:900,deviceScaleFactor:1,mobile:false})
+ await run('window.scrollTo(0,0)')
+ await pause(160)
+ if(await run('!!document.querySelector(".staff-roster-tools")'))throw Error('Search controls should hide while ordering')
+ await run('document.querySelectorAll(".staff-roster-line")[1].querySelector(".staff-roster-move-buttons button").click()')
+ await until('document.querySelector(".staff-roster-line .staff-roster-person strong")?.textContent==="小狐"')
+ const order=await run(`({
+  names:[...document.querySelectorAll(".staff-roster-person strong")].map(x=>x.textContent),
+  writes:window.__qa.requests.filter(x=>x.method==="ORDER_WRITE"),
+  values:window.__qa.rows.map(x=>({name:x.display_name,sort:x.sort_order}))
+ })`)
+ console.log('SORT ARROWS',order)
+ if(order.writes.length!==1||order.names.join(',')!=='小狐,芳乃')throw Error('Sort buttons did not persist order')
+ // Return to the starting list for the remaining editor regressions.
+ await run('document.querySelectorAll(".staff-roster-line")[1].querySelector(".staff-roster-move-buttons button").click()')
+ await until('document.querySelector(".staff-roster-line .staff-roster-person strong")?.textContent==="芳乃"')
+ // DnD with the browser DragEvent API also exercises React's drop handler.
+ await run(`(()=>{
+  const transfer=new DataTransfer()
+  document.querySelectorAll('.staff-roster-line')[0].dispatchEvent(new DragEvent('dragstart',{bubbles:true,cancelable:true,dataTransfer:transfer}))
+  window.__qaDragTransfer=transfer
+ })()`)
+ await pause(80)
+ await run(`(()=>{
+  const target=document.querySelectorAll('.staff-roster-line')[1]
+  target.dispatchEvent(new DragEvent('dragover',{bubbles:true,cancelable:true,dataTransfer:window.__qaDragTransfer}))
+  target.dispatchEvent(new DragEvent('drop',{bubbles:true,cancelable:true,dataTransfer:window.__qaDragTransfer}))
+ })()`)
+ await until('document.querySelector(".staff-roster-line .staff-roster-person strong")?.textContent==="小狐"')
+ await run('document.querySelectorAll(".staff-roster-line")[1].querySelector(".staff-roster-move-buttons button").click()')
+ await until('document.querySelector(".staff-roster-line .staff-roster-person strong")?.textContent==="芳乃"')
+ await run('document.querySelector(".staff-order-toggle").click()')
+ if(await run('document.querySelector(".staff-roster-list.is-ordering")!==null'))throw Error('Sort mode did not close')
+
  await text('.staff-roster-search input','芳乃')
  if(await run('document.querySelectorAll(".staff-roster-list .roster-item").length')!==1)throw Error('Search filter failed')
  await text('.staff-roster-search input','')
@@ -166,7 +225,7 @@ try {
  await run('window.__qa.failSave=false;document.querySelector(".staff-editor-title .icon-button").click()')
  if(!(await run('document.querySelector(".editor-empty")!==null')))throw Error('Close editor failed')
  // Photo selection is intentionally local until Save. Cancel leaves Storage untouched.
- await run('document.querySelector(".roster-title button").click()')
+ await run('document.querySelector(".roster-title button:last-child").click()')
  await until('document.querySelector(".staff-editor-fields")!==null')
  await run(`(()=>{
   const base64='iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLttAAAAABJRU5ErkJggg=='
@@ -182,7 +241,7 @@ try {
  if(stage.uploads||!stage.dirty.includes('未儲存'))throw Error('Photo uploaded prematurely')
  await run('window.__qa.allowConfirm=true;document.querySelector(".staff-editor-title .icon-button").click()')
  if(await run('window.__qa.uploads.length')!==0)throw Error('Cancel uploaded staged photo')
- await run('document.querySelector(".roster-title button").click()')
+ await run('document.querySelector(".roster-title button:last-child").click()')
  await text('.staff-admin-editor input[placeholder="員工角色名稱"]','測試新角色')
  await run('document.querySelector(".staff-editor-footer button[type=submit]").click()')
  await until('!!document.querySelector(".staff-admin-notice.is-success")')

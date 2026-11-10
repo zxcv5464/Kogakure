@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ChangeEvent } from 'react'
-import { AlertCircle, CheckCircle2, ExternalLink, ImagePlus, Plus, RefreshCw, Save, Search, Trash2, X } from 'lucide-react'
+import { AlertCircle, ArrowDown, ArrowUp, CheckCircle2, ExternalLink, GripVertical, ImagePlus, ListOrdered, Plus, RefreshCw, Save, Search, Trash2, X } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { Staff, Effect } from '../../types'
 import { EFFECTS } from '../../types'
-import { deleteStaff, getStaff, saveStaff } from '../../lib/staff'
+import { deleteStaff, getStaff, saveStaff, saveStaffSortChanges } from '../../lib/staff'
+import { planStaffReorder } from '../../lib/staff-order'
 import { invalidatePublicStaffCache } from '../../lib/public-staff'
 import { safeExternalUrl } from '../../lib/url'
 import { removeUploadedStaffImages, uploadStaffImage, validateStaffImage } from '../../lib/upload'
@@ -14,11 +15,11 @@ import './staff-management.css'
 type Filter = 'all' | 'published' | 'draft'
 type Notice = { kind: 'success' | 'error' | 'info'; text: string }
 
-function blankStaff(): Staff {
+function blankStaff(sortOrder = 1024): Staff {
  return {
   id: crypto.randomUUID(), name: '', role: '接待者', tagline: '', bio: '',
   imageUrl: '', thumbnailUrl: '', themeColor: '#82c8bc',
-  effect: 'foxfire', socials: [], services: [], published: false, sortOrder: 100,
+  effect: 'foxfire', socials: [], services: [], published: false, sortOrder,
  }
 }
 function cloneStaff(staff: Staff): Staff {
@@ -45,7 +46,9 @@ export default function StaffManagement() {
  const [query, setQuery] = useState('')
  const [filter, setFilter] = useState<Filter>('all')
  const [servicesText, setServicesText] = useState('')
- const [sortText, setSortText] = useState('100')
+ const [ordering, setOrdering] = useState(false)
+ const [draggingId, setDraggingId] = useState<string | null>(null)
+ const [dropTargetId, setDropTargetId] = useState<string | null>(null)
  const [photoFile, setPhotoFile] = useState<File | null>(null)
  const [previewUrl, setPreviewUrl] = useState('')
  const editorRef = useRef<HTMLDivElement>(null)
@@ -54,9 +57,8 @@ export default function StaffManagement() {
  const dirty = useMemo(() => Boolean(selected && baseline && (
   JSON.stringify(selected) !== JSON.stringify(baseline)
   || servicesText !== baseline.services.join('、')
-  || sortText !== String(baseline.sortOrder)
   || photoFile
- )), [selected, baseline, servicesText, sortText, photoFile])
+ )), [selected, baseline, servicesText, photoFile])
 
  useEffect(() => { setEditing(dirty, busy) }, [dirty, busy, setEditing])
  useEffect(() => () => setEditing(false, false), [setEditing])
@@ -81,12 +83,12 @@ export default function StaffManagement() {
   return () => { active = false }
  }, [])
 
- const visible = useMemo(() => rows.filter(staff => {
+ const visible = useMemo(() => ordering ? rows : rows.filter(staff => {
   if (filter === 'published' && !staff.published) return false
   if (filter === 'draft' && staff.published) return false
   const term = query.trim().toLocaleLowerCase()
   return !term || [staff.name, staff.role, staff.tagline, ...staff.services].join(' ').toLocaleLowerCase().includes(term)
- }), [rows, query, filter])
+ }), [rows, query, filter, ordering])
  const publishedCount = rows.filter(staff => staff.published).length
 
  function confirmDiscard(): boolean {
@@ -100,9 +102,9 @@ export default function StaffManagement() {
   setBaseline(cloneStaff(draft))
   setIsNew(creating)
   setServicesText(draft.services.join('、'))
-  setSortText(String(draft.sortOrder))
   setPhotoFile(null)
   setNotice(null)
+  setOrdering(false)
   if (window.matchMedia('(max-width: 850px)').matches) {
    requestAnimationFrame(() => editorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
   }
@@ -137,16 +139,12 @@ export default function StaffManagement() {
   if (!name) { setNotice({ kind:'error', text:'請填寫員工名稱' }); return }
   const color = selected.themeColor.trim()
   if (!/^#[0-9a-fA-F]{6}$/.test(color)) { setNotice({ kind:'error', text:'主題色必須是 #RRGGBB 格式，例如 #82c8bc' }); return }
-  const sort = Number(sortText)
-  if (!sortText.trim() || !Number.isInteger(sort) || sort < 0 || sort > 2147483647) {
-   setNotice({ kind:'error', text:'顯示順序請輸入 0 至 2147483647 的整數' }); return
-  }
   if (selected.socials.some(s => s.url.trim() && (!s.label.trim() || !safeExternalUrl(s.url.trim())))) {
    setNotice({ kind:'error', text:'請為已填網址的社群設定名稱，並檢查網址必須以 http:// 或 https:// 開頭' }); return
   }
   const sanitized: Staff = {
    ...selected, name, role: selected.role.trim() || '接待者', themeColor: color,
-   services: parseServices(servicesText), sortOrder: sort,
+   services: parseServices(servicesText),
    socials: selected.socials.filter(s => s.url.trim()).map(s => ({ ...s, label: s.label.trim(), url: s.url.trim() })),
   }
   busyRef.current = true
@@ -167,7 +165,6 @@ export default function StaffManagement() {
    setBaseline(cloneStaff(saving))
    setIsNew(false)
    setServicesText(saving.services.join('、'))
-   setSortText(String(saving.sortOrder))
    setPhotoFile(null)
    setNotice({ kind:'success', text:saving.published ? '名帖已儲存並公開。' : '名帖已儲存為草稿。' })
    try {
@@ -220,6 +217,7 @@ export default function StaffManagement() {
   setNotice(null)
   try {
    const next = await refresh()
+   setOrdering(false)
    setSelected(null)
    setBaseline(null)
    setPhotoFile(null)
@@ -227,6 +225,55 @@ export default function StaffManagement() {
   } catch (error) {
    setNotice({ kind:'error', text:'重新整理失敗：' + (describeError(error)) })
   } finally { setLoading(false) }
+ }
+
+ function toggleOrdering() {
+  if (busyRef.current || loading) return
+  if (!ordering && dirty) {
+   setNotice({ kind:'info', text:'請先儲存或關閉目前的編輯內容，再調整名冊順序。' })
+   return
+  }
+  setOrdering(previous => !previous)
+  setDraggingId(null)
+  setDropTargetId(null)
+  setNotice(null)
+ }
+
+ async function moveStaff(movedId: string, targetIndex: number) {
+  if (!ordering || busyRef.current || dirty) return
+  const plan = planStaffReorder(rows, movedId, targetIndex)
+  if (plan.changes.length === 0) return
+  busyRef.current = true
+  setBusy(true)
+  setNotice({ kind:'info', text:'正在儲存狐姬的出場順序…' })
+  try {
+   await saveStaffSortChanges(plan.changes)
+   setRows(plan.ordered)
+   // A visible editor and its saved baseline must follow the same order
+   // without becoming falsely marked as an unsaved profile change.
+   const selectedPosition = plan.ordered.find(person => person.id === selected?.id)
+   if (selectedPosition) {
+    setSelected(current => current ? { ...current, sortOrder:selectedPosition.sortOrder } : current)
+    setBaseline(current => current ? { ...current, sortOrder:selectedPosition.sortOrder } : current)
+   }
+   invalidatePublicStaffCache()
+   setNotice({ kind:'success', text:'出場順序已儲存，前台名冊會依新順序顯示。' })
+  } catch (error) {
+   try {
+    const fresh = await refresh()
+    const selectedPosition = fresh.find(person => person.id === selected?.id)
+    if (selectedPosition) {
+     setSelected(current => current ? { ...current, sortOrder:selectedPosition.sortOrder } : current)
+     setBaseline(current => current ? { ...current, sortOrder:selectedPosition.sortOrder } : current)
+    }
+   } catch (reloadError) { console.warn('排序錯誤後更新清單失敗：', reloadError) }
+   setNotice({ kind:'error', text:'排序未能完成，已嘗試還原並更新清單：' + describeError(error) })
+  } finally {
+   busyRef.current = false
+   setBusy(false)
+   setDraggingId(null)
+   setDropTargetId(null)
+  }
  }
 
  return <section className="admin-page admin-staff-module">
@@ -247,19 +294,58 @@ export default function StaffManagement() {
 
   <div className="admin-layout">
    <aside className="admin-roster staff-admin-roster">
-    <div className="roster-title"><strong>員工清單</strong><button type="button" disabled={busy} onClick={() => selectStaff(blankStaff(), true)}><Plus size={18}/> 新增</button></div>
-    <div className="staff-roster-tools">
+    <div className="roster-title">
+     <strong>員工清單</strong>
+     <div className="staff-roster-actions">
+      <button type="button" className={'staff-order-toggle' + (ordering ? ' is-active' : '')} disabled={busy || loading || rows.length < 2} aria-pressed={ordering} onClick={toggleOrdering}><ListOrdered size={16}/>{ordering ? '完成' : '排序'}</button>
+      <button type="button" disabled={busy || ordering} onClick={() => {
+       const lastOrder = rows.at(-1)?.sortOrder ?? 0
+       selectStaff(blankStaff(Math.min(2147483647, lastOrder + 1024)), true)
+      }}><Plus size={18}/> 新增</button>
+     </div>
+    </div>
+    {ordering ? <p className="staff-sort-instructions"><GripVertical size={16}/> 拖曳調整順序，手機可用上下箭頭。每次移動都會自動儲存。</p> : <div className="staff-roster-tools">
      <label className="staff-roster-search"><Search size={17}/><input aria-label="搜尋員工" value={query} onChange={event => setQuery(event.target.value)} placeholder="搜尋姓名、職稱或服務…"/></label>
      <select aria-label="篩選公開狀態" value={filter} onChange={event => setFilter(event.target.value as Filter)}>
       <option value="all">全部狀態</option><option value="published">已公開</option><option value="draft">草稿</option>
      </select>
      <p>{loading ? '正在讀取名帖…' : '顯示 ' + visible.length + ' / ' + rows.length + ' 位'}</p>
-    </div>
-    <div className="staff-roster-list">
-     {visible.map(person => <button key={person.id} disabled={busy} type="button" aria-pressed={selected?.id === person.id} className={'roster-item ' + (selected?.id === person.id ? 'current' : '')} onClick={() => selectStaff(person)}>
-      {person.thumbnailUrl ? <img src={person.thumbnailUrl} loading="lazy" alt=""/> : <span className="avatar-placeholder">狐</span>}
-      <span className="staff-roster-person"><strong>{person.name}</strong><small>{person.role || '接待者'}</small><em className={person.published ? 'is-published' : 'is-draft'}>{person.published ? '已公開' : '草稿'}</em></span>
-     </button>)}
+    </div>}
+    <div className={'staff-roster-list' + (ordering ? ' is-ordering' : '')}>
+     {visible.map((person, index) => <div key={person.id}
+      className={'staff-roster-line' + (draggingId === person.id ? ' is-dragging' : '') + (dropTargetId === person.id ? ' is-drop-target' : '')}
+      draggable={ordering && !busy}
+      onDragStart={event => {
+       if (!ordering || busy) { event.preventDefault(); return }
+       setDraggingId(person.id)
+       event.dataTransfer.effectAllowed = 'move'
+       event.dataTransfer.setData('text/plain', person.id)
+      }}
+      onDragOver={event => {
+       if (!ordering || !draggingId || busy) return
+       event.preventDefault()
+       event.dataTransfer.dropEffect = 'move'
+       if (dropTargetId !== person.id) setDropTargetId(person.id)
+      }}
+      onDrop={event => {
+       event.preventDefault()
+       const id = draggingId || event.dataTransfer.getData('text/plain')
+       setDraggingId(null)
+       setDropTargetId(null)
+       if (id) void moveStaff(id, index)
+      }}
+      onDragEnd={() => { setDraggingId(null); setDropTargetId(null) }}>
+      {ordering && <span className="staff-roster-grip" aria-hidden="true"><GripVertical size={17}/></span>}
+      <button disabled={busy} type="button" aria-pressed={selected?.id === person.id} aria-label={ordering ? person.name + '，可拖曳或利用方向按鈕排序' : '編輯 ' + person.name}
+       className={'roster-item ' + (selected?.id === person.id ? 'current' : '')} onClick={() => { if (!ordering) selectStaff(person) }}>
+       {person.thumbnailUrl ? <img src={person.thumbnailUrl} loading="lazy" alt=""/> : <span className="avatar-placeholder">狐</span>}
+       <span className="staff-roster-person"><strong>{person.name}</strong><small>{person.role || '接待者'}</small><em className={person.published ? 'is-published' : 'is-draft'}>{person.published ? '已公開' : '草稿'}</em></span>
+      </button>
+      {ordering && <div className="staff-roster-move-buttons">
+       <button type="button" aria-label={'將 ' + person.name + ' 上移'} title="上移" disabled={busy || index === 0} onClick={() => void moveStaff(person.id, index - 1)}><ArrowUp size={17}/></button>
+       <button type="button" aria-label={'將 ' + person.name + ' 下移'} title="下移" disabled={busy || index === rows.length - 1} onClick={() => void moveStaff(person.id, index + 1)}><ArrowDown size={17}/></button>
+      </div>}
+     </div>)}
      {!loading && rows.length === 0 && <p className="roster-empty">目前沒有員工資料，點擊「新增」建立第一位員工。</p>}
      {!loading && rows.length > 0 && visible.length === 0 && <p className="roster-empty">沒有符合條件的員工，請調整搜尋或篩選。</p>}
      {loading && <p className="roster-empty" role="status">讀取名帖列表…</p>}
@@ -281,10 +367,9 @@ export default function StaffManagement() {
        <label className="span-2">名片短句 <input value={selected.tagline} maxLength={120} onChange={event => patch('tagline', event.target.value)} placeholder="會顯示於人員卡片下方的一句話"/><small className="staff-field-note">{selected.tagline.length} / 120 字 · 卡片上會以一行省略顯示</small></label>
        <label className="span-2">完整自我介紹 <textarea value={selected.bio} rows={7} onChange={event => patch('bio', event.target.value)} placeholder="人物介紹、喜好、聊天風格…"/><small className="staff-field-note">{selected.bio.length} 字 · 前台詳情可完整閱讀</small></label>
       </div>
-      <div className="staff-editor-section-title"><h3>展示設定</h3><small>決定前台的排序及視覺效果</small></div>
+      <div className="staff-editor-section-title"><h3>展示設定</h3><small>設定服務分類與名帖特效；出場順序可在左側清單調整</small></div>
       <div className="form-grid">
        <label>服務分類 <input value={servicesText} onChange={event => setServicesText(event.target.value)} placeholder="例如：接待、占卜、湯屋"/><small className="staff-field-note">用逗號、頓號分隔，可以連續輸入多項</small></label>
-       <label>顯示順序 <input type="number" min="0" step="1" value={sortText} onChange={event => setSortText(event.target.value)}/><small className="staff-field-note">數字越小越靠前</small></label>
        <label>特效主題 <select value={selected.effect} onChange={event => patch('effect', event.target.value as Effect)}>{Object.entries(EFFECTS).map(([key, label]) => <option value={key} key={key}>{label}</option>)}</select></label>
        <label>主題色 <div className="color-field"><input type="color" value={/^#[0-9a-fA-F]{6}$/.test(selected.themeColor) ? selected.themeColor : '#82c8bc'} onChange={event => patch('themeColor', event.target.value)} aria-label="選擇主題色"/><input aria-label="主題色 HEX 色碼" value={selected.themeColor} onChange={event => patch('themeColor', event.target.value)} maxLength={7}/></div></label>
       </div>

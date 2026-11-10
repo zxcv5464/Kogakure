@@ -95,7 +95,7 @@ try {
  const adminStaff = await navigate('/Kogakure/admin/staff')
  if (!adminStaff.url.startsWith('/Kogakure/admin/staff') || !adminStaff.admin || !adminStaff.site) throw new Error('Nested admin staff URL did not load its protected application shell')
  const staff = await navigate('/Kogakure/staff')
- if (!staff.url.startsWith('/Kogakure/staff') || staff.title !== '狐隱名帖') throw new Error('Clean staff route failed')
+ if (!staff.url.startsWith('/Kogakure/staff') || staff.title !== '狐姬名冊') throw new Error('Clean staff route failed')
  const legacy = await navigate('/Kogakure/#/staff')
  if (!legacy.url.startsWith('/Kogakure/staff') || legacy.url.includes('#')) throw new Error('Old hash link migration failed')
  const unknown = await navigate('/Kogakure/example-missing-path')

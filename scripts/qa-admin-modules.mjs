@@ -110,7 +110,7 @@ try {
  })`)
  console.log('STAFF MODULE',staff)
  if(!staff.url.endsWith('/admin/staff')||staff.header!=='員工名帖管理'||!staff.formReady)throw Error('Staff module did not load')
- await evaluate('document.querySelector(".roster-title button").click()')
+ await evaluate('document.querySelector(".roster-title button:last-child").click()')
  const editor = await evaluate('({edit:!!document.querySelector(".admin-editor form"),name:!!document.querySelector(".admin-editor input[required]"),save:!!document.querySelector(".editor-actions .action-button"),photo:!!document.querySelector(".upload-control input[type=file]")})')
  console.log('NEW STAFF EDITOR',editor)
  if(!editor.edit||!editor.name||!editor.save||!editor.photo)throw Error('Extracted staff editor lost its creation controls')

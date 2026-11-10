@@ -94,7 +94,7 @@ try {
  await delay(1900)
  const staff = await snapshot()
  console.log('Staff scene:',staff)
- if (staff.heading !== '狐隱名帖' || !staff.photoSources[staff.active].includes('scene-04.webp')) throw Error('Staff scene did not rotate')
+ if (staff.heading !== '狐姬名冊' || !staff.photoSources[staff.active].includes('scene-04.webp')) throw Error('Staff scene did not rotate')
  const cards = await evaluate('document.querySelectorAll(".omamori-card").length')
  if (cards > 0) {
   await evaluate('document.querySelector(".omamori-card")?.click()')

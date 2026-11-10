@@ -32,7 +32,7 @@ export default function StaffDialog({staff,onClose}:{staff:Staff;onClose:()=>voi
  return <div className="dialog-overlay" onMouseDown={e=>{if(e.target===e.currentTarget)onClose()}}>
   <div className="dialog-shell">
    <div className="dialog-mobile-header">
-    <span className="dialog-mobile-label">狐隱名帖 <small>KOGAKURE</small></span>
+    <span className="dialog-mobile-label">狐姬名冊 <small>KOGAKURE</small></span>
     <button className="dialog-close" ref={closeRef} type="button" onClick={onClose} aria-label="關閉介紹"><X size={22}/></button>
    </div>
   <section ref={dialogRef} tabIndex={0} onScroll={()=>{const area=scrollingElement();setHasMore(Boolean(area&&area.scrollHeight-area.scrollTop-area.clientHeight>26))}} className="staff-dialog" role="dialog" aria-modal="true" aria-labelledby="detail-name" style={{'--accent':staff.themeColor} as CSSProperties}>
