@@ -92,6 +92,8 @@ try {
  await command('Runtime.enable')
  const admin = await navigate('/Kogakure/admin')
  if (!admin.url.startsWith('/Kogakure/admin') || admin.title !== '狐隱管理後台' || !admin.admin) throw new Error('Clean isolated admin route failed')
+ const adminStaff = await navigate('/Kogakure/admin/staff')
+ if (!adminStaff.url.startsWith('/Kogakure/admin/staff') || !adminStaff.admin || !adminStaff.site) throw new Error('Nested admin staff URL did not load its protected application shell')
  const staff = await navigate('/Kogakure/staff')
  if (!staff.url.startsWith('/Kogakure/staff') || staff.title !== '狐隱名帖') throw new Error('Clean staff route failed')
  const legacy = await navigate('/Kogakure/#/staff')

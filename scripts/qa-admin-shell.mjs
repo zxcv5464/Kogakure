@@ -84,6 +84,10 @@ try{
  await go(base+'admin')
  const direct=await snap()
  if(!direct.admin||direct.mainNav)throw Error('Direct admin link failed after frontend navigation')
+ await go(base+'admin/staff')
+ const nested = await snap()
+ console.log('PROTECTED MODULE WITHOUT LOGIN',JSON.stringify(nested))
+ if (!nested.admin || nested.publicSite || !nested.loginTitle || nested.mainNav || nested.mobileNav || nested.path !== '/Kogakure/admin/staff') throw Error('Staff management URL bypassed the admin login gate')
  // Visual fixture for the authorized editor layout; never bypass Auth or
  // write actual Supabase records. Tests only responsive CSS of existing classes.
  const fixture = `<section class="admin-page container">

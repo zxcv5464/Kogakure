@@ -44,6 +44,7 @@
 - [x] 移除 HashRouter 網址 `#`，GitHub Pages 直接連結／重新整理入口與舊書籤轉換
 - [x] Supabase 第一階段 migration、權限規則、員工後台介面
 - [x] 管理後台獨立 AdminLayout（無前台導覽、背景、頁尾和動畫），只保留可返回前台的 Logo；登入頁和名帖編輯頁採精簡響應式排版
+- [x] 後台模組化：`/admin` 為管理總覽與共用登入權限，`/admin/staff` 為獨立員工管理；保留公告、營業、菜單、預約、排班未開放的規劃入口（不產生資料庫請求）
 - [x] Supabase 本機唯讀連線檢查與設定文件（docs/SUPABASE_SETUP.md）
 - [x] 原始素材保留，公開圖檔依 brand/staff/scenes 分類並排除未使用圖
 - [x] 本機正式編譯通過

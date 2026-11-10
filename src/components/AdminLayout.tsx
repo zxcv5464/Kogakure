@@ -1,10 +1,15 @@
-import { Link } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import { asset } from '../lib/paths'
 import './admin-layout.css'
 
 // A deliberately separate application frame: no public navigation, carousel,
 // animated intro, footer, or mobile bottom navigation.
 export default function AdminLayout({children}:{children:React.ReactNode}) {
+ const { pathname } = useLocation()
+ useEffect(() => {
+  document.title = '狐隱 KOGAKURE｜' + (pathname.replace(/\/+$/, '') === '/admin/staff' ? '員工名帖管理' : '管理後台')
+ }, [pathname])
  return <div className="admin-shell">
   <header className="admin-shell-header">
    <div className="admin-shell-header-inner">

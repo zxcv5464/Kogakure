@@ -1,0 +1,291 @@
+/* A modular control panel, visually separate from the public site. */
+.admin-workspace {
+ display: grid;
+ grid-template-columns: 223px minmax(0, 1fr);
+ gap: 0;
+ width: min(100%, 1530px);
+ min-height: calc(100dvh - 65px);
+ margin: 0 auto;
+}
+.admin-workspace-nav {
+ display: flex;
+ flex-direction: column;
+ gap: 7px;
+ min-width: 0;
+ padding: 30px 15px 20px 0;
+ border-right: 1px solid rgba(221,210,196,.12);
+}
+.admin-workspace-nav-title {
+ margin: 0 0 5px;
+ padding-left: 13px;
+ color: #a6a1a1;
+ font-size: .74rem;
+ font-weight: 600;
+ letter-spacing: .06em;
+}
+.admin-nav-links { display: grid; gap: 3px; }
+.admin-nav-link {
+ display: flex;
+ align-items: center;
+ gap: 12px;
+ min-height: 44px;
+ padding: 9px 13px;
+ border: 1px solid transparent;
+ border-radius: 7px;
+ color: #c8c6c6;
+ font-size: .87rem;
+ line-height: 1.4;
+ transition: color 160ms ease, background 160ms ease;
+}
+.admin-nav-link svg { flex: none; color: #a6a2a0; }
+.admin-nav-link:hover {
+ background: #272934;
+ color: #f0e7dd;
+}
+.admin-nav-link.is-active {
+ border-color: rgba(216,181,129,.17);
+ background: #2b2a34;
+ color: #f1d5ad;
+}
+.admin-nav-link.is-active svg { color: #d7b687; }
+.admin-nav-planned {
+ display: flex;
+ flex-direction: column;
+ gap: 5px;
+ margin-top: 21px;
+ padding: 17px 0 0;
+ border-top: 1px solid rgba(221,210,196,.12);
+}
+.admin-nav-planned > p {
+ margin: 0 0 4px;
+ padding-left: 13px;
+ color: #9d9b9b;
+ font-size: .72rem;
+ letter-spacing: .06em;
+}
+.admin-nav-pending {
+ display: flex;
+ align-items: center;
+ gap: 10px;
+ padding: 8px 12px;
+ color: #87858a;
+ font-size: .78rem;
+ line-height: 1.35;
+ cursor: default;
+}
+.admin-nav-pending svg { flex: none; }
+.admin-nav-pending small {
+ margin-left: auto;
+ white-space: nowrap;
+ color: #77747a;
+ font-size: .62rem;
+}
+.admin-nav-logout {
+ display: flex;
+ align-items: center;
+ gap: 10px;
+ min-height: 43px;
+ margin-top: auto;
+ padding: 9px 13px;
+ border: 1px solid transparent;
+ border-radius: 7px;
+ background: transparent;
+ color: #bdaca4;
+ font-size: .81rem;
+ text-align: left;
+}
+.admin-nav-logout:hover { background: #282731; color: #eed0be; }
+.admin-nav-logout:disabled { opacity: .5; cursor: not-allowed; }
+.admin-workspace-content {
+ min-width: 0;
+ padding: 0 0 36px clamp(20px, 2.5vw, 38px);
+}
+.admin-workspace-content .admin-page {
+ width: 100%;
+ max-width: none;
+ padding-top: 30px;
+}
+.admin-workspace-module-footer {
+ margin: 14px 0 0;
+ padding: 22px 0;
+ border-top: 1px solid rgba(221,210,196,.11);
+ font-size: .81rem;
+}
+.admin-workspace-module-footer a { color: #d8bc91; }
+.admin-workspace-module-footer a:hover { text-decoration: underline; }
+.admin-module-loading {
+ padding: 80px 14px;
+ color: #aca8a3;
+ font-size: .87rem;
+ text-align: center;
+}
+.admin-overview {
+ width: 100%;
+ min-width: 0;
+ padding: 33px 0 44px;
+}
+.admin-overview-heading .eyebrow {
+ margin: 0 0 8px;
+ color: #b7a18a;
+ font-size: .7rem;
+ letter-spacing: .12em;
+}
+.admin-overview-heading h1 {
+ margin: 0 0 8px;
+ color: #f3e5d4;
+ font-size: clamp(1.45rem, 2vw, 1.85rem);
+ font-weight: 600;
+ letter-spacing: .045em;
+}
+.admin-overview-heading p:last-child {
+ margin: 0;
+ color: #aea9ab;
+ font-size: .85rem;
+ line-height: 1.8;
+}
+.admin-overview-section-heading {
+ display: flex;
+ align-items: baseline;
+ justify-content: space-between;
+ gap: 12px;
+ margin: 35px 0 14px;
+}
+.admin-overview-section-heading h2 {
+ margin: 0;
+ color: #e8ddce;
+ font-size: 1rem;
+ font-weight: 600;
+}
+.admin-overview-section-heading span {
+ font-size: .73rem;
+ color: #98949a;
+}
+.admin-overview-section-heading.is-planned { margin-top: 30px; }
+.admin-module-grid {
+ display: grid;
+ grid-template-columns: repeat(2,minmax(0,1fr));
+ gap: 12px;
+}
+.admin-module-card {
+ display: flex;
+ align-items: flex-start;
+ gap: 13px;
+ min-width: 0;
+ min-height: 107px;
+ padding: 19px 17px;
+ border: 1px solid rgba(221,210,196,.15);
+ border-radius: 9px;
+ background: #1d202a;
+}
+.admin-module-card.is-available {
+ border-color: rgba(218,178,126,.3);
+ transition: border-color .16s ease, background .16s ease;
+}
+.admin-module-card.is-available:hover {
+ border-color: rgba(218,178,126,.62);
+ background: #282832;
+}
+.admin-module-icon {
+ display: grid;
+ place-items: center;
+ width: 41px;
+ height: 41px;
+ flex: 0 0 auto;
+ border: 1px solid rgba(216,181,129,.19);
+ border-radius: 9px;
+ background: rgba(216,181,129,.07);
+ color: #dab987;
+}
+.admin-module-content {
+ display: flex;
+ flex-direction: column;
+ min-width: 0;
+ gap: 8px;
+}
+.admin-module-content strong {
+ color: #efdfca;
+ font-size: .96rem;
+ font-weight: 600;
+ line-height: 1.4;
+}
+.admin-module-content small {
+ color: #aba6a4;
+ font-size: .77rem;
+ line-height: 1.7;
+}
+.admin-module-arrow {
+ margin: 11px 0 0 auto;
+ flex: 0 0 auto;
+ color: #dab987;
+}
+.admin-module-card.is-planned {
+ background: #191b24;
+ border-color: rgba(221,210,196,.09);
+}
+.admin-module-card.is-planned .admin-module-icon {
+ color: #979096;
+ border-color: rgba(221,210,196,.1);
+ background: #22232b;
+}
+.admin-module-card.is-planned .admin-module-content strong { color: #c2bcb9; }
+.admin-module-card.is-planned .admin-module-content small { color: #89858b; }
+.admin-module-status {
+ flex: 0 0 auto;
+ margin-left: auto;
+ padding: 4px 7px;
+ border-radius: 5px;
+ background: #282831;
+ color: #9b9596;
+ font-size: .66rem;
+ white-space: nowrap;
+}
+.admin-overview-note {
+ margin: 19px 0 0;
+ color: #908b90;
+ font-size: .77rem;
+ line-height: 1.65;
+}
+@media (max-width: 1120px) {
+ .admin-workspace { grid-template-columns: 185px minmax(0,1fr); }
+ .admin-workspace-nav { padding-right: 10px; }
+ .admin-nav-pending small { display: none; }
+}
+@media (max-width: 850px) {
+ .admin-workspace {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100dvh - 58px);
+ }
+ .admin-workspace-nav {
+  flex-direction: row;
+  align-items: center;
+  gap: 9px;
+  padding: 13px 0 8px;
+  border-right: 0;
+  border-bottom: 1px solid rgba(221,210,196,.14);
+ }
+ .admin-workspace-nav-title, .admin-nav-planned { display: none; }
+ .admin-nav-links { display: flex; flex-wrap: wrap; gap: 7px; }
+ .admin-nav-link { min-height: 42px; padding: 8px 12px; gap: 7px; white-space: nowrap; }
+ .admin-nav-logout { margin: 0 0 0 auto; flex: 0 0 auto; }
+ .admin-workspace-content { padding: 0 0 30px; }
+ .admin-workspace-content .admin-page { padding-top: 21px; }
+ .admin-overview { padding-top: 25px; }
+}
+@media (max-width: 570px) {
+ .admin-workspace-nav { padding: 10px 0 7px; }
+ .admin-nav-links { gap: 5px; }
+ .admin-nav-link { padding: 8px 10px; font-size: .77rem; }
+ .admin-nav-link svg { width: 16px; height: 16px; }
+ .admin-nav-logout { padding: 7px 9px; font-size: .73rem; gap: 5px; }
+ .admin-overview { padding: 21px 0 33px; }
+ .admin-overview-heading h1 { font-size: 1.48rem; }
+ .admin-overview-heading p:last-child { font-size: .78rem; }
+ .admin-overview-section-heading { margin-top: 27px; }
+ .admin-module-grid { grid-template-columns: 1fr; gap: 9px; }
+ .admin-module-card { min-height: 89px; padding: 15px 13px; gap: 12px; }
+ .admin-module-icon { width: 37px; height: 37px; }
+ .admin-module-content strong { font-size: .91rem; }
+ .admin-module-content small { font-size: .75rem; }
+ .admin-module-status { font-size: .63rem; }
+}

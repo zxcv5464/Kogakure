@@ -3,10 +3,11 @@ import { join, resolve } from 'node:path'
 
 // GitHub Pages has no SPA rewrite rules. Output a tiny HTML entry for every
 // known BrowserRouter route so direct links and refreshes return HTTP 200.
-const routes = ['about', 'services', 'staff', 'shifts', 'menu', 'booking', 'admin']
+const routes = ['about', 'services', 'staff', 'shifts', 'menu', 'booking', 'admin', 'admin/staff']
 const routeTitles = {
  about: '館內介紹', services: '服務內容', staff: '狐隱名帖',
  shifts: '值班排班', menu: '點菜', booking: '預約', admin: '後台管理',
+ 'admin/staff': '員工名帖管理',
 }
 const dist = resolve('dist')
 const entry = await readFile(join(dist, 'index.html'), 'utf8')

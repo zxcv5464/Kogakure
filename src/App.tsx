@@ -14,7 +14,7 @@ const StaffPage = lazy(() => import('./pages/StaffPage'))
 // This keeps its interface and loading state independent of public animations.
 export default function App() {
  const { pathname } = useLocation()
- if (pathname.replace(/\/+$/, '') === '/admin') return <AdminLayout>
+ if (/^\/admin(?:\/|$)/.test(pathname)) return <AdminLayout>
   <Suspense fallback={<div className="admin-shell-loading" role="status">正在開啟管理後台…</div>}>
    <AdminPage />
   </Suspense>

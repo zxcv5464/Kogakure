@@ -50,7 +50,7 @@ git push -u origin main
 ## 多個網站與管理員
 
 - 舊測試帳號 `ffxivtesthub/kogakure` 與店長專案是**不同**儲存庫；以店長專案為正式來源。
-- 訪客網站與 `/Kogakure/admin` 共用同一個網域，管理員仍須使用 Supabase 帳號登入。
+- 訪客網站與 `/Kogakure/admin`（管理總覽）、`/Kogakure/admin/staff`（員工名帖管理）共用同一個網域，管理員仍須使用 Supabase 帳號登入。
 - GitHub Pages 是公開網站，不能將網站登入頁面當作資料安全邊界。資料庫依 Supabase RLS 驗證操作權限。
 - GitHub Pages 推送後可能有短暫的 GitHub/CDN 快取延遲，請以 Actions 成功、硬重新整理或無痕模式檢查。
 
