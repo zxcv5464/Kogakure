@@ -21,14 +21,20 @@ export async function getStaff(includeUnpublished=false):Promise<Staff[]> {
  if(error) throw error
  return (data as StaffRow[]).map(rowToStaff)
 }
-export async function saveStaff(staff: Staff):Promise<void> {
+export async function saveStaff(staff: Staff, creating: boolean):Promise<void> {
  if(!supabase) throw new Error('尚未設定 Supabase')
  const row=staffToRow(staff)
- const {error}=await supabase.from('staff').upsert(row,{onConflict:'id'})
+ // An update must never silently recreate a profile that another admin deleted.
+ const query = creating
+  ? supabase.from('staff').insert(row).select('id')
+  : supabase.from('staff').update(row).eq('id',row.id).select('id')
+ const {data,error}=await query
  if(error) throw error
+ if(!data || data.length!==1) throw new Error('沒有成功寫入任何名帖，資料可能已遭其他管理員刪除，或權限不足。請更新清單。')
 }
 export async function deleteStaff(id:string):Promise<void> {
  if(!supabase) throw new Error('尚未設定 Supabase')
- const {error}=await supabase.from('staff').delete().eq('id',id)
+ const {data,error}=await supabase.from('staff').delete().eq('id',id).select('id')
  if(error) throw error
+ if(!data || data.length!==1) throw new Error('沒有刪除任何名帖，資料可能已遭移除或權限不足')
 }

@@ -5,6 +5,7 @@ import { ArrowRight, LayoutDashboard, LogOut, ShieldCheck } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { configured } from '../lib/config'
 import { ADMIN_MODULES } from './admin/modules'
+import { useAdminEditGuard } from './admin/AdminEditGuard'
 import './admin/admin-workspace.css'
 
 const StaffManagement = lazy(() => import('./admin/StaffManagement'))
@@ -86,18 +87,19 @@ export default function AdminPage() {
 
 function AdminWorkspace({ busy, onLogout }: { busy: boolean; onLogout: () => void }) {
  const { pathname } = useLocation()
+ const {canLeave, confirmNavigation} = useAdminEditGuard()
  const active = ADMIN_MODULES.find(module => module.path && (pathname === module.path || pathname === module.path + '/'))
 
  return <div className="admin-workspace">
   <aside className="admin-workspace-nav" aria-label="後台功能選單">
    <p className="admin-workspace-nav-title">管理功能</p>
    <nav className="admin-nav-links">
-    <NavLink end to="/admin" className={({ isActive }) => 'admin-nav-link' + (isActive ? ' is-active' : '')}>
+    <NavLink end to="/admin" onClick={confirmNavigation} className={({ isActive }) => 'admin-nav-link' + (isActive ? ' is-active' : '')}>
      <LayoutDashboard size={18}/> <span>總覽</span>
     </NavLink>
     {ADMIN_MODULES.filter(module => module.status === 'available' && module.path).map(module => {
      const Icon = module.icon
-     return <NavLink key={module.id} to={module.path!} className={({ isActive }) => 'admin-nav-link' + (isActive ? ' is-active' : '')}>
+     return <NavLink key={module.id} to={module.path!} onClick={confirmNavigation} className={({ isActive }) => 'admin-nav-link' + (isActive ? ' is-active' : '')}>
       <Icon size={18}/> <span>{module.title}</span>
      </NavLink>
     })}
@@ -109,7 +111,7 @@ function AdminWorkspace({ busy, onLogout }: { busy: boolean; onLogout: () => voi
      return <div className="admin-nav-pending" key={module.id}><Icon size={17}/><span>{module.title}</span><small>尚未開放</small></div>
     })}
    </div>
-   <button type="button" disabled={busy} className="admin-nav-logout" onClick={onLogout}><LogOut size={17}/> 登出</button>
+   <button type="button" disabled={busy} className="admin-nav-logout" onClick={() => {if (canLeave()) onLogout()}}> <LogOut size={17}/> 登出</button>
   </aside>
   <div className="admin-workspace-content" id="admin-workspace-content">
    <Routes>
@@ -117,7 +119,7 @@ function AdminWorkspace({ busy, onLogout }: { busy: boolean; onLogout: () => voi
     <Route path="/admin/staff" element={<Suspense fallback={<div className="admin-module-loading" role="status">正在開啟員工名帖管理…</div>}><StaffManagement/></Suspense>}/>
     <Route path="*" element={<Navigate to="/admin" replace/>}/>
    </Routes>
-   {active && <div className="admin-workspace-module-footer"><Link to="/admin">返回管理總覽</Link></div>}
+   {active && <div className="admin-workspace-module-footer"><Link to="/admin" onClick={confirmNavigation}>返回管理總覽</Link></div>}
   </div>
  </div>
 }
