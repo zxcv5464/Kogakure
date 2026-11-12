@@ -6,7 +6,7 @@ import { prefetchStaffPage } from '../lib/prefetch'
 
 const links = [
  {to:'/',label:'首頁'},
- {to:'/about',label:'館內介紹'},
+ {to:'/about',label:'入館須知'},
  {to:'/services',label:'服務內容'},
  {to:'/staff',label:'狐姬名冊'},
  {to:'/shifts',label:'值班排班'},
@@ -22,14 +22,14 @@ const mobileMain = [
 ]
 
 const mobileExtra = [
- {to:'/about',label:'館內介紹',icon:Compass},
+ {to:'/about',label:'入館須知',icon:Compass},
  {to:'/services',label:'服務內容',icon:Sparkles},
  {to:'/booking',label:'預約',icon:CalendarCheck2},
 ]
 
 const pageTitles: Record<string, string> = {
  '/': '首頁',
- '/about': '館內介紹',
+ '/about': '入館須知',
  '/services': '服務內容',
  '/staff': '狐姬名冊',
  '/shifts': '值班排班',
