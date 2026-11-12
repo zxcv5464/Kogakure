@@ -15,7 +15,10 @@ const entry = await readFile(join(dist, 'index.html'), 'utf8')
 for (const route of routes) {
  const folder = join(dist, route)
  await mkdir(folder, { recursive: true })
- await writeFile(join(folder, 'index.html'), entry.replace('<title>狐隱 KOGAKURE｜首頁</title>', `<title>狐隱 KOGAKURE｜${routeTitles[route]}</title>`), 'utf8')
+ const page = entry
+  .replaceAll('狐隱 KOGAKURE｜首頁', `狐隱 KOGAKURE｜${routeTitles[route]}`)
+  .replaceAll('https://zxcv5464.github.io/Kogakure/"', `https://zxcv5464.github.io/Kogakure/${route}/"`)
+ await writeFile(join(folder, 'index.html'), page, 'utf8')
 }
 
 const base = process.env.VITE_BASE_PATH || '/'
