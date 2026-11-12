@@ -110,7 +110,7 @@ export default function PageTransition({
 
  return <>
   <SceneBackdrop introReady={introReady} />
-  <div key={`${displayed.pathname}-${introReady}`} className={'route-stage' + (introReady ? '' : ' intro-waiting')}>
+  <div key={`${displayed.pathname}-${introReady}`} className={'route-stage' + (introReady ? '' : ' intro-waiting') + (phase === 'cover' ? ' is-covering' : '')}>
    {children(displayed)}
   </div>
   <div
