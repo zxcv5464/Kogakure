@@ -5,7 +5,7 @@ import { join, resolve } from 'node:path'
 // known BrowserRouter route so direct links and refreshes return HTTP 200.
 const routes = ['about', 'services', 'staff', 'shifts', 'menu', 'booking', 'admin', 'admin/staff']
 const routeTitles = {
- about: '館內介紹', services: '服務內容', staff: '狐姬名冊',
+ about: '入館須知', services: '服務內容', staff: '狐姬名冊',
  shifts: '值班排班', menu: '點菜', booking: '預約', admin: '後台管理',
  'admin/staff': '員工名帖管理',
 }

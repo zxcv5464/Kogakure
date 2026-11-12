@@ -134,7 +134,7 @@ try {
  await wait(1750)
  const afterNav = await evaluate('({url:location.pathname+location.hash,title:document.querySelector("main h1")?.textContent,overlay:document.querySelector(".page-transition-curtain")?.className})')
  console.log('Clean navigation:',afterNav)
- if (!afterNav.url.startsWith('/Kogakure/about') || afterNav.url.includes('#') || afterNav.title!=='館內介紹' || afterNav.overlay!=='page-transition-curtain') throw new Error('BrowserRouter navigation failed')
+ if (!afterNav.url.startsWith('/Kogakure/about') || afterNav.url.includes('#') || afterNav.title!=='入館須知' || afterNav.overlay!=='page-transition-curtain') throw new Error('BrowserRouter navigation failed')
  console.log('PASS: direct clean URLs, hash migration, static 404 fallback, responsive biography scrolling, page navigation')
 } finally {
  socket?.close()
