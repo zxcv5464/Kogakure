@@ -13,19 +13,34 @@
 .route-stage .coming-panel .gold-rule,.route-stage .coming-panel>p:first-of-type{animation:quietRise 1.08s ease-out .87s both}
 .route-stage .coming-panel .coming-tag,.route-stage .coming-panel .coming-explain{animation:quietRise 1.02s ease-out 1.15s both}
 .route-stage .coming-panel .primary-link{animation:quietRise 1.02s ease-out 1.42s both}
-/* Overlapping steps keep the directory flowing from heading to portraits. */
-.route-stage .staff-page{--staff-ease:cubic-bezier(.22,1,.36,1)}
-.route-stage .staff-overline{animation:staffReveal .7s var(--staff-ease) .12s both}
-.route-stage .staff-hero .hero-inner h1{animation:staffReveal .8s var(--staff-ease) .24s both}
-.route-stage .staff-hero .hero-line{animation:quietFade .7s ease-out .38s both}
-.route-stage .staff-hero .hero-description{animation:staffReveal .8s var(--staff-ease) .48s both}
-.route-stage .staff-list-heading,.route-stage .staff-section .section-header{animation:staffReveal .8s var(--staff-ease) .64s both}
-.route-stage .staff-toolbar,.route-stage .staff-catalog-tools{animation:staffReveal .8s var(--staff-ease) .8s both}
-/* Animate each card once; a fading grid would mask its individual entrance. */
+/* Match the unhurried entrance of the other public pages.
+   Pause the directory while the route curtain covers it; otherwise slow
+   Supabase loads can finish the animations before visitors see the page. */
+.route-stage .staff-page{--staff-ease:cubic-bezier(.22,.65,.25,1)}
+.route-stage .staff-overline{animation:staffReveal 1.12s var(--staff-ease) .15s both}
+.route-stage .staff-hero .hero-inner h1{animation:staffReveal 1.26s var(--staff-ease) .33s both}
+.route-stage .staff-hero .hero-line{animation:quietFade 1.1s ease-out .53s both}
+.route-stage .staff-hero .hero-description{animation:staffReveal 1.28s var(--staff-ease) .72s both}
+.route-stage .staff-list-heading,.route-stage .staff-section .section-header{animation:staffReveal 1.22s var(--staff-ease) .9s both}
+.route-stage .staff-toolbar,.route-stage .staff-catalog-tools{animation:staffReveal 1.16s var(--staff-ease) 1.08s both}
+/* Animate each card once; a fading grid would mask individual entrances. */
 .route-stage .staff-grid{animation:none}
-.route-stage .staff-entry{animation:staffReveal .9s var(--staff-ease) both;animation-delay:calc(.96s + min(var(--delay,0ms),640ms))}
+.route-stage .staff-entry{animation:staffReveal 1.34s var(--staff-ease) both;animation-delay:calc(1.2s + min(var(--delay,0ms),640ms))}
 .route-stage .staff-catalog-panel{animation:staffReveal .3s var(--staff-ease) both}
-.route-stage .empty-staff,.route-stage .staff-demo-disclaimer{animation:quietFade .8s ease-out .96s both}
+.route-stage .empty-staff,.route-stage .staff-demo-disclaimer{animation:quietFade 1.12s ease-out 1.2s both}
+.route-stage:is(.is-covering,.intro-waiting) .staff-page :is(
+ .staff-overline,
+ .staff-hero .hero-inner h1,
+ .staff-hero .hero-line,
+ .staff-hero .hero-description,
+ .staff-list-heading,
+ .staff-section .section-header,
+ .staff-toolbar,
+ .staff-catalog-tools,
+ .staff-entry,
+ .empty-staff,
+ .staff-demo-disclaimer
+){animation-play-state:paused}
 .route-stage .admin-page{animation:quietRise 1s ease-out .18s both}
 @keyframes quietFade{from{opacity:0}to{opacity:1}}
 @keyframes sceneArrive{from{opacity:0;transform:scale(1.035)}to{opacity:1;transform:scale(1)}}
