@@ -6,6 +6,7 @@ import EntryIntro, { shouldPlay } from './components/EntryIntro'
 import PageTransition from './components/PageTransition'
 import StaffLoading from './components/StaffLoading'
 import { HomePage, OtherPage } from './pages/OtherPages'
+import AboutPage from './pages/AboutPage'
 
 const AdminPage = lazy(() => import('./pages/AdminPage'))
 const StaffPage = lazy(() => import('./pages/StaffPage'))
@@ -31,6 +32,7 @@ function PublicApp() {
      <Suspense fallback={location.pathname === '/staff' ? <StaffLoading /> : <div className="empty-staff">正在載入頁面…</div>}>
       <Routes location={location}>
        <Route path="/" element={<HomePage />} />
+       <Route path="/about" element={<AboutPage />} />
        <Route path="/staff" element={<StaffPage />} />
        <Route path="*" element={<OtherPage />} />
       </Routes>
