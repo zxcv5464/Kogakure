@@ -24,3 +24,5 @@ jobs:
           VITE_BASE_PATH: /Kogakure/
           VITE_OFFLINE_PREVIEW: 'true'
         run: npm run build
+      - name: Verify house rules content and chapter links (no database access)
+        run: node scripts/qa-house-rules.mjs

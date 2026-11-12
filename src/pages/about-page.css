@@ -1,0 +1,295 @@
+/* 狐之館約：靜謐的深墨、柔金與暖白，避免沿用尚未開放頁的提示卡。 */
+.house-rules-page {
+ position: relative;
+ width: 100%;
+ min-width: 0;
+ padding-bottom: clamp(46px, 7vw, 100px);
+ background: linear-gradient(180deg, rgba(13, 12, 22, .78) 0%, rgba(14, 13, 23, .9) 33%, rgba(16, 14, 24, .94) 100%);
+ color: #e9e0d5;
+}
+.house-rules-page::before {
+ content: '';
+ position: absolute;
+ inset: 0 0 auto;
+ height: min(1080px, 70%);
+ pointer-events: none;
+ background: radial-gradient(ellipse at 50% 10%, rgba(145, 104, 128, .13), transparent 56%);
+}
+.house-rules-hero,
+.house-rules-content { position: relative; z-index: 1; }
+.house-rules-hero {
+ max-width: 950px;
+ margin: 0 auto;
+ padding: clamp(50px, 7vw, 84px) 24px clamp(38px, 5vw, 61px);
+ text-align: center;
+}
+.house-rules-brand {
+ margin: 0;
+ color: #cfb78f;
+ font-family: 'Noto Serif TC', 'PMingLiU', serif;
+ font-size: clamp(.7rem, 1.2vw, .82rem);
+ font-weight: 500;
+ letter-spacing: .28em;
+}
+.house-rules-ornament {
+ display: block;
+ margin: 19px auto 12px;
+ color: #b99b73;
+ font-size: .86rem;
+ line-height: 1;
+ opacity: .9;
+}
+.house-rules-hero h1 {
+ margin: 0;
+ color: #f4e4c9;
+ font-family: 'Noto Serif TC', 'PMingLiU', serif;
+ font-size: clamp(2.15rem, 5.2vw, 3.25rem);
+ font-weight: 600;
+ line-height: 1.5;
+ letter-spacing: .22em;
+ text-indent: .22em;
+ text-shadow: 0 3px 28px rgba(0, 0, 0, .55);
+}
+.house-rules-subtitle {
+ margin: 11px 0 0;
+ color: #dac39d;
+ font-family: 'Noto Serif TC', 'PMingLiU', serif;
+ font-size: clamp(.8rem, 1.5vw, .95rem);
+ letter-spacing: .11em;
+}
+.house-rules-epigraph {
+ max-width: 680px;
+ margin: 34px auto 0;
+ padding: 18px 14px 0;
+ border-top: 1px solid rgba(211, 175, 123, .32);
+ color: #e5d6c6;
+ font-family: 'Noto Serif TC', 'PMingLiU', serif;
+ font-size: clamp(.94rem, 1.7vw, 1.07rem);
+ font-weight: 400;
+ line-height: 2;
+ letter-spacing: .07em;
+}
+.house-rules-content {
+ width: min(100% - 40px, 1060px);
+ margin: 0 auto;
+}
+.house-rules-welcome {
+ max-width: 880px;
+ margin: 0 auto 36px;
+ padding: clamp(25px, 4vw, 43px) clamp(22px, 4.6vw, 60px);
+ border: 1px solid rgba(216, 181, 129, .23);
+ border-left: 3px solid rgba(216, 181, 129, .63);
+ border-radius: 4px;
+ background: linear-gradient(120deg, rgba(42, 34, 46, .72), rgba(18, 18, 29, .76));
+ box-shadow: 0 20px 55px rgba(0, 0, 0, .12);
+}
+.house-rules-welcome p {
+ margin: 0 0 16px;
+ color: #e4d9cd;
+ font-size: .98rem;
+ line-height: 2.05;
+ letter-spacing: .025em;
+}
+.house-rules-welcome p:last-child { margin-bottom: 0; }
+.house-rules-welcome .house-rules-greeting {
+ color: #f1d9ad;
+ font-family: 'Noto Serif TC', 'PMingLiU', serif;
+ font-size: 1.15rem;
+ font-weight: 600;
+ letter-spacing: .08em;
+}
+.house-rules-index {
+ max-width: 880px;
+ margin: 0 auto 47px;
+ text-align: center;
+}
+.house-rules-index-label {
+ margin: 0 0 17px;
+ color: #e8d2ae;
+ font-family: 'Noto Serif TC', 'PMingLiU', serif;
+ font-size: .96rem;
+ letter-spacing: .13em;
+}
+.house-rules-index-label span {
+ margin-left: 10px;
+ color: #bbaa95;
+ font-family: 'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
+ font-size: .72rem;
+ font-weight: 400;
+ letter-spacing: .1em;
+}
+.house-rules-index-links {
+ display: flex;
+ flex-wrap: wrap;
+ justify-content: center;
+ gap: 9px;
+}
+.house-rules-index-links a {
+ display: inline-flex;
+ align-items: center;
+ justify-content: center;
+ gap: 8px;
+ min-height: 45px;
+ padding: 9px 17px;
+ border: 1px solid rgba(215, 183, 133, .33);
+ border-radius: 100px;
+ background: rgba(19, 19, 30, .72);
+ color: #dfc39a;
+ font-size: .77rem;
+ letter-spacing: .03em;
+ transition: color .25s ease, border-color .25s ease, background .25s ease;
+}
+.house-rules-index-links a span { color: #e7dbcb; }
+.house-rules-index-links a:hover {
+ border-color: rgba(233, 201, 155, .72);
+ background: rgba(99, 72, 83, .3);
+ color: #fff0d2;
+}
+.house-rules-chapters {
+ display: flex;
+ flex-direction: column;
+ gap: clamp(25px, 4.5vw, 45px);
+}
+.house-rules-chapter {
+ scroll-margin-top: 25px;
+ padding: clamp(23px, 3.7vw, 35px);
+ border: 1px solid rgba(216, 181, 129, .23);
+ border-radius: 6px;
+ background: linear-gradient(145deg, rgba(34, 29, 42, .9), rgba(17, 17, 28, .91) 60%);
+ box-shadow: 0 15px 55px rgba(0, 0, 0, .14);
+}
+.house-rules-chapter-heading {
+ display: flex;
+ align-items: end;
+ justify-content: space-between;
+ gap: 18px;
+ margin-bottom: 22px;
+ padding: 0 1px 21px;
+ border-bottom: 1px solid rgba(216, 181, 129, .27);
+}
+.house-rules-chapter-number {
+ margin: 0 0 6px;
+ color: #c6a576;
+ font-family: 'Noto Serif TC', 'PMingLiU', serif;
+ font-size: .73rem;
+ letter-spacing: .23em;
+}
+.house-rules-chapter h2 {
+ margin: 0;
+ color: #f1debc;
+ font-family: 'Noto Serif TC', 'PMingLiU', serif;
+ font-size: clamp(1.37rem, 2.3vw, 1.75rem);
+ font-weight: 600;
+ letter-spacing: .15em;
+ line-height: 1.5;
+}
+.house-rules-chapter-range {
+ padding-bottom: 4px;
+ color: #bba284;
+ font-family: Georgia, 'Times New Roman', serif;
+ font-size: .78rem;
+ letter-spacing: .17em;
+ white-space: nowrap;
+}
+.house-rules-list {
+ display: grid;
+ grid-template-columns: repeat(2, minmax(0, 1fr));
+ align-items: stretch;
+ gap: 16px;
+ margin: 0;
+ padding: 0;
+ list-style: none;
+}
+.house-rules-rule {
+ min-width: 0;
+ padding: clamp(20px, 2.6vw, 29px);
+ border: 1px solid rgba(213, 184, 144, .15);
+ border-radius: 4px;
+ background: linear-gradient(150deg, rgba(41, 36, 47, .61), rgba(16, 17, 27, .58));
+}
+.house-rules-rule h3 {
+ display: flex;
+ align-items: baseline;
+ flex-wrap: wrap;
+ gap: 5px;
+ margin: 0 0 15px;
+ color: #f0e2ca;
+ font-family: 'Noto Serif TC', 'PMingLiU', serif;
+ font-size: clamp(1rem, 1.7vw, 1.13rem);
+ font-weight: 600;
+ line-height: 1.65;
+ letter-spacing: .04em;
+}
+.house-rules-rule-number {
+ color: #d4ad75;
+ font-family: Georgia, 'Noto Serif TC', serif;
+ font-size: 1rem;
+ font-weight: 500;
+ letter-spacing: .035em;
+}
+.house-rules-rule p {
+ margin: 0 0 13px;
+ color: #e0d6cb;
+ font-size: .94rem;
+ line-height: 1.95;
+ overflow-wrap: anywhere;
+}
+.house-rules-rule p:last-child { margin-bottom: 0; }
+.house-rules-rule code {
+ display: inline-block;
+ padding: 1px 7px;
+ border: 1px solid rgba(213, 184, 144, .3);
+ border-radius: 3px;
+ background: rgba(11, 12, 20, .6);
+ color: #f5d6a6;
+ font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+ font-size: .88em;
+ white-space: nowrap;
+}
+.house-rules-chapter:last-child .house-rules-rule { grid-column: 1 / -1; }
+.house-rules-chapter:last-child .house-rules-rule p { max-width: 90ch; }
+.house-rules-ending {
+ max-width: 780px;
+ margin: clamp(46px, 7vw, 76px) auto 0;
+ padding: 24px 16px 0;
+ text-align: center;
+ border-top: 1px solid rgba(216, 181, 129, .29);
+}
+.house-rules-ending .house-rules-ornament { margin: 0 auto 20px; }
+.house-rules-farewell {
+ margin: 0 0 22px;
+ color: #edd8b5;
+ font-family: 'Noto Serif TC', 'PMingLiU', serif;
+ font-size: clamp(.95rem, 1.9vw, 1.17rem);
+ letter-spacing: .07em;
+ line-height: 2.1;
+}
+.house-rules-signature {
+ margin: 0;
+ color: #c2aa89;
+ font-size: .85rem;
+ letter-spacing: .11em;
+ line-height: 1.8;
+}
+@media (max-width: 760px) {
+ .house-rules-content { width: min(100% - 28px, 540px); }
+ .house-rules-hero { padding: 49px 18px 35px; }
+ .house-rules-epigraph { margin-top: 29px; }
+ .house-rules-welcome { margin-bottom: 31px; }
+ .house-rules-index { margin-bottom: 33px; }
+ .house-rules-list { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+ .house-rules-chapter { padding: 21px 17px; }
+ .house-rules-rule { padding: 21px 19px; }
+ .house-rules-rule p { font-size: .97rem; }
+}
+@media (max-width: 400px) {
+ .house-rules-content { width: calc(100% - 22px); }
+ .house-rules-hero h1 { font-size: 2.05rem; }
+ .house-rules-brand { letter-spacing: .19em; }
+ .house-rules-subtitle { font-size: .77rem; }
+ .house-rules-welcome { padding: 22px 18px; }
+ .house-rules-index-links a { padding: 9px 12px; font-size: .73rem; }
+ .house-rules-chapter { padding: 18px 13px; }
+ .house-rules-rule { padding: 18px 15px; }
+ .house-rules-chapter-range { font-size: .7rem; }
+}
