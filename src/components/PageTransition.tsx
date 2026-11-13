@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import type { Location } from 'react-router-dom'
 import SceneBackdrop from './SceneBackdrop'
-import { STAFF_PAGE_READY_EVENT } from '../lib/route-events'
+import { STAFF_PAGE_READY_EVENT, MENU_PAGE_READY_EVENT } from '../lib/route-events'
 import './page-transition.css'
 import './route-motion.css'
 
@@ -11,6 +11,7 @@ import './route-motion.css'
 const COVER_MS = 650
 const REVEAL_MS = 760
 const STAFF_READY_TIMEOUT_MS = 8000
+const MENU_READY_TIMEOUT_MS = 8000
 
 function resetScroll() {
  // The site uses smooth anchor scrolling, but route changes should not scroll
@@ -51,11 +52,14 @@ export default function PageTransition({
    return
   }
 
-  // Keep the curtain closed while the first staff route bundle and its
-  // directory data load. Otherwise the temporary fallback appears between
-  // the old page and the real portrait cards.
+  // Keep the curtain closed while a lazy page bundle and its content load.
+  // In particular, the tea menu should never reveal its lazy fallback and
+  // immediately replace it with a Supabase loading screen or live items.
+  const readyEvent = location.pathname === '/staff' ? STAFF_PAGE_READY_EVENT
+   : location.pathname === '/menu' ? MENU_PAGE_READY_EVENT : null
+  const readyTimeout = location.pathname === '/menu' ? MENU_READY_TIMEOUT_MS : STAFF_READY_TIMEOUT_MS
   let swapped = false
-  let ready = location.pathname !== '/staff'
+  let ready = readyEvent === null
   let revealed = false
   let fallback: number | undefined
   let finish: number | undefined
@@ -65,12 +69,12 @@ export default function PageTransition({
    setPhase('reveal')
    finish = window.setTimeout(() => setPhase('idle'), REVEAL_MS + 40)
   }
-  const onStaffReady = () => {
+  const onPageReady = () => {
    ready = true
    if (fallback !== undefined) window.clearTimeout(fallback)
    reveal()
   }
-  if (!ready) window.addEventListener(STAFF_PAGE_READY_EVENT, onStaffReady)
+  if (readyEvent) window.addEventListener(readyEvent, onPageReady)
 
   setPhase('cover')
   const swap = window.setTimeout(() => {
@@ -78,7 +82,7 @@ export default function PageTransition({
    setDisplayed(location)
    resetScroll()
    swapped = true
-   if (!ready) fallback = window.setTimeout(onStaffReady, STAFF_READY_TIMEOUT_MS)
+   if (!ready) fallback = window.setTimeout(onPageReady, readyTimeout)
    reveal()
   }, COVER_MS)
 
@@ -86,7 +90,7 @@ export default function PageTransition({
    window.clearTimeout(swap)
    if (fallback !== undefined) window.clearTimeout(fallback)
    if (finish !== undefined) window.clearTimeout(finish)
-   window.removeEventListener(STAFF_PAGE_READY_EVENT, onStaffReady)
+   if (readyEvent) window.removeEventListener(readyEvent, onPageReady)
   }
  }, [location.pathname, location.search, location.hash])
 
@@ -110,7 +114,9 @@ export default function PageTransition({
 
  return <>
   <SceneBackdrop introReady={introReady} />
-  <div key={`${displayed.pathname}-${introReady}`} className={'route-stage' + (introReady ? '' : ' intro-waiting') + (phase === 'cover' ? ' is-covering' : '')}>
+  // Keep the mounted route stable when the first-visit Logo intro clears.
+  // Remounting a live menu at this point would fetch Supabase twice and flash.
+  <div key={displayed.pathname} className={'route-stage' + (introReady ? '' : ' intro-waiting') + (phase === 'cover' ? ' is-covering' : '')}>
    {children(displayed)}
   </div>
   <div
