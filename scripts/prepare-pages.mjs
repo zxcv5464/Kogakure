@@ -6,7 +6,7 @@ import { join, resolve } from 'node:path'
 const routes = ['about', 'services', 'staff', 'shifts', 'menu', 'booking', 'admin', 'admin/staff', 'admin/menu']
 const routeTitles = {
  about: '入館須知', services: '服務內容', staff: '狐姬名冊',
- shifts: '值班排班', menu: '點菜', booking: '預約', admin: '後台管理',
+ shifts: '值班排班', menu: '茶宴', booking: '預約', admin: '後台管理',
  'admin/staff': '員工名帖管理', 'admin/menu': '菜單管理',
 }
 const dist = resolve('dist')

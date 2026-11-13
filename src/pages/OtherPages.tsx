@@ -7,7 +7,7 @@ const pages={
  '/about':{title:'入館須知',desc:'穿過山林的夜色，尋一處可暫時忘憂的所在。',icon:Compass},
  '/services':{title:'服務內容',desc:'湯泉、占卜與茶點，願每段停留都能得到溫柔款待。',icon:Coffee},
  '/shifts':{title:'值班排班',desc:'在此查看每週接待者與當日的值班資訊。',icon:CalendarDays},
- '/menu':{title:'點菜',desc:'選一盞茶、一份點心，陪你慢慢度過今夜。',icon:Utensils},
+ '/menu':{title:'茶宴',desc:'選一盞茶、一份點心，陪你慢慢度過今夜。',icon:Utensils},
  '/booking':{title:'預約',desc:'選擇想體驗的服務，在狐火亮起時與我們相見。',icon:ScrollText},
 }
 export function HomePage(){
