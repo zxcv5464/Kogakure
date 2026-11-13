@@ -1,0 +1,255 @@
+/* 服務內容：延續狐隱的深墨底色與霧金細節，兩幅照片可獨立替換。 */
+.services-page {
+ flex: 1 0 auto;
+ width: 100%;
+ min-width: 0;
+ padding-bottom: clamp(55px, 7vw, 100px);
+ color: #e9e0d5;
+ background:
+  radial-gradient(ellipse at 52% 1%, rgba(126, 91, 117, .16), transparent 47%),
+  linear-gradient(180deg, #11101b 0%, #17131e 56%, #110f19 100%);
+}
+.services-hero {
+ width: min(100% - 40px, 900px);
+ margin-inline: auto;
+ padding: clamp(52px, 7vw, 84px) 0 clamp(43px, 5vw, 63px);
+ text-align: center;
+}
+.services-brand {
+ margin: 0;
+ color: #cfb78f;
+ font-family: 'Noto Serif TC', 'PMingLiU', serif;
+ font-size: .8rem;
+ letter-spacing: .28em;
+}
+.services-ornament {
+ display: block;
+ margin: 18px auto 13px;
+ font-size: .86rem;
+ line-height: 1;
+ color: #b99b73;
+}
+.services-hero h1 {
+ margin: 0;
+ color: #f4e4c9;
+ font-family: 'Noto Serif TC', 'PMingLiU', serif;
+ font-size: clamp(2.15rem, 5.2vw, 3.25rem);
+ font-weight: 600;
+ letter-spacing: .22em;
+ text-indent: .22em;
+}
+.services-subtitle {
+ margin: 10px 0 0;
+ color: #dac39d;
+ font-family: 'Noto Serif TC', 'PMingLiU', serif;
+ font-size: clamp(.82rem, 1.5vw, .96rem);
+ letter-spacing: .09em;
+}
+.services-intro {
+ max-width: 680px;
+ margin: 28px auto 0;
+ padding-top: 23px;
+ border-top: 1px solid rgba(211, 175, 123, .31);
+ color: #e2d5c9;
+ font-family: 'Noto Serif TC', 'PMingLiU', serif;
+ font-size: clamp(.91rem, 1.5vw, 1.02rem);
+ letter-spacing: .05em;
+ line-height: 2.05;
+}
+.services-shortcuts {
+ display: flex;
+ flex-wrap: wrap;
+ justify-content: center;
+ gap: 12px;
+ margin-top: 29px;
+}
+.services-shortcuts a {
+ display: inline-flex;
+ align-items: center;
+ justify-content: center;
+ gap: 9px;
+ min-height: 45px;
+ padding: 8px 23px;
+ border: 1px solid rgba(216, 181, 129, .4);
+ border-radius: 100px;
+ background: rgba(29, 24, 38, .56);
+ color: #ead3ad;
+ font-size: .85rem;
+ letter-spacing: .07em;
+ transition: border-color .2s ease, background .2s ease;
+}
+.services-shortcuts a:hover { border-color: #dfbb83; background: rgba(123, 88, 94, .2); }
+.services-content { width: min(100% - 64px, 1160px); margin-inline: auto; }
+.services-feature {
+ display: grid;
+ grid-template-columns: minmax(0, .96fr) minmax(0, 1.04fr);
+ gap: clamp(30px, 5vw, 75px);
+ align-items: center;
+ margin: 0 0 clamp(34px, 5vw, 64px);
+ padding: clamp(18px, 2.3vw, 27px);
+ border: 1px solid rgba(216, 181, 129, .22);
+ border-radius: 6px;
+ background: linear-gradient(135deg, rgba(42, 33, 47, .68), rgba(19, 18, 30, .91) 67%);
+ box-shadow: 0 23px 65px rgba(0, 0, 0, .16);
+ scroll-margin-top: 24px;
+}
+.services-feature:nth-child(even) .services-photo { order: 2; }
+.services-feature:nth-child(even) .services-copy { order: 1; }
+.services-photo {
+ position: relative;
+ min-width: 0;
+ align-self: stretch;
+ min-height: 360px;
+ aspect-ratio: 4 / 4.7;
+ max-height: 570px;
+ overflow: hidden;
+ border: 1px solid rgba(213, 178, 129, .28);
+ border-radius: 3px;
+ background: #211d2a;
+}
+.services-photo::after {
+ content: '';
+ position: absolute;
+ z-index: 2;
+ inset: 9px;
+ border: 1px solid rgba(228, 191, 141, .2);
+ pointer-events: none;
+}
+.services-photo > img {
+ width: 100%;
+ height: 100%;
+ object-fit: cover;
+ object-position: center;
+}
+.services-photo-placeholder {
+ position: absolute;
+ inset: 0;
+ display: flex;
+ flex-direction: column;
+ align-items: center;
+ justify-content: center;
+ gap: 12px;
+ padding: 27px;
+ overflow: hidden;
+ text-align: center;
+ background:
+  radial-gradient(ellipse at 50% 42%, rgba(132, 103, 134, .19), transparent 48%),
+  repeating-linear-gradient(135deg, rgba(211, 179, 137, .018) 0, rgba(211, 179, 137, .018) 1px, transparent 1px, transparent 16px),
+  linear-gradient(135deg, #2e2735, #1a1824 75%);
+ color: #dac3a2;
+}
+.services-photo-placeholder > svg,
+.services-photo-placeholder > strong,
+.services-photo-placeholder > span:not(.services-photo-halo) { position: relative; z-index: 1; }
+.services-photo-placeholder > svg { opacity: .8; }
+.services-photo-placeholder strong {
+ font-family: 'Noto Serif TC', 'PMingLiU', serif;
+ font-size: 1.25rem;
+ font-weight: 500;
+ letter-spacing: .2em;
+ text-indent: .2em;
+ color: #efd8b4;
+}
+.services-photo-placeholder > span:not(.services-photo-halo) {
+ color: #bda98f;
+ font-size: .79rem;
+ letter-spacing: .07em;
+}
+.services-photo-halo {
+ position: absolute;
+ width: min(71%, 310px);
+ aspect-ratio: 1;
+ border: 1px solid rgba(208, 175, 131, .12);
+ border-radius: 50%;
+ box-shadow: 0 0 0 25px rgba(207, 174, 126, .028), 0 0 0 62px rgba(207, 174, 126, .018);
+}
+.services-photo-index {
+ position: absolute;
+ z-index: 3;
+ bottom: 23px;
+ left: 27px;
+ color: rgba(235, 208, 170, .68);
+ font-family: Georgia, 'Times New Roman', serif;
+ font-size: .69rem;
+ letter-spacing: .23em;
+ text-shadow: 0 2px 7px rgba(0, 0, 0, .5);
+}
+.services-copy { min-width: 0; padding: 20px clamp(10px, 2vw, 29px); }
+.services-eyebrow {
+ display: flex;
+ align-items: center;
+ flex-wrap: wrap;
+ column-gap: 10px;
+ row-gap: 6px;
+ margin: 0 0 19px;
+ color: #d4b488;
+ font-size: .82rem;
+ letter-spacing: .12em;
+}
+.services-eyebrow svg { flex-shrink: 0; }
+.services-separator { color: #897663; }
+.services-english { font-family: Georgia, 'Times New Roman', serif; font-size: .72rem; letter-spacing: .13em; }
+.services-copy h2 {
+ margin: 0 0 19px;
+ color: #f3dfbf;
+ font-family: 'Noto Serif TC', 'PMingLiU', serif;
+ font-size: clamp(1.52rem, 2.55vw, 2.08rem);
+ line-height: 1.62;
+ font-weight: 600;
+ letter-spacing: .1em;
+}
+.services-quote {
+ margin: 0;
+ color: #dcc5a3;
+ font-family: 'Noto Serif TC', 'PMingLiU', serif;
+ font-size: clamp(.89rem, 1.4vw, 1rem);
+ line-height: 1.95;
+}
+.services-divider { display: block; width: 83px; height: 1px; margin: 24px 0; background: linear-gradient(90deg, #c49f71, transparent); }
+.services-description p { margin: 0 0 18px; color: #e0d6cc; font-size: .94rem; line-height: 2.04; letter-spacing: .015em; }
+.services-description p:last-child { margin-bottom: 0; }
+.services-tags {
+ display: flex;
+ flex-wrap: wrap;
+ gap: 10px;
+ margin: 26px 0 0;
+ padding: 0;
+ list-style: none;
+}
+.services-tags li { padding: 5px 12px; color: #d2ba9a; background: rgba(217, 181, 129, .055); border: 1px solid rgba(217, 181, 129, .25); font-size: .75rem; letter-spacing: .05em; border-radius: 3px; }
+.services-ending { max-width: 790px; margin: clamp(48px, 7vw, 78px) auto 0; padding: 26px 15px 0; text-align: center; border-top: 1px solid rgba(216, 181, 129, .27); }
+.services-ending .services-ornament { margin: 0 auto 19px; }
+.services-ending p { margin: 0 0 18px; color: #ecd5b4; font-family: 'Noto Serif TC', 'PMingLiU', serif; font-size: 1.01rem; line-height: 2; letter-spacing: .06em; }
+.services-ending small { display: block; max-width: 690px; margin: 0 auto 20px; color: #bfb0a3; font-size: .78rem; line-height: 1.9; }
+.services-ending a { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; color: #e4c28f; font-size: .85rem; }
+.services-ending a:hover { color: #ffdfaa; }
+@media (max-width: 850px) {
+ .services-content { width: min(100% - 34px, 670px); }
+ .services-feature { grid-template-columns: minmax(0, 1fr); gap: 0; padding: 17px; }
+ .services-feature:nth-child(even) .services-photo,
+ .services-feature:nth-child(even) .services-copy { order: initial; }
+ .services-photo { min-height: 0; max-height: none; aspect-ratio: 4 / 2.65; }
+ .services-copy { padding: 31px clamp(4px, 3vw, 25px) 24px; }
+}
+@media (max-width: 480px) {
+ .services-hero { width: calc(100% - 28px); padding: 49px 0 35px; }
+ .services-hero h1 { font-size: 2.15rem; }
+ .services-brand { font-size: .73rem; letter-spacing: .19em; }
+ .services-intro { font-size: .89rem; line-height: 1.95; }
+ .services-shortcuts { gap: 9px; margin-top: 23px; }
+ .services-shortcuts a { padding: 7px 16px; font-size: .78rem; }
+ .services-content { width: calc(100% - 24px); }
+ .services-feature { padding: 11px; margin-bottom: 26px; }
+ .services-photo { aspect-ratio: 4 / 3; }
+ .services-photo-placeholder { gap: 8px; }
+ .services-photo-placeholder > svg { width: 29px; height: 29px; }
+ .services-photo-placeholder strong { font-size: 1.06rem; }
+ .services-photo-placeholder > span:not(.services-photo-halo) { font-size: .71rem; }
+ .services-photo-index { bottom: 17px; left: 19px; font-size: .61rem; }
+ .services-copy { padding: 28px 12px 21px; }
+ .services-copy h2 { font-size: 1.43rem; }
+ .services-description p { font-size: .91rem; line-height: 1.95; }
+ .services-tags { gap: 7px; }
+ .services-tags li { padding: 4px 9px; font-size: .7rem; }
+ .services-ending { padding-inline: 8px; }
+}
