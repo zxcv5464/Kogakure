@@ -69,7 +69,7 @@ export default function ServicesPage() {
     </nav>
    </header>
 
-   <main className="services-content">
+   <div className="services-content">
     {services.map(service => {
      const Icon = service.id === 'bath' ? Droplets : MoonStar
      return (
@@ -109,7 +109,7 @@ export default function ServicesPage() {
      <small>湯浴及占卜皆為 FFXIV 遊戲內 RP 體驗，實際開放項目、時間與費用以館內公告及服務前說明為準；占卜不代表現實預言或專業建議。</small>
      <Link to="/about">閱讀入館須知 <ArrowUpRight size={16} aria-hidden="true"/></Link>
     </footer>
-   </main>
+   </div>
   </div>
  )
 }
