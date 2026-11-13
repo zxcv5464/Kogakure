@@ -26,7 +26,8 @@
    Animate content groups rather than every sentence to preserve readability.
    Sections inserted after the async menu fetch reveal when they actually mount. */
 .route-stage .house-rules-page,
-.route-stage .tea-menu-page{--public-reveal-ease:cubic-bezier(.22,.65,.25,1)}
+.route-stage .tea-menu-page,
+.route-stage .services-page{--public-reveal-ease:cubic-bezier(.22,.65,.25,1)}
 /* 入館須知：題字 → 引言 → 歡迎詞 → 目錄 → 五章館約 */
 .route-stage .house-rules-brand,
 .route-stage .house-rules-hero>.house-rules-ornament{animation:quietRise 1.12s var(--public-reveal-ease) .16s both}
@@ -42,6 +43,19 @@
 .route-stage .house-rules-chapter:nth-child(4){animation-delay:1.62s}
 .route-stage .house-rules-chapter:nth-child(n+5){animation-delay:1.76s}
 .route-stage .house-rules-ending{animation:quietRise 1.24s var(--public-reveal-ease) 1.84s both}
+/* 服務內容：與入館須知、茶宴採用相同的柔和淡入節奏。
+   圖片與介紹作為單一視覺區塊淡入，避免文字逐行閃爍。 */
+.route-stage .services-brand,
+.route-stage .services-hero>.services-ornament{animation:quietRise 1.12s var(--public-reveal-ease) .16s both}
+.route-stage .services-hero h1{animation:quietRise 1.26s var(--public-reveal-ease) .34s both}
+.route-stage .services-subtitle{animation:quietRise 1.18s var(--public-reveal-ease) .54s both}
+.route-stage .services-intro{animation:quietRise 1.28s var(--public-reveal-ease) .72s both}
+.route-stage .services-shortcuts{animation:quietRise 1.2s var(--public-reveal-ease) .92s both}
+.route-stage .services-feature{animation:quietRise 1.3s var(--public-reveal-ease) both}
+.route-stage .services-feature:nth-child(1){animation-delay:1.12s}
+.route-stage .services-feature:nth-child(2){animation-delay:1.34s}
+.route-stage .services-feature:nth-child(n+3){animation-delay:1.5s}
+.route-stage .services-ending{animation:quietRise 1.24s var(--public-reveal-ease) 1.58s both}
 /* 點菜：茶宴題字 → 主旨 → 卷別與御品 → 點單；分類可由 Supabase 非同步載入 */
 .route-stage .tea-menu-brand,
 .route-stage .tea-menu-seal{animation:quietRise 1.12s var(--public-reveal-ease) .16s both}
@@ -69,6 +83,14 @@
  .house-rules-index,
  .house-rules-chapter,
  .house-rules-ending,
+ .services-brand,
+ .services-hero>.services-ornament,
+ .services-hero h1,
+ .services-subtitle,
+ .services-intro,
+ .services-shortcuts,
+ .services-feature,
+ .services-ending,
  .tea-menu-brand,
  .tea-menu-seal,
  .tea-menu-hero h1,
