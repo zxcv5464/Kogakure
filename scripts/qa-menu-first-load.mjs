@@ -20,7 +20,7 @@ assert.ok(transition.includes("location.pathname === '/menu' ? MENU_PAGE_READY_E
 assert.ok(transition.includes('if (readyEvent) window.addEventListener(readyEvent, onPageReady)'), 'Readiness listener must be registered')
 assert.ok(transition.includes('if (readyEvent) window.removeEventListener(readyEvent, onPageReady)'), 'Readiness listener must be removed')
 assert.ok(transition.includes('key={displayed.pathname}'), 'Intro should never remount an already loading route')
-assert.ok(!transition.includes('key={`${displayed.pathname}-${introReady}`}', 'Old intro key causes duplicate data loads')
+assert.ok(!transition.includes('displayed.pathname}-${introReady}'), 'Old intro key causes duplicate data loads')
 assert.ok(motion.includes('.route-stage.intro-waiting :is('), 'Pause home animations instead of remounting during intro')
 assert.ok(loader.includes('tea-menu-loading'), 'Shared loader must be used')
 
