@@ -32,3 +32,7 @@ jobs:
         run: node scripts/qa-menu.mjs
       - name: Verify public page fade pacing and curtain handling
         run: node scripts/qa-public-page-fades.mjs
+      - name: Verify first-load tea menu does not flash between loaders
+        env:
+          VITE_OFFLINE_PREVIEW: 'true'
+        run: node scripts/qa-menu-first-load.mjs
