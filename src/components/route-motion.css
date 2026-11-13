@@ -13,6 +13,64 @@
 .route-stage .coming-panel .gold-rule,.route-stage .coming-panel>p:first-of-type{animation:quietRise 1.08s ease-out .87s both}
 .route-stage .coming-panel .coming-tag,.route-stage .coming-panel .coming-explain{animation:quietRise 1.02s ease-out 1.15s both}
 .route-stage .coming-panel .primary-link{animation:quietRise 1.02s ease-out 1.42s both}
+/* House rules and tea menu share the same gentle easing as staff.
+   Animate content groups rather than every sentence to preserve readability.
+   Sections inserted after the async menu fetch reveal when they actually mount. */
+.route-stage .house-rules-page,
+.route-stage .tea-menu-page{--public-reveal-ease:cubic-bezier(.22,.65,.25,1)}
+/* 入館須知：題字 → 引言 → 歡迎詞 → 目錄 → 五章館約 */
+.route-stage .house-rules-brand,
+.route-stage .house-rules-hero>.house-rules-ornament{animation:quietRise 1.12s var(--public-reveal-ease) .16s both}
+.route-stage .house-rules-hero h1{animation:quietRise 1.26s var(--public-reveal-ease) .34s both}
+.route-stage .house-rules-subtitle{animation:quietRise 1.18s var(--public-reveal-ease) .54s both}
+.route-stage .house-rules-epigraph{animation:quietRise 1.28s var(--public-reveal-ease) .72s both}
+.route-stage .house-rules-welcome{animation:quietRise 1.25s var(--public-reveal-ease) .88s both}
+.route-stage .house-rules-index{animation:quietRise 1.2s var(--public-reveal-ease) 1.07s both}
+.route-stage .house-rules-chapter{animation:quietRise 1.3s var(--public-reveal-ease) both}
+.route-stage .house-rules-chapter:nth-child(1){animation-delay:1.2s}
+.route-stage .house-rules-chapter:nth-child(2){animation-delay:1.34s}
+.route-stage .house-rules-chapter:nth-child(3){animation-delay:1.48s}
+.route-stage .house-rules-chapter:nth-child(4){animation-delay:1.62s}
+.route-stage .house-rules-chapter:nth-child(n+5){animation-delay:1.76s}
+.route-stage .house-rules-ending{animation:quietRise 1.24s var(--public-reveal-ease) 1.84s both}
+/* 點菜：茶宴題字 → 主旨 → 卷別與御品 → 點單；分類可由 Supabase 非同步載入 */
+.route-stage .tea-menu-brand,
+.route-stage .tea-menu-seal{animation:quietRise 1.12s var(--public-reveal-ease) .16s both}
+.route-stage .tea-menu-hero h1{animation:quietRise 1.26s var(--public-reveal-ease) .34s both}
+.route-stage .tea-menu-subtitle{animation:quietRise 1.18s var(--public-reveal-ease) .55s both}
+.route-stage .tea-menu-verse{animation:quietRise 1.28s var(--public-reveal-ease) .73s both}
+.route-stage .tea-menu-state,
+.route-stage .tea-menu-status{animation:quietRise 1.15s var(--public-reveal-ease) .84s both}
+.route-stage .tea-menu-section{animation:quietRise 1.3s var(--public-reveal-ease) both}
+.route-stage .tea-menu-section:nth-of-type(1){animation-delay:1.08s}
+.route-stage .tea-menu-section:nth-of-type(2){animation-delay:1.24s}
+.route-stage .tea-menu-section:nth-of-type(n+3){animation-delay:1.4s}
+.route-stage .tea-menu-summary{animation:quietRise 1.24s var(--public-reveal-ease) 1.54s both}
+.route-stage .tea-menu-ending{animation:quietRise 1.24s var(--public-reveal-ease) 1.68s both}
+/* A covered route must not finish its entrance behind the opaque curtain.
+   The existing intro-waiting class also handles a first-visit logo intro.
+   No data or page markup changes are needed. */
+.route-stage:is(.is-covering,.intro-waiting) :is(
+ .house-rules-brand,
+ .house-rules-hero>.house-rules-ornament,
+ .house-rules-hero h1,
+ .house-rules-subtitle,
+ .house-rules-epigraph,
+ .house-rules-welcome,
+ .house-rules-index,
+ .house-rules-chapter,
+ .house-rules-ending,
+ .tea-menu-brand,
+ .tea-menu-seal,
+ .tea-menu-hero h1,
+ .tea-menu-subtitle,
+ .tea-menu-verse,
+ .tea-menu-state,
+ .tea-menu-status,
+ .tea-menu-section,
+ .tea-menu-summary,
+ .tea-menu-ending
+){animation-play-state:paused}
 /* Match the unhurried entrance of the other public pages.
    Pause the directory while the route curtain covers it; otherwise slow
    Supabase loads can finish the animations before visitors see the page. */
