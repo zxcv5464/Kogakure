@@ -5,6 +5,7 @@ import AdminLayout from './components/AdminLayout'
 import EntryIntro, { shouldPlay } from './components/EntryIntro'
 import PageTransition from './components/PageTransition'
 import StaffLoading from './components/StaffLoading'
+import MenuLoading from './components/MenuLoading'
 import { HomePage, OtherPage } from './pages/OtherPages'
 import AboutPage from './pages/AboutPage'
 
@@ -30,7 +31,7 @@ function PublicApp() {
   <Layout>
    <PageTransition introReady={introReady}>
     {location => (
-     <Suspense fallback={location.pathname === '/staff' ? <StaffLoading /> : <div className="empty-staff">正在載入頁面…</div>}>
+     <Suspense fallback={location.pathname === '/staff' ? <StaffLoading /> : location.pathname === '/menu' ? <MenuLoading /> : <div className="empty-staff">正在載入頁面…</div>}>
       <Routes location={location}>
        <Route path="/" element={<HomePage />} />
        <Route path="/about" element={<AboutPage />} />
