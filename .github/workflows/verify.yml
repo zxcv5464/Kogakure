@@ -36,3 +36,7 @@ jobs:
         env:
           VITE_OFFLINE_PREVIEW: 'true'
         run: node scripts/qa-menu-first-load.mjs
+      - name: Verify implementation comments never render as page text
+        env:
+          VITE_OFFLINE_PREVIEW: 'true'
+        run: node scripts/qa-jsx-comment-leak.mjs

@@ -114,8 +114,6 @@ export default function PageTransition({
 
  return <>
   <SceneBackdrop introReady={introReady} />
-  // Keep the mounted route stable when the first-visit Logo intro clears.
-  // Remounting a live menu at this point would fetch Supabase twice and flash.
   <div key={displayed.pathname} className={'route-stage' + (introReady ? '' : ' intro-waiting') + (phase === 'cover' ? ' is-covering' : '')}>
    {children(displayed)}
   </div>
