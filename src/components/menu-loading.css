@@ -1,0 +1,32 @@
+/* Stable, unobtrusive surface while the lazy route and live menu load.
+   The delayed caption avoids a one-frame spinner flash on fast connections. */
+.tea-menu-loading {
+ display: grid;
+ place-items: center;
+ min-height: min(68dvh, 660px);
+ padding: 70px 24px;
+ background: linear-gradient(180deg, rgba(13,12,21,.75), rgba(14,13,21,.95));
+ color: #dbc6a8;
+ text-align: center;
+}
+.tea-menu-loading-inner {
+ animation: teaLoadingAppear .45s ease .35s both;
+}
+.tea-menu-loading-seal {
+ display: block;
+ margin-bottom: 12px;
+ font-family: 'Noto Serif TC', serif;
+ font-size: 1.45rem;
+ color: #d6b487;
+}
+.tea-menu-loading p {
+ margin: 0;
+ font-family: 'Noto Serif TC', serif;
+ font-size: .91rem;
+ letter-spacing: .09em;
+ line-height: 2;
+}
+@keyframes teaLoadingAppear { from {opacity: 0} to {opacity: 1} }
+@media (prefers-reduced-motion: reduce) {
+ .tea-menu-loading-inner { animation: none }
+}
