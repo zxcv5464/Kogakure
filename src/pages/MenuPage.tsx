@@ -29,7 +29,8 @@ export default function MenuPage() {
  }, [])
 
  const sorted = useMemo(() => sortMenu(catalog),[catalog])
- const categories = sorted.categories.filter(cat => cat.published)
+ // Do not flash sample content while the authoritative menu is loading.
+ const categories = mode === 'loading' ? [] : sorted.categories.filter(cat => cat.published)
  const items = sorted.items.filter(item => item.published && categories.some(cat => cat.id === item.categoryId))
  const selected = items.filter(item => (quantities[item.id] || 0) > 0 && item.available)
  const total = selected.reduce((sum,item) => sum + item.priceGil * (quantities[item.id] || 0), 0)
