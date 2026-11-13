@@ -14,7 +14,20 @@ type Selection =
  | { type:'item'; value: MenuItem; original: MenuItem; creating: boolean }
 type Notice = {kind:'error'|'success'|'info';text:string}
 const initial: MenuCatalog = { categories:[], items:[] }
-const describe = (error:unknown) => error instanceof Error ? error.message : '資料庫發生未知錯誤'
+function describe(error:unknown): string {
+ if (error instanceof Error) return error.message
+ if (typeof error === 'string' && error.trim()) return error
+ if (error && typeof error === 'object') {
+  const info = error as Record<string,unknown>
+  const message = typeof info.message === 'string' ? info.message : ''
+  const code = typeof info.code === 'string' ? info.code : ''
+  const details = typeof info.details === 'string' ? info.details : ''
+  const hint = typeof info.hint === 'string' ? info.hint : ''
+  const result = [code && '['+code+']',message,details,hint && '提示：'+hint].filter(Boolean).join(' · ')
+  if (result) return result
+ }
+ return '無法辨識資料庫錯誤，請重新整理後檢查 Supabase 連線狀態'
+}
 const ascending = (rows:MenuCatalog) => sortMenu(rows)
 
 export default function MenuManagement() {
