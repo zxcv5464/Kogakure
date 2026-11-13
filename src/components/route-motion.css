@@ -13,6 +13,15 @@
 .route-stage .coming-panel .gold-rule,.route-stage .coming-panel>p:first-of-type{animation:quietRise 1.08s ease-out .87s both}
 .route-stage .coming-panel .coming-tag,.route-stage .coming-panel .coming-explain{animation:quietRise 1.02s ease-out 1.15s both}
 .route-stage .coming-panel .primary-link{animation:quietRise 1.02s ease-out 1.42s both}
+/* First-visit Logo intro should pause the existing home/placeholder entrance,
+   not remount the route (which causes a second Supabase request on menu). */
+.route-stage.intro-waiting :is(
+ .home-image,.coming-photo,.home-logo,.home-verse,.home-blurb,
+ .home-content>.primary-link,.home-note,.coming-panel,
+ .coming-panel>svg,.coming-panel h1,.coming-panel .gold-rule,
+ .coming-panel>p:first-of-type,.coming-panel .coming-tag,
+ .coming-panel .coming-explain,.coming-panel .primary-link
+){animation-play-state:paused}
 /* House rules and tea menu share the same gentle easing as staff.
    Animate content groups rather than every sentence to preserve readability.
    Sections inserted after the async menu fetch reveal when they actually mount. */
