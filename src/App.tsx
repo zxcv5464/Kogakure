@@ -8,6 +8,7 @@ import StaffLoading from './components/StaffLoading'
 import MenuLoading from './components/MenuLoading'
 import { HomePage, OtherPage } from './pages/OtherPages'
 import AboutPage from './pages/AboutPage'
+import ServicesPage from './pages/ServicesPage'
 
 const AdminPage = lazy(() => import('./pages/AdminPage'))
 const StaffPage = lazy(() => import('./pages/StaffPage'))
@@ -35,6 +36,7 @@ function PublicApp() {
       <Routes location={location}>
        <Route path="/" element={<HomePage />} />
        <Route path="/about" element={<AboutPage />} />
+       <Route path="/services" element={<ServicesPage />} />
        <Route path="/staff" element={<StaffPage />} />
        <Route path="/menu" element={<MenuPage />} />
        <Route path="*" element={<OtherPage />} />
