@@ -17,10 +17,10 @@ export function AdminEditGuardProvider({ children }: { children: ReactNode }) {
  }, [])
  const canLeave = useCallback(() => {
   if (editing.busy) {
-   window.alert('正在處理員工資料，請完成後再切換頁面。')
+   window.alert('正在處理後台資料，請完成後再切換頁面。')
    return false
   }
-  return !editing.dirty || window.confirm('目前有尚未儲存的名帖修改。確定要放棄這些變更？')
+  return !editing.dirty || window.confirm('目前有尚未儲存的後台修改。確定要放棄這些變更？')
  }, [editing])
  const confirmNavigation = useCallback((event: MouseEvent<HTMLAnchorElement>) => {
   // Do not interfere with opening a different tab, download, or the same route.

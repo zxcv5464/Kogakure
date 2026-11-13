@@ -1,0 +1,56 @@
+/* Fox banquet: ink, washi gold and restrained tea-room typography. */
+.tea-menu-page{width:100%;min-width:0;background:linear-gradient(180deg,rgba(13,12,21,.75),rgba(14,13,21,.95));color:#eadfce;padding-bottom:clamp(50px,7vw,100px)}
+.tea-menu-hero{text-align:center;padding:clamp(55px,7vw,90px) 18px 40px;background:radial-gradient(ellipse at 50% 0,rgba(91,66,84,.31),transparent 70%)}
+.tea-menu-brand{font-family:'Noto Serif TC',serif;color:#ceb78e;font-size:.76rem;letter-spacing:.3em}
+.tea-menu-seal{display:block;margin:20px auto 11px;color:#bfa17c;font-size:1.2rem}
+.tea-menu-hero h1{font-size:clamp(2.15rem,4.6vw,3.2rem);font-weight:600;letter-spacing:.24em;text-indent:.24em;color:#f2dfbe;margin:0;text-shadow:0 7px 24px #08090c}
+.tea-menu-subtitle{font-family:'Noto Serif TC',serif;color:#d7b681;font-size:clamp(.9rem,1.8vw,1.1rem);letter-spacing:.22em;margin:13px 0 23px}
+.tea-menu-verse{margin:0 auto;max-width:650px;font-family:'Noto Serif TC',serif;color:#dfd2c1;line-height:2;letter-spacing:.07em;font-size:clamp(.91rem,1.6vw,1.06rem)}
+.tea-menu-content{width:min(100% - 36px,1060px);margin:auto}
+.tea-menu-state{padding:24px 16px;text-align:center;color:#e0c69e}
+.tea-menu-status{max-width:810px;margin:0 auto 25px;padding:16px 23px;border:1px solid rgba(216,181,129,.28);background:rgba(42,33,40,.84);border-radius:5px}
+.tea-menu-status span{font-family:'Noto Serif TC',serif;font-weight:600;color:#f0cf9c;letter-spacing:.1em}
+.tea-menu-status p{margin:5px 0 0;color:#d6c9ba;font-size:.83rem;line-height:1.8}
+.tea-menu-section{margin:0 0 clamp(30px,5vw,54px);padding:clamp(24px,4vw,42px);border:1px solid rgba(210,172,124,.26);background:linear-gradient(135deg,rgba(37,29,42,.95),rgba(19,17,28,.92));box-shadow:0 22px 55px rgba(0,0,0,.16);border-radius:6px}
+.tea-menu-section-title{display:flex;gap:20px;align-items:center;border-bottom:1px solid rgba(213,173,123,.27);padding-bottom:21px}
+.tea-menu-ordinal{font-family:'Noto Serif TC',serif;font-size:2.1rem;color:#caac7e;line-height:1.2}
+.tea-menu-volume{margin:0 0 2px;font-size:.72rem;letter-spacing:.21em;color:#c6ac8e}
+.tea-menu-section-title h2{margin:0;color:#f3dec0;font-family:'Noto Serif TC',serif;font-weight:600;font-size:clamp(1.35rem,2.3vw,1.7rem);letter-spacing:.18em}
+.tea-menu-flourish{margin-left:auto;color:#bca078;opacity:.55;font-size:1.25rem}
+.tea-menu-section-intro{margin:20px 0 0;color:#d8c7b2;line-height:1.95;letter-spacing:.035em;font-family:'Noto Serif TC',serif;font-size:.91rem}
+.tea-menu-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:24px}
+.tea-menu-item{display:flex;flex-direction:column;gap:12px;min-width:0;border:1px solid rgba(216,181,129,.16);border-radius:5px;padding:23px 22px 17px;background:linear-gradient(145deg,rgba(46,36,48,.68),rgba(17,17,27,.78))}
+.tea-menu-item-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:6px 13px}
+.tea-menu-item h3{margin:0;color:#f3e1c4;font-family:'Noto Serif TC',serif;font-size:clamp(1.01rem,1.65vw,1.18rem);font-weight:600;letter-spacing:.065em}
+.tea-menu-price{white-space:nowrap;color:#e2b77c;font-family:Georgia,'Noto Sans TC',serif;font-variant-numeric:tabular-nums;font-size:1.08rem}
+.tea-menu-price small{font-size:.73rem;color:#d0af80}
+.tea-menu-item-desc{margin:0;flex:1;color:#d8d0c7;font-size:.85rem;line-height:1.8;overflow-wrap:anywhere}
+.tea-menu-qty{display:flex;align-self:flex-end;align-items:center;gap:11px;margin-top:auto;padding-top:6px}
+.tea-menu-qty button{display:grid;place-items:center;width:37px;height:37px;border:1px solid rgba(221,187,145,.42);border-radius:50%;background:rgba(20,17,27,.74);color:#f0d0a3}
+.tea-menu-qty button:hover:not(:disabled){background:rgba(118,80,82,.44)}
+.tea-menu-qty button:disabled{opacity:.32;cursor:default}
+.tea-menu-qty output{min-width:25px;text-align:center;font-variant-numeric:tabular-nums;color:#f6e6d0}
+.tea-menu-unavailable{align-self:flex-end;color:#c3a9a0;font-size:.77rem;letter-spacing:.1em}
+.tea-menu-item.is-sold-out{opacity:.68}
+.tea-menu-empty{margin:20px 0 0;color:#d8ccb9;font-size:.86rem}
+.tea-menu-summary{max-width:850px;margin:0 auto 25px;padding:25px clamp(18px,4vw,32px);border:1px solid rgba(215,180,130,.36);border-radius:6px;background:linear-gradient(120deg,rgba(46,36,46,.9),rgba(22,19,31,.97))}
+.tea-menu-summary-heading{display:flex;align-items:center;gap:10px;color:#d2af7f}
+.tea-menu-summary-heading h2{margin:0;color:#f0debd;font-family:'Noto Serif TC',serif;font-size:1.2rem;letter-spacing:.1em}
+.tea-menu-summary-heading span{margin-left:auto;font-size:.79rem;color:#d6c0a4}
+.tea-menu-summary ul{margin:20px 0 0;padding:0;list-style:none}
+.tea-menu-summary li{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid rgba(216,181,129,.15);font-size:.88rem;color:#e2d7c9}
+.tea-menu-summary li strong{white-space:nowrap;font-weight:500;color:#e8c38f;font-variant-numeric:tabular-nums}
+.tea-menu-cart-empty{margin:18px 0 0;color:#c4b9ad;line-height:1.7;font-size:.87rem}
+.tea-menu-total{display:flex;justify-content:space-between;gap:12px;margin:16px 0;color:#eedabd;font-size:1.03rem}
+.tea-menu-total strong{color:#ffd79d;font-variant-numeric:tabular-nums}
+.tea-menu-summary-actions{display:flex;flex-wrap:wrap;gap:10px}
+.tea-menu-summary-actions button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:43px;padding:10px 17px;border-radius:5px;font-size:.84rem}
+.tea-menu-copy{border:1px solid #dab585;background:#d6b486;color:#1a1820;font-weight:600}
+.tea-menu-clear{border:1px solid rgba(216,181,129,.4);background:transparent;color:#ead5ba}
+.tea-menu-summary-note{margin:17px 0 0;font-size:.74rem;color:#baad9e;line-height:1.8}
+.tea-menu-ending{text-align:center;max-width:760px;margin:57px auto 0;border-top:1px solid rgba(213,173,123,.26);padding:27px 10px}
+.tea-menu-ending>span{color:#c3a57c}
+.tea-menu-ending p{font-family:'Noto Serif TC',serif;margin:13px 0;color:#e5d2b8;line-height:1.9;letter-spacing:.055em}
+.tea-menu-ending small{display:block;color:#c4a98a;margin-top:21px;letter-spacing:.17em}
+@media(max-width:720px){.tea-menu-content{width:calc(100% - 25px)}.tea-menu-grid{grid-template-columns:minmax(0,1fr)}.tea-menu-section{padding:22px 17px}.tea-menu-section-title{gap:14px}.tea-menu-item{padding:20px 17px}.tea-menu-hero{padding:47px 15px 32px}.tea-menu-verse{font-size:.9rem}.tea-menu-section-intro{font-size:.86rem}.tea-menu-qty button{width:41px;height:41px}}
+@media(max-width:360px){.tea-menu-item-head{display:block}.tea-menu-price{display:block;margin-top:6px}.tea-menu-section-title h2{font-size:1.25rem}}
