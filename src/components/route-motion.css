@@ -102,6 +102,12 @@
  .tea-menu-summary,
  .tea-menu-ending
 ){animation-play-state:paused}
+/* 狐姬指名：維持全站緩動節奏，先顯示標題再顯示角色卡。 */
+.route-stage .booking-eyebrow,.route-stage .booking-emblem{animation:quietRise 1.12s cubic-bezier(.22,.65,.25,1) .16s both}
+.route-stage .booking-hero h1{animation:quietRise 1.26s cubic-bezier(.22,.65,.25,1) .34s both}
+.route-stage .booking-hero-label,.route-stage .booking-hero-verse{animation:quietRise 1.2s cubic-bezier(.22,.65,.25,1) .6s both}
+.route-stage .booking-legend{animation:quietRise 1.2s cubic-bezier(.22,.65,.25,1) .8s both}
+.route-stage:is(.is-covering,.intro-waiting) :is(.booking-eyebrow,.booking-emblem,.booking-hero h1,.booking-hero-label,.booking-hero-verse,.booking-legend,.booking-profile){animation-play-state:paused}
 /* Match the unhurried entrance of the other public pages.
    Pause the directory while the route curtain covers it; otherwise slow
    Supabase loads can finish the animations before visitors see the page. */
