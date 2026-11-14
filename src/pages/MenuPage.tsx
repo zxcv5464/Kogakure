@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
-import { Check, ClipboardList, Minus, Plus, RefreshCcw, Send, CircleCheck } from 'lucide-react'
+import { ClipboardList, Minus, Plus, RefreshCcw, Send, CircleCheck } from 'lucide-react'
 import { configured } from '../lib/config'
 import { fetchMenu, initialMenu, sortMenu } from '../lib/menu-catalog'
 import type { MenuCatalog } from '../lib/menu-catalog'
@@ -14,7 +14,6 @@ export default function MenuPage() {
  const [mode,setMode] = useState<'loading'|'live'|'preview'>(configured ? 'loading' : 'preview')
  const [error,setError] = useState('')
  const [quantities,setQuantities] = useState<Record<string,number>>({})
- const [copied,setCopied] = useState(false)
  const [guestName,setGuestName] = useState('')
  const [guestWorld,setGuestWorld] = useState('')
  const [sending,setSending] = useState(false)
@@ -53,18 +52,10 @@ export default function MenuPage() {
 
  function changeQuantity(id:string,delta:number) {
   setQuantities(prev => ({ ...prev, [id]: Math.min(99,Math.max(0,(prev[id] || 0)+delta)) }))
-  setCopied(false)
   setReceipt(null)
   setOrderError('')
  }
 
- const orderText = [
-  '狐隱 · KOGAKURE｜茶宴點單',
-  ...(guestName.trim()?['旅人：'+guestName.trim()]:[]),
-  ...(guestWorld.trim()?['伺服器：'+guestWorld.trim()]:[]),
-  ...selected.map(item => `${item.name} × ${quantities[item.id]}　${(item.priceGil * quantities[item.id]).toLocaleString('en-US')} Gil`),
-  '合計：' + total.toLocaleString('en-US') + ' Gil',
- ]
  async function sendOrder(e:FormEvent){
   e.preventDefault()
   if(sending)return
@@ -79,21 +70,8 @@ export default function MenuPage() {
    const id=await submitTeaOrder(name,world,selected.map(x=>({id:x.id,quantity:quantities[x.id]})))
    setReceipt({id,name,world,items:snapshot,total})
    setQuantities({})
-   setCopied(false)
   }catch(error){setOrderError(error instanceof Error?error.message:'訂單未能送出，請稍後重試')}
   finally{setSending(false)}
- }
-
- async function copyOrder() {
-  if (!count) return
-  try {
-   await navigator.clipboard.writeText(orderText.join('\n'))
-   setCopied(true)
-  } catch {
-   // Clipboard access is not guaranteed on every embedded browser.
-   setCopied(false)
-   window.prompt('請複製以下點單內容',orderText.join('\n'))
-  }
  }
 
  if (mode === 'loading') return <MenuLoading />
@@ -150,7 +128,12 @@ export default function MenuPage() {
       <strong>合計 {receipt.total.toLocaleString('en-US')} Gil</strong>
      </div>
     </div>}
-    <div className="tea-menu-summary-heading"><ClipboardList size={19}/><h2>旅人點單</h2><span>{count} 品</span></div>
+    <div className="tea-menu-summary-heading">
+     <ClipboardList size={19}/><h2>旅人點單</h2><span>{count} 份</span>
+     {selected.length>0&&<button type="button" className="tea-menu-clear"
+      onClick={()=>{setQuantities({});setOrderError('');setReceipt(null)}}
+      disabled={sending}><RefreshCcw size={14}/>清空選擇</button>}
+    </div>
     {selected.length ? <>
      <ul>{selected.map(item=><li key={item.id}><span>{item.name} × {quantities[item.id]}</span><strong>{(item.priceGil * quantities[item.id]).toLocaleString('en-US')} Gil</strong></li>)}</ul>
      <div className="tea-menu-total"><span>合計</span><strong>{total.toLocaleString('en-US')} Gil</strong></div>
@@ -175,10 +158,6 @@ export default function MenuPage() {
       </button>
       {mode!=='live'&&<p className="tea-menu-order-error">展示菜單無法送出訂單；待正式菜單連線後開放。</p>}
      </form>
-     <div className="tea-menu-summary-actions">
-      <button type="button" className="tea-menu-copy" onClick={()=>void copyOrder()}>{copied?<><Check size={17}/> 已複製</>:<><ClipboardList size={17}/> 複製點單</>}</button>
-      <button type="button" className="tea-menu-clear" onClick={()=>{setQuantities({});setCopied(false);setOrderError('')}}><RefreshCcw size={15}/> 清空</button>
-     </div>
     </> : <p className="tea-menu-cart-empty">點選御品旁的 ＋，將喜愛的茶點收入清單。</p>}
     <p className="tea-menu-summary-note">送出後由館方接單確認。餐點及 Gil 金額以送出時資料庫價格為準；送出不代表完成付款，請依館內人員指示結算。</p>
    </aside>
