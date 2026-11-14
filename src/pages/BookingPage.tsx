@@ -131,7 +131,7 @@ export default function BookingPage(){
     {people.map((person,index)=>{
      const busyUntil=statusByStaff.get(person.id)
      const busy=isStaffBusy(busyUntil,now)
-     return <article className={'booking-profile effect-'+person.effect} key={person.id}
+     return <article className={'booking-profile staff-entry effect-'+person.effect} key={person.id}
       style={{'--accent':person.themeColor||'#c4ac83','--booking-delay':Math.min(index,8)*95+'ms'} as CSSProperties}>
       <button className="omamori-card booking-profile-action" type="button"
        onClick={()=>openBooking(person)} disabled={busy||!plans.length}
