@@ -34,6 +34,10 @@ jobs:
         env:
           VITE_OFFLINE_PREVIEW: 'true'
         run: node scripts/qa-tea-orders.mjs
+      - name: Verify editable services, polaroid keepsake, guarded admin CRUD and storage policy
+        env:
+          VITE_OFFLINE_PREVIEW: 'true'
+        run: node scripts/qa-service-content.mjs
       - name: Verify public page fade pacing and curtain handling
         run: node scripts/qa-public-page-fades.mjs
       - name: Verify first-load tea menu does not flash between loaders
