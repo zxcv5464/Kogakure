@@ -60,7 +60,7 @@ for(const perm of ['staff.manage','menu.manage','booking.manage']){
 }
 assert.ok(api.includes("from('employee_accounts')")&&api.includes('staffLoginEmail'),
  'Login credentials must be linked to employee RLS account records')
-for(const action of ["action:'create'","action:'reset_password'","action:'delete'","action:'update'"])
+for(const action of ["action:'create'","action:'reset_password'","action:'delete'","action:'update'","action:'convert_legacy'"])
  assert.ok(api.includes(action),'Frontend account manager action missing: '+action)
 assert.ok(!api.includes('SERVICE_ROLE_KEY')&&!page.includes('SERVICE_ROLE_KEY'),
  'Service-role credentials must never appear in the browser')
@@ -88,6 +88,13 @@ assert.ok(!edge.includes('inviteUserByEmail')&&!edge.includes("action==='invite'
  'Email invitations must be completely removed from the backend')
 assert.ok(edge.includes("if(body.action==='delete')")&&edge.includes("if(body.action==='reset_password')"),
  'Both delete and reset flows must be present')
+assert.ok(edge.includes("if(body.action==='convert_legacy')")&&edge.includes("!employee.username.startsWith('legacy_')"),
+ 'Existing employee logins must be preserved and convertible only by a manager')
+assert.ok(edge.includes("email,password:body.password,email_confirm:true") &&
+ edge.includes("username:employee.username,email:employee.email"),
+ 'Legacy conversion must set new login credentials with rollback on Auth failure')
+assert.ok(editor.includes('舊版帳號轉換')&&editor.includes('convertLegacyEmployee'),
+ 'An existing invited employee needs a manager-run migration path')
 assert.ok(edge.includes("if(!await findEmployee(id)||await isManager(id))"),
  'Owner account must never be a valid delete or password-reset target')
 assert.ok(edge.includes("service.auth.admin.deleteUser(id)"),
@@ -96,6 +103,7 @@ assert.ok(usernames.includes('add column if not exists username text'),
  'Migration must create employee usernames')
 assert.ok(usernames.includes('employee_accounts_username_unique'),
  'Employee username must be unique in the database')
+assert.ok(usernames.includes("'legacy_'"), 'Old employee accounts must retain an identity until explicitly converted')
 assert.ok(usernames.includes('employee_accounts_username_format'),
  'Username format must be validated server-side')
 assert.ok(usernames.includes('alter column username set not null'),
