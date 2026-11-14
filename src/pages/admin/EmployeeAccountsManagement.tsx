@@ -30,11 +30,11 @@ export default function EmployeeAccountsManagement(){
  const [resetConfirm,setResetConfirm]=useState('')
  const busyRef=useRef(false)
  const {setEditing}=useAdminEditGuard()
- const changed=useMemo(()=>draft!==null&&(
+ const settingsChanged=useMemo(()=>draft!==null&&(
   !initial||JSON.stringify({...draft,permissions:[...draft.permissions].sort()})
    !==JSON.stringify({...initial,permissions:[...initial.permissions].sort()})
-  ||!!password||!!passwordConfirm||!!resetPassword||!!resetConfirm
- ),[draft,initial,password,passwordConfirm,resetPassword,resetConfirm])
+ ),[draft,initial])
+ const changed=settingsChanged||!!password||!!passwordConfirm||!!resetPassword||!!resetConfirm
  useEffect(()=>setEditing(changed,busy),[changed,busy,setEditing])
  useEffect(()=>()=>setEditing(false,false),[setEditing])
 
@@ -66,7 +66,7 @@ export default function EmployeeAccountsManagement(){
   }:old)
  }
  async function save(){
-  if(!draft||busyRef.current)return
+  if(!draft||busyRef.current|| (!!draft.userId&&!settingsChanged))return
   if(draft.displayName.trim().length<1||draft.displayName.trim().length>70){
    setError('請填寫長度 1～70 字的員工顯示名稱');return
   }
@@ -203,7 +203,7 @@ export default function EmployeeAccountsManagement(){
      </label>}
      <div className="employee-admin-editor-buttons">
       <button type="button" onClick={()=>{if(!changed||window.confirm('放棄帳號修改？')){setDraft(null);setInitial(null);resetInputs()}}} disabled={busy}>取消</button>
-      <button className="employee-action-primary" type="submit" disabled={busy||(!changed&&!!draft.userId)}>
+      <button className="employee-action-primary" type="submit" disabled={busy||(!settingsChanged&&!!draft.userId)}>
        <Save size={16}/>{busy?'處理中…':draft.userId?'儲存權限':'建立員工帳號'}
       </button>
      </div>
