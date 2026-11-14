@@ -11,14 +11,20 @@ export type BackofficeAccess = { kind:'owner'; permissions:EmployeePermission[] 
  { kind:'employee'; permissions:EmployeePermission[]; active:boolean; displayName:string }
 
 export type EmployeeAccount = {
- userId:string; email:string; displayName:string
+ userId:string; username:string; displayName:string
  permissions:EmployeePermission[]; active:boolean; createdAt:string
 }
 type EmployeeRow={
- user_id:string; email:string; display_name:string
+ user_id:string; username:string; display_name:string
  permissions:string[]; active:boolean; created_at:string
 }
 const allIds=EMPLOYEE_PERMISSIONS.map(item=>item.id)
+export const STAFF_LOGIN_PATTERN=/^[a-z][a-z0-9_-]{2,23}$/
+export const STAFF_PASSWORD_VALID=(password:string)=>password.length>=12&&password.length<=128&&/[a-zA-Z]/.test(password)&&/[0-9]/.test(password)
+export function staffLoginEmail(value:string):string|null {
+ const username=value.trim().toLowerCase()
+ return STAFF_LOGIN_PATTERN.test(username)?username+'@staff.kogakure.invalid':null
+}
 const isPermission=(x:string):x is EmployeePermission => allIds.includes(x as EmployeePermission)
 export function permitted(access:BackofficeAccess,permission:EmployeePermission){
  return access.kind==='owner' || (access.active && access.permissions.includes(permission))
@@ -43,11 +49,11 @@ export async function getBackofficeAccess(id:string):Promise<BackofficeAccess|nu
 
 export async function listEmployeeAccounts():Promise<EmployeeAccount[]>{
  const {data,error}=await client().from('employee_accounts')
-  .select('user_id,email,display_name,permissions,active,created_at')
+  .select('user_id,username,display_name,permissions,active,created_at')
   .order('created_at',{ascending:false})
  if(error)throw error
  return (data as EmployeeRow[]).map(r=>({
-  userId:r.user_id,email:r.email,displayName:r.display_name,
+  userId:r.user_id,username:r.username,displayName:r.display_name,
   active:r.active,createdAt:r.created_at,
   permissions:(r.permissions||[]).filter(isPermission),
  }))
@@ -72,10 +78,16 @@ async function invokeAccountAction(body:Record<string,unknown>):Promise<string>{
  return typeof data?.message==='string'?data.message:'設定已儲存'
 }
 
-export async function inviteEmployee(input:{
- email:string;displayName:string;permissions:EmployeePermission[]
+export async function createEmployee(input:{
+ username:string;password:string;displayName:string;permissions:EmployeePermission[]
 }):Promise<string>{
- return invokeAccountAction({action:'invite',...input})
+ return invokeAccountAction({action:'create',...input})
+}
+export async function resetEmployeePassword(userId:string,password:string):Promise<string>{
+ return invokeAccountAction({action:'reset_password',userId,password})
+}
+export async function deleteEmployee(userId:string):Promise<string>{
+ return invokeAccountAction({action:'delete',userId})
 }
 export async function updateEmployee(input:{
  userId:string;displayName:string;permissions:EmployeePermission[];active:boolean
