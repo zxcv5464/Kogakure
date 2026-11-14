@@ -54,7 +54,15 @@ export default function BookingPage(){
  useEffect(()=>{
   if(loading||!configured)return
   let live=true
-  const refresh=()=>{void loadStaffPresence().then(p=>{if(live)setPresence(p)}).catch(()=>{})}
+  const refresh=()=>{
+   void loadStaffPresence().then(p=>{if(live)setPresence(p)}).catch(()=>{})
+   // Plans are editable in the admin console; refresh while this page is open.
+   void loadBookingPlans().then(updated=>{
+    if(!live)return
+    setPlans(updated)
+    setPlanId(previous=>updated.some(p=>p.id===previous)?previous:(updated[0]?.id||''))
+   }).catch(()=>{})
+  }
   const unwatch=watchBookingChanges(refresh)
   const poll=window.setInterval(()=>{if(document.visibilityState==='visible')refresh()},15000)
   const clock=window.setInterval(()=>setNow(Date.now()),1000)
