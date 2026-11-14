@@ -10,8 +10,9 @@ const files=[
  'src/pages/admin/modules.ts','scripts/prepare-pages.mjs',
  'supabase/migrations/20261115_01_employee_accounts_permissions.sql',
  'supabase/functions/manage-employee-accounts/index.ts',
+ 'supabase/migrations/20261115_02_employee_permission_invoker.sql',
 ]
-const [page,editor,api,auth,notice,modules,routes,sql,edge]=await Promise.all(files.map(x=>readFile(x,'utf8')))
+const [page,editor,api,auth,notice,modules,routes,sql,edge,invoker]=await Promise.all(files.map(x=>readFile(x,'utf8')))
 for(const required of [
  "getBackofficeAccess(id)", "ProtectedModule", "allowed(access,module.id)",
  'module="accounts"', 'module="staff"', 'module="menu"', 'module="booking"',
@@ -55,6 +56,7 @@ for(const rule of [
  assert.ok(sql.includes(rule),'Employee RLS safety check missing '+rule)
 }
 assert.ok(!sql.includes('create policy "employees update'), 'Employees may never change their own privileges')
+assert.ok(invoker.includes('alter function public.has_backoffice_permission(text) security invoker'), 'Employee authorization helper must execute with caller RLS')
 assert.ok(!sql.includes('insert into public.admin_users'), 'Invited staff must never become managers')
 assert.ok(sql.includes("if not public.has_backoffice_permission('booking.manage')"),'Booking RPCs must honor assigned module access')
 assert.equal((sql.match(/if not public.has_backoffice_permission\('booking.manage'\)/g)||[]).length,3,'All three booking admin RPCs must enforce role scopes')
