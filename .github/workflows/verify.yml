@@ -26,10 +26,14 @@ jobs:
         run: npm run build
       - name: Verify house rules content and chapter links (no database access)
         run: node scripts/qa-house-rules.mjs
-      - name: Verify tea menu content, pricing and read-only rendering
+      - name: Verify tea menu content, pricing and preview rendering
         env:
           VITE_OFFLINE_PREVIEW: 'true'
         run: node scripts/qa-menu.mjs
+      - name: Verify guest tea-order submission, secured manager workflow and pending order notifications
+        env:
+          VITE_OFFLINE_PREVIEW: 'true'
+        run: node scripts/qa-tea-orders.mjs
       - name: Verify public page fade pacing and curtain handling
         run: node scripts/qa-public-page-fades.mjs
       - name: Verify first-load tea menu does not flash between loaders
