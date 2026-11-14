@@ -152,7 +152,7 @@ export default function BookingManagement(){
    <div><strong>{counts.rejected}</strong><span>已婉拒</span></div>
   </div>
   {incoming&&<div className="booking-admin-alert" role="alert">
-   <Bell size={20}/><div><strong>收到新的指名申請</strong><p>{incoming.guestName} · {incoming.guestWorld} · {incoming.planName} · {incoming.staff.map(s=>s.name).join('、')}</p></div>
+   <Bell size={20}/><div><strong>收到新的指名申請</strong><p>{incoming.guestName} · {incoming.guestWorld} · {incoming.planName} · 指名 {incoming.staff.length} 位 · {incoming.staff.map(s=>s.name).join('、')}</p></div>
    <button type="button" onClick={()=>{setTab('requests');setFilter('all');setFocused(incoming.id);setIncoming(null)}}>查看內容</button>
    <button type="button" aria-label="關閉通知" onClick={()=>setIncoming(null)}><X size={17}/></button>
   </div>}
@@ -172,7 +172,9 @@ export default function BookingManagement(){
     {shown.map(r=><article key={r.id} className="booking-admin-request">
      <div className="booking-admin-request-top"><span className={'booking-admin-status is-'+r.status}>{statusNames[r.status]}</span><time>{fmt(r.createdAt)}</time></div>
      <h2>{r.guestName} <small>／ {r.guestWorld}</small></h2>
-     <p><strong>指名狐姬：</strong>{r.staff.map(s=>s.name).join('、')||'無'}</p>
+     <p className="booking-admin-nominees"><strong>指名人員（{r.staff.length} 位）：</strong>
+      <span className="booking-admin-nominee-list">{r.staff.length?r.staff.map(person=><span key={person.id}>{person.name}</span>):'無'}</span>
+     </p>
      <p><strong>方案：</strong>{r.planName} · {r.durationMinutes} 分鐘 · {gil(r.priceGil)}</p>
      {r.status==='accepted'&&<p className="booking-admin-timer"><Clock3 size={16}/>{r.endsAt&&new Date(r.endsAt).getTime()<=now?'已達預定時間，請確認結束': '剩餘 '+countdown(r.endsAt,now)}（開始：{fmt(r.acceptedAt)}）</p>}
      <div className="booking-admin-request-actions">
@@ -215,7 +217,9 @@ export default function BookingManagement(){
      <div><dt>申請編號</dt><dd>{selectedBooking.id}</dd></div>
      <div><dt>預約者姓名</dt><dd>{selectedBooking.guestName}</dd></div>
      <div><dt>伺服器</dt><dd>{selectedBooking.guestWorld}</dd></div>
-     <div><dt>指名狐姬</dt><dd>{selectedBooking.staff.map(s=>s.name).join('、')}</dd></div>
+     <div><dt>指名人員（{selectedBooking.staff.length} 位）</dt><dd className="booking-admin-nominee-list">
+      {selectedBooking.staff.length?selectedBooking.staff.map(person=><span key={person.id}>{person.name}</span>):'無'}
+     </dd></div>
      <div><dt>指名方案</dt><dd>{selectedBooking.planName}</dd></div>
      <div><dt>時長與金額</dt><dd>{selectedBooking.durationMinutes} 分鐘 · {gil(selectedBooking.priceGil)}</dd></div>
      <div><dt>申請時間（台灣）</dt><dd>{fmt(selectedBooking.createdAt)}</dd></div>
