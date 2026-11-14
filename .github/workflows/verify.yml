@@ -60,3 +60,7 @@ jobs:
         run: node scripts/qa-booking-card-presentation.mjs
       - name: Verify booking entrance matches staff directory pacing
         run: node scripts/qa-booking-fade.mjs
+      - name: Verify sidebar pending-booking count and incoming alerts
+        env:
+          VITE_OFFLINE_PREVIEW: 'true'
+        run: node scripts/qa-admin-booking-sidebar.mjs
