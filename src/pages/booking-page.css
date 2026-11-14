@@ -18,8 +18,8 @@
 /* 橫式指名名片：高度完全由文字與服務內容決定，避免被固定 282px 截斷。
    左側照片與右側文字互不覆蓋；自行圈選的圖片保持完整比例。 */
 .booking-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,550px),1fr));gap:24px;padding:25px 0 32px;align-items:stretch}
-.booking-profile{min-width:0;width:100%;animation:bookingReveal 1.25s cubic-bezier(.22,.65,.25,1) both;animation-delay:var(--booking-delay,0ms)}
-.booking-profile-action{position:relative;width:100%;height:auto;min-height:298px;min-width:0;padding:0;display:grid;grid-template-columns:minmax(145px,34%) minmax(0,1fr);align-items:stretch;text-align:left;isolation:isolate;border:1px solid rgba(217,181,128,.38);border-radius:10px;color:#f1e1cb;background:linear-gradient(120deg,rgba(42,33,47,.98),rgba(20,19,29,.98));box-shadow:0 18px 36px rgba(0,0,0,.25);transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease}
+.booking-profile{display:flex;min-width:0;width:100%;animation:bookingReveal 1.25s cubic-bezier(.22,.65,.25,1) both;animation-delay:var(--booking-delay,0ms)}
+.booking-profile-action{position:relative;flex:1;width:100%;height:auto;min-height:298px;min-width:0;padding:0;display:grid;grid-template-columns:minmax(145px,34%) minmax(0,1fr);align-items:stretch;text-align:left;isolation:isolate;border:1px solid rgba(217,181,128,.38);border-radius:10px;color:#f1e1cb;background:linear-gradient(120deg,rgba(42,33,47,.98),rgba(20,19,29,.98));box-shadow:0 18px 36px rgba(0,0,0,.25);transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease}
 .booking-profile-action:before{content:'';position:absolute;inset:7px;z-index:2;pointer-events:none;border:1px solid rgba(213,172,115,.14);border-radius:5px}
 .booking-profile-action:hover:not(:disabled){transform:translateY(-3px);border-color:rgba(232,197,147,.72);box-shadow:0 23px 44px rgba(0,0,0,.4)}
 .booking-profile-action:focus-visible{outline:2px solid #ebc68b;outline-offset:3px}
