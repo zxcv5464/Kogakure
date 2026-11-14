@@ -153,7 +153,7 @@ export default function BookingPage(){
    {error&&<div className="booking-notice is-error" role="alert">無法取得預約資訊：{error}</div>}
    {!loading&&!error&&!plans.length&&<div className="booking-notice">館方尚未啟用指名方案，角色名帖可先行欣賞；請待館方開放預約。</div>}
    {!loading&&!error&&!people.length&&<div className="booking-notice">目前沒有開放指名的館員，敬請期待。</div>}
-   {!loading&&!error&&<div className="booking-grid">
+   {!loading&&!error&&people.length>0&&<div className="booking-grid">
     {people.map((person,index)=>{
      const busyUntil=statusByStaff.get(person.id)
      const busy=isStaffBusy(busyUntil,now)
