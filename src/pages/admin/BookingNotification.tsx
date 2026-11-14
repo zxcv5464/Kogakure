@@ -6,7 +6,7 @@ import { watchBookingChanges } from '../../lib/bookings'
 import { useAdminEditGuard } from './AdminEditGuard'
 import './booking-notification.css'
 
-type PendingInfo = { id: string; guest_name: string; guest_world: string; plan_name: string }
+type PendingInfo = { id: string; guest_name: string; guest_world: string; plan_name: string; booking_request_staff?: { staff_name: string }[] }
 
 /**
  * Single authenticated source for the sidebar count and the existing
@@ -30,7 +30,7 @@ export function usePendingBookings() {
    const version = ++requestVersion
    try {
     const { data, count, error } = await client.from('booking_requests')
-     .select('id,guest_name,guest_world,plan_name', { count: 'exact' })
+     .select('id,guest_name,guest_world,plan_name,booking_request_staff(staff_name)', { count: 'exact' })
      .eq('status', 'pending')
      .order('created_at', { ascending: false })
      .limit(20)
@@ -103,7 +103,7 @@ export default function BookingNotification({
     ? '新指名申請 · ' + unread.guest_name + '（' + unread.guest_world + '）'
     : '目前有 ' + pendingCount + ' 筆待審核預約'}</strong>
    <small>{unread
-    ? unread.plan_name + '，請查看完整指名資訊並決定是否接取'
+    ? unread.plan_name + ' · 指名：' + (unread.booking_request_staff?.map(person => person.staff_name).filter(Boolean).join('、') || '請至預約管理查看名單')
     : '館方接取或婉拒後，側邊欄數量會同步更新'}</small>
   </span>
   <Link to="/admin/booking" onClick={event => {
