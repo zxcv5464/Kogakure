@@ -6,10 +6,12 @@ import { supabase } from '../lib/supabase'
 import { configured } from '../lib/config'
 import { ADMIN_MODULES } from './admin/modules'
 import { useAdminEditGuard } from './admin/AdminEditGuard'
+import BookingNotification from './admin/BookingNotification'
 import './admin/admin-workspace.css'
 
 const StaffManagement = lazy(() => import('./admin/StaffManagement'))
 const MenuManagement = lazy(() => import('./admin/MenuManagement'))
+const BookingManagement = lazy(() => import('./admin/BookingManagement'))
 
 // Authentication and authorization belong to the shared admin shell, not to
 // any individual module. Every module is mounted only after verification.
@@ -115,10 +117,12 @@ function AdminWorkspace({ busy, onLogout }: { busy: boolean; onLogout: () => voi
    <button type="button" disabled={busy} className="admin-nav-logout" onClick={() => {if (canLeave()) onLogout()}}> <LogOut size={17}/> 登出</button>
   </aside>
   <div className="admin-workspace-content" id="admin-workspace-content">
+   <BookingNotification />
    <Routes>
     <Route path="/admin" element={<AdminOverview/>}/>
     <Route path="/admin/staff" element={<Suspense fallback={<div className="admin-module-loading" role="status">正在開啟員工名帖管理…</div>}><StaffManagement/></Suspense>}/>
     <Route path="/admin/menu" element={<Suspense fallback={<div className="admin-module-loading" role="status">正在開啟茶宴菜單管理…</div>}><MenuManagement/></Suspense>}/>
+    <Route path="/admin/booking" element={<Suspense fallback={<div className="admin-module-loading" role="status">正在開啟預約管理…</div>}><BookingManagement/></Suspense>}/>
     <Route path="*" element={<Navigate to="/admin" replace/>}/>
    </Routes>
    {active && <div className="admin-workspace-module-footer"><Link to="/admin" onClick={confirmNavigation}>返回管理總覽</Link></div>}
