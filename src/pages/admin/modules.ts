@@ -12,7 +12,7 @@ export type AdminModule = {
  status: 'available' | 'planned'
 }
 export const ADMIN_MODULES: AdminModule[] = [
- { id: 'accounts', title: '員工帳號', summary: '邀請登入、設定可使用的後台功能及停用帳號', icon: ShieldCheck, path: '/admin/accounts', status: 'available' },
+ { id: 'accounts', title: '員工帳號', summary: '建立員工登入帳號、密碼、管理權限與刪除帳號', icon: ShieldCheck, path: '/admin/accounts', status: 'available' },
  { id: 'staff', title: '員工名帖', summary: '管理人員介紹、照片、顯示順序與公開狀態', icon: UsersRound, path: '/admin/staff', status: 'available' },
  { id: 'announcements', title: '公告管理', summary: '館內公告、最新消息與首頁資訊', icon: FileText, status: 'planned' },
  { id: 'hours', title: '營業資訊', summary: '營業時間、館內說明與基本資料', icon: Clock3, status: 'planned' },

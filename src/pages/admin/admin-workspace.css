@@ -333,3 +333,5 @@
 .admin-security-settings button{min-height:42px;padding:9px 14px}
 .admin-gate .admin-password-help{border:0;background:transparent;color:#cba677;cursor:pointer;text-decoration:underline;text-underline-offset:3px;padding:7px 0;text-align:left;font-size:.8rem}
 .admin-gate .admin-password-help:disabled{opacity:.42;cursor:not-allowed}
+
+.admin-login-hint{font-size:.77rem;color:#bdb0a2;line-height:1.7;margin:3px 0 0}
