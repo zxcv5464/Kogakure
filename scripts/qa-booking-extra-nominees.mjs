@@ -27,6 +27,9 @@ for (const snippet of [
  "ids.length!==1+(withOthers?others.length:0)",
 ]) assert.ok(page.includes(snippet), 'Booking selection/confirmation missing: '+snippet)
 assert.ok(!page.includes('setOthers([]);setWithOthers(false)\n  }catch'), 'Do not clear extra nominees after a successful submission')
+assert.ok(page.includes('const headerNominees=result?submittedNominees:nominees'), 'Booking modal title must use live nominees before submission and a submitted snapshot afterward')
+assert.ok(page.includes('指名預約 · {headerNominees.map(person=>person.name).join(" ＋ ")}'), 'Booking dialog heading must display both primary and additional nominee names')
+assert.ok(style.includes('.booking-modal-header>div{flex:1;min-width:0}'), 'Heading must allow long double-nominee names to wrap')
 assert.ok(selection.includes('additionalIds'), 'Selection utility must account for extras')
 assert.ok(api.includes("p_staff_ids:input.staffIds"), 'RPC must send the full selected staff array')
 assert.ok(api.includes('for(const l of links as BookingLinkRow[])'), 'Admin must preserve all booking-to-staff links')
