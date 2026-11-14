@@ -253,3 +253,6 @@
  .services-tags li { padding: 4px 9px; font-size: .7rem; }
  .services-ending { padding-inline: 8px; }
 }
+
+.services-state{max-width:780px;margin:0 auto 30px;padding:21px 23px;border:1px solid rgba(213,173,123,.29);border-radius:5px;background:rgba(36,30,44,.78);color:#e8cda4;text-align:center;line-height:1.9}
+.services-state.is-error{border-color:rgba(218,134,133,.46);color:#edbdb7}
