@@ -150,7 +150,7 @@ export default function BookingPage(){
          : <span className="booking-photo-placeholder"><Sparkles size={32}/></span>}
        </span>
        <span className="booking-card-details">
-        <span className="booking-card-topline"><span className="booking-card-overline">KOGAKURE · 指名名帖</span>
+        <span className="booking-card-topline">
          <span className={'booking-card-status '+(busy?'is-booked':'is-available')}><i/>{busy?'指名中':'空閒中'}</span>
         </span>
         <span className="booking-card-role">{person.role||'館員'}</span>

@@ -56,3 +56,5 @@ jobs:
         env:
           VITE_OFFLINE_PREVIEW: 'true'
         run: node scripts/qa-booking-role-layout.mjs
+      - name: Verify full-bleed booking portraits and details-only inner frame
+        run: node scripts/qa-booking-card-presentation.mjs

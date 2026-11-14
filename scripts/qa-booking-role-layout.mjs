@@ -27,7 +27,7 @@ for(const part of [
  '.booking-card-topline{display:flex;flex-wrap:wrap',
  '.booking-card-description{','white-space:normal',
  '.booking-card-services{display:flex;flex-wrap:wrap',
- '.booking-profile.has-manual-crop .booking-portrait img{object-fit:contain',
+ '.booking-profile.has-manual-crop .booking-portrait img{object-fit:cover',
  '@media(max-width:620px)','@media(max-width:400px)',
 ]){
  assert.ok(css.includes(part),'Adaptive booking card rule missing: '+part)
