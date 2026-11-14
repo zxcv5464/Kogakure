@@ -1,6 +1,7 @@
 import {useEffect,useState} from 'react'
 import {Link} from 'react-router-dom'
-import {ArrowUpRight,Camera, Droplets, ImagePlus, MoonStar, Sparkles} from 'lucide-react'
+import {ArrowUpRight,Camera, Droplets, MoonStar, Sparkles} from 'lucide-react'
+import ServicePhotoGallery from '../components/ServicePhotoGallery'
 import {configured} from '../lib/config'
 import {fetchServiceContents,previewServices} from '../lib/service-content'
 import type {ServiceEntry} from '../lib/service-content'
@@ -47,19 +48,7 @@ export default function ServicesPage(){
     const Icon=serviceIcon(service)
     const number=String(index+1).padStart(2,'0')
     return <section className="services-feature" id={service.slug} key={service.id} aria-labelledby={service.slug+'-title'}>
-     <div className="services-photo">
-      {service.imageUrl?(
-       <img src={service.imageUrl} alt={service.photoLabel||service.category+'體驗照片'} loading="lazy" decoding="async"/>
-      ):(
-       <div className="services-photo-placeholder" role="img" aria-label={(service.photoLabel||service.category+'照片')+'，等待上傳'}>
-        <span className="services-photo-halo" aria-hidden="true"/>
-        <ImagePlus size={38} strokeWidth={1.15} aria-hidden="true"/>
-        <strong>等待上傳</strong>
-        <span>{service.photoLabel||service.category+'照片'} · 圖片預留區</span>
-       </div>
-      )}
-      <span className="services-photo-index" aria-hidden="true">KOGAKURE / {number}</span>
-     </div>
+     <ServicePhotoGallery service={service} number={number}/>
      <div className="services-copy">
       <p className="services-eyebrow"><Icon size={19} strokeWidth={1.5} aria-hidden="true"/><span>{service.category}</span><span className="services-separator" aria-hidden="true">·</span><span className="services-english">{service.english}</span></p>
       <h2 id={service.slug+'-title'}>{service.title}</h2>
