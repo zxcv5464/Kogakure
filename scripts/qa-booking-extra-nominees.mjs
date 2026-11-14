@@ -49,6 +49,7 @@ try {
  assert.deepEqual(full.map(x=>x.name),['紫狐','婆婆'])
  assert.deepEqual(full.map(x=>x.primary),[true,false])
  assert.deepEqual(resolveBookingNominees(primary,everyone,['b','c','d'],false).map(x=>x.name),['紫狐'])
+ assert.deepEqual(resolveBookingNominees(primary,everyone,['b','c','d'],true).map(x=>x.name),['紫狐','婆婆'], 'Stale multi-select state must never add a third nominee')
  assert.deepEqual(resolveBookingNominees(primary,everyone,['a','b','b','not-present'],true).map(x=>x.name),['紫狐','婆婆'])
  assert.deepEqual(resolveBookingNominees(null,everyone,['b'],true),[])
  assert.ok(page.includes('const maximumStaff = 2'), 'Only primary + one extra can be chosen')
