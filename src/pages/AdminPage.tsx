@@ -16,6 +16,7 @@ import './admin/admin-workspace.css'
 const StaffManagement = lazy(() => import('./admin/StaffManagement'))
 const MenuManagement = lazy(() => import('./admin/MenuManagement'))
 const ServiceManagement = lazy(() => import('./admin/ServiceManagement'))
+const ShiftManagement = lazy(() => import('./admin/ShiftManagement'))
 const BookingManagement = lazy(() => import('./admin/BookingManagement'))
 const OrdersManagement = lazy(() => import('./admin/OrdersManagement'))
 const EmployeeAccountsManagement = lazy(() => import('./admin/EmployeeAccountsManagement'))
@@ -120,6 +121,7 @@ export default function AdminPage() {
 
 function allowed(access:BackofficeAccess,id:string){
  if(id==='accounts'||id==='services')return access.kind==='owner'
+ if(id==='shifts')return access.kind==='owner'||(access.kind==='employee'&&access.active)
  if(id==='staff')return permitted(access,'staff.manage')
  if(id==='menu')return permitted(access,'menu.manage')
  if(id==='booking')return permitted(access,'booking.manage')
@@ -191,6 +193,7 @@ function AdminWorkspace({ access,busy, onLogout }: {
      <Route path="/admin/services" element={<ProtectedModule access={access} module="services"><Suspense fallback={<div className="admin-module-loading" role="status">正在開啟服務內容管理…</div>}><ServiceManagement/></Suspense></ProtectedModule>}/>
     <Route path="/admin/booking" element={<ProtectedModule access={access} module="booking"><Suspense fallback={<div className="admin-module-loading" role="status">正在開啟預約管理…</div>}><BookingManagement/></Suspense></ProtectedModule>}/>
     <Route path="/admin/orders" element={<ProtectedModule access={access} module="orders"><Suspense fallback={<div className="admin-module-loading" role="status">正在開啟茶宴訂單管理…</div>}><OrdersManagement/></Suspense></ProtectedModule>}/>
+     <Route path="/admin/shifts" element={<ProtectedModule access={access} module="shifts"><Suspense fallback={<div className="admin-module-loading" role="status">正在開啟值班排班管理…</div>}><ShiftManagement access={access}/></Suspense></ProtectedModule>}/>
     <Route path="/admin/accounts" element={<ProtectedModule access={access} module="accounts"><Suspense fallback={<div className="admin-module-loading" role="status">正在開啟員工帳號管理…</div>}><EmployeeAccountsManagement/></Suspense></ProtectedModule>}/>
     <Route path="*" element={<Navigate to="/admin" replace/>}/>
    </Routes>
