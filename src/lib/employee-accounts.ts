@@ -86,6 +86,9 @@ export async function createEmployee(input:{
 export async function resetEmployeePassword(userId:string,password:string):Promise<string>{
  return invokeAccountAction({action:'reset_password',userId,password})
 }
+export async function convertLegacyEmployee(userId:string,username:string,password:string):Promise<string>{
+ return invokeAccountAction({action:'convert_legacy',userId,username,password})
+}
 export async function deleteEmployee(userId:string):Promise<string>{
  return invokeAccountAction({action:'delete',userId})
 }
