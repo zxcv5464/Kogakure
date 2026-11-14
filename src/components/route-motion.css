@@ -28,6 +28,7 @@
 .route-stage .house-rules-page,
 .route-stage .tea-menu-page,
 .route-stage .services-page,
+.route-stage .shift-page,
 .route-stage .booking-page{--public-reveal-ease:cubic-bezier(.22,.65,.25,1)}
 /* 入館須知：題字 → 引言 → 歡迎詞 → 目錄 → 五章館約 */
 .route-stage .house-rules-brand,
@@ -57,6 +58,17 @@
 .route-stage .services-feature:nth-child(2){animation-delay:1.34s}
 .route-stage .services-feature:nth-child(n+3){animation-delay:1.5s}
 .route-stage .services-ending{animation:quietRise 1.24s var(--public-reveal-ease) 1.58s both}
+/* 值班排班：沿用其他公開資訊頁面的狐火淡入節奏。 */
+.route-stage .shift-eyebrow,.route-stage .shift-ornament{animation:quietRise 1.12s var(--public-reveal-ease) .16s both}
+.route-stage .shift-hero h1{animation:quietRise 1.26s var(--public-reveal-ease) .34s both}
+.route-stage .shift-hero-sub{animation:quietRise 1.18s var(--public-reveal-ease) .54s both}
+.route-stage .shift-intro,.route-stage .shift-legend{animation:quietRise 1.26s var(--public-reveal-ease) .72s both}
+.route-stage .shift-toolbar{animation:quietRise 1.12s var(--public-reveal-ease) .94s both}
+.route-stage .shift-week{animation:quietRise 1.3s var(--public-reveal-ease) both;animation-delay:1.08s}
+.route-stage .shift-week:nth-child(2){animation-delay:1.22s}
+.route-stage .shift-week:nth-child(3){animation-delay:1.36s}
+.route-stage .shift-week:nth-child(4){animation-delay:1.5s}
+.route-stage .shift-disclaimer{animation:quietFade 1.2s var(--public-reveal-ease) 1.58s both}
 /* 點菜：茶宴題字 → 主旨 → 卷別與御品 → 點單；分類可由 Supabase 非同步載入 */
 .route-stage .tea-menu-brand,
 .route-stage .tea-menu-seal{animation:quietRise 1.12s var(--public-reveal-ease) .16s both}
@@ -92,6 +104,7 @@
  .services-shortcuts,
  .services-feature,
  .services-ending,
+ .shift-eyebrow,.shift-ornament,.shift-hero h1,.shift-hero-sub,.shift-intro,.shift-legend,.shift-toolbar,.shift-week,.shift-disclaimer,
  .tea-menu-brand,
  .tea-menu-seal,
  .tea-menu-hero h1,
