@@ -140,7 +140,7 @@ begin
  from public.booking_plans p where p.id=p_plan_id and p.is_active=true;
  if not found then raise exception '指名方案已變更，請重新整理' using errcode='22023'; end if;
  select count(*) into v_count from public.staff s
- where s.id=any(v_staff_ids) and s.is_published=true;
+ where s.id=any(v_staff_ids) and s.is_published=true and s.role like '%狐姬%';
  if v_count<>array_length(v_staff_ids,1)
  then raise exception '指定狐姬已不開放，請重新整理' using errcode='22023'; end if;
  if exists(select 1 from public.staff_booking_presence o
@@ -208,7 +208,7 @@ begin
  from public.booking_request_staff l where l.booking_id=p_booking_id;
  if coalesce(array_length(v_ids,1),0)=0 then
   raise exception '沒有可接取的狐姬' using errcode='P0001'; end if;
- if exists(select 1 from public.staff s where s.id=any(v_ids) and not s.is_published)
+ if exists(select 1 from public.staff s where s.id=any(v_ids) and (not s.is_published or s.role not like '%狐姬%'))
  then raise exception '有狐姬已取消公開，無法接取' using errcode='P0001'; end if;
  insert into public.staff_booking_presence(staff_id) select unnest(v_ids)
   on conflict(staff_id) do nothing;
