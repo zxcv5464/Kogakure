@@ -266,20 +266,36 @@ export default function ServiceManagement(){
      <label>特色標籤 <small>每行一個，最多 12 個</small>
       <textarea rows={4} value={detailsText} onChange={e=>setDetailsText(e.target.value)} placeholder={'狐姬合影\n拍立得風格\n旅途紀念'} disabled={busy}/></label>
      <div className="service-admin-photo-block">
-      <h3>服務形象照片</h3>
-      <div className="service-admin-photo-content">
-       <div className="service-admin-preview">
-        {previewUrl||draft.imageUrl?<img src={previewUrl||draft.imageUrl||''} alt={draft.photoLabel||draft.category+'照片預覽'}/>:<div><ImagePlus size={30}/><span>等待上傳</span></div>}
-       </div>
-       <div className="service-admin-photo-actions">
-        <label>圖片預留文字 <input maxLength={100} value={draft.photoLabel} onChange={e=>patch('photoLabel',e.target.value)} disabled={busy}/></label>
-        <label className="service-admin-upload"><ImagePlus size={17}/>{photoFile?'重新選擇照片':'選擇／替換照片'}
-         <input type="file" accept="image/jpeg,image/png,image/webp" disabled={busy}
-          onChange={e=>{choosePhoto(e.target.files?.[0]);e.target.value=''}}/></label>
-        <small>支援 JPG、PNG、WebP，最多 6 MB。儲存時才會上傳；未上傳時前台保留原本的神祕風格預留區。</small>
-        {(photoFile||draft.imageUrl)&&<button type="button" disabled={busy} className="service-admin-remove-image"
-         onClick={()=>{setPhotoFile(null);patch('imageUrl',null)}}>移除目前照片</button>}
-       </div>
+      <div className="service-admin-photo-head">
+       <h3>服務形象照片</h3>
+       <span>{photoSlots.length} / {maxServicePhotos} 張 · 每 5 秒漸變輪播</span>
+      </div>
+      <div className="service-admin-photo-list" aria-label="服務照片播放順序">
+       {photoSlots.map((photo,index)=><div className="service-admin-photo-card" key={photo.id}>
+        <div className="service-admin-preview"><img src={photo.url} alt={'第 '+(index+1)+' 張服務照片預覽'}/></div>
+        <div className="service-admin-photo-card-tools">
+         <span>第 {index+1} 張{photo.file?' · 待上傳':''}</span>
+         <div>
+          <button type="button" disabled={busy||index===0} onClick={()=>movePhoto(index,-1)}
+           aria-label={'將第 '+(index+1)+' 張照片上移'} title="上移"><ArrowUp size={16}/></button>
+          <button type="button" disabled={busy||index===photoSlots.length-1} onClick={()=>movePhoto(index,1)}
+           aria-label={'將第 '+(index+1)+' 張照片下移'} title="下移"><ArrowDown size={16}/></button>
+          <button type="button" className="is-remove" disabled={busy} onClick={()=>removePhoto(photo.id)}
+           aria-label={'移除第 '+(index+1)+' 張照片'} title="移除照片"><Trash2 size={16}/></button>
+         </div>
+        </div>
+       </div>)}
+       {!photoSlots.length&&<div className="service-admin-photo-empty">
+        <ImagePlus size={32}/><span>等待上傳 · 照片預留區</span>
+       </div>}
+      </div>
+      <div className="service-admin-photo-actions">
+       <label>圖片預留文字 <input maxLength={100} value={draft.photoLabel} onChange={e=>patch('photoLabel',e.target.value)} disabled={busy}/></label>
+       <label className="service-admin-upload"><ImagePlus size={17}/>選擇／追加多張照片
+        <input type="file" accept="image/jpeg,image/png,image/webp" multiple disabled={busy||photoSlots.length>=maxServicePhotos}
+         onChange={e=>{choosePhotos(e.target.files);e.target.value=''}}/>
+       </label>
+       <small>可一次選擇多張 JPG、PNG、WebP；每張最多 6 MB，每個服務最多 {maxServicePhotos} 張。使用上下箭頭調整輪播順序，移除不需要的照片。新照片會在按「儲存服務」後才上傳。</small>
       </div>
      </div>
      <div className="service-admin-fields two">
