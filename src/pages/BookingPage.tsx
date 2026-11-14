@@ -2,9 +2,12 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { CSSProperties, FormEvent } from 'react'
 import { Check, Clock3, Send, Sparkles, X } from 'lucide-react'
 import { configured } from '../lib/config'
+import { BOOKING_PAGE_READY_EVENT } from '../lib/route-events'
+import BookingLoading from '../components/BookingLoading'
+import '../components/staff-card.css'
 import { loadPublicStaff } from '../lib/public-staff'
 import {
- countdown, describeBookingError, isStaffBusy, loadBookingPlans, loadStaffPresence,
+ describeBookingError, isStaffBusy, loadBookingPlans, loadStaffPresence,
  submitNomination, watchBookingChanges,
 } from '../lib/bookings'
 import type { BookingPlan, StaffPresence } from '../lib/bookings'
@@ -42,9 +45,11 @@ export default function BookingPage(){
     setPeople(staff.filter(p=>p.published))
     setPlans(loadedPlans);setPlanId(loadedPlans[0]?.id||'');setPresence(status)
    }).catch(e=>{if(live)setError(describeBookingError(e))})
-   .finally(()=>{if(live){setLoading(false);window.dispatchEvent(new Event('kogakure:booking-ready'))}})
+   .finally(()=>{if(live)setLoading(false)})
   return()=>{live=false}
  },[])
+ // Notify the shared route transition only after data or an error is ready.
+ useEffect(()=>{if(!loading)window.dispatchEvent(new Event(BOOKING_PAGE_READY_EVENT))},[loading])
 
  useEffect(()=>{
   if(loading||!configured)return
@@ -107,6 +112,7 @@ export default function BookingPage(){
   finally{setSending(false)}
  }
 
+ if(loading)return <BookingLoading />
  return <section className="booking-page" aria-label="狐姬指名預約">
   <header className="booking-hero">
    <p className="booking-eyebrow">狐隱 · KOGAKURE</p>
