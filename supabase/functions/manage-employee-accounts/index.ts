@@ -5,7 +5,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2.86.0'
 
 const siteOrigin = 'https://zxcv5464.github.io'
 const internalDomain = 'staff.kogakure.invalid'
-const allowedPermissions = new Set(['staff.manage','menu.manage','booking.manage'])
+const allowedPermissions = new Set(['staff.manage','menu.manage','booking.manage','orders.manage'])
 const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
 const secretKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 const service = createClient(supabaseUrl, secretKey, {
@@ -28,7 +28,7 @@ function reply(req:Request,status:number,value:Record<string,unknown>){
  return new Response(JSON.stringify(value),{status,headers:cors(req)})
 }
 function validatedPermissions(value:unknown):string[]|null{
- if(!Array.isArray(value)||value.length>3||
+ if(!Array.isArray(value)||value.length>4||
   !value.every(x=>typeof x==='string'&&allowedPermissions.has(x)))return null
  return [...new Set(value)]
 }

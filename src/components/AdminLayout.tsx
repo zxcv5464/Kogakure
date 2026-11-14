@@ -14,7 +14,7 @@ function AdminLayoutFrame({children}:{children:React.ReactNode}) {
  const {confirmNavigation} = useAdminEditGuard()
  const { pathname } = useLocation()
  useEffect(() => {
-  document.title = '狐隱 KOGAKURE｜' + (pathname.replace(/\/+$/, '') === '/admin/accounts' ? '員工帳號與權限' : pathname.replace(/\/+$/, '') === '/admin/booking' ? '預約管理' : pathname.replace(/\/+$/, '') === '/admin/menu' ? '菜單管理' : pathname.replace(/\/+$/, '') === '/admin/staff' ? '員工名帖管理' : '管理後台')
+  document.title = '狐隱 KOGAKURE｜' + (pathname.replace(/\/+$/, '') === '/admin/accounts' ? '員工帳號與權限' : pathname.replace(/\/+$/, '') === '/admin/booking' ? '預約管理' : pathname.replace(/\/+$/, '') === '/admin/orders' ? '茶宴訂單管理' : pathname.replace(/\/+$/, '') === '/admin/menu' ? '菜單管理' : pathname.replace(/\/+$/, '') === '/admin/staff' ? '員工名帖管理' : '管理後台')
  }, [pathname])
  return <div className="admin-shell">
   <header className="admin-shell-header">

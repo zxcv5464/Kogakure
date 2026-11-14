@@ -50,11 +50,14 @@
 .admin-nav-link.is-active svg { color: #d7b687; }
 /* Exact number of pending booking requests; visible in desktop sidebar
    and compact mobile navigation. Keep it distinct from planned modules. */
-.admin-nav-link.has-booking-pending {
+.admin-nav-link.has-booking-pending,
+.admin-nav-link.has-order-pending {
  border-color: rgba(216,145,114,.23);
 }
 .admin-nav-booking-badge,
-.admin-nav-booking-warning {
+.admin-nav-booking-warning,
+.admin-nav-order-badge,
+.admin-nav-order-warning {
  display: inline-grid;
  place-items: center;
  flex: 0 0 auto;
@@ -71,14 +74,17 @@
  font-variant-numeric: tabular-nums;
  line-height: 1;
 }
-.admin-nav-booking-warning {
+.admin-nav-booking-warning,
+.admin-nav-order-warning {
  border-color: rgba(217,186,127,.5);
  background: rgba(106,88,48,.26);
  color: #efd4a3;
 }
 @media (max-width: 850px) {
  .admin-nav-booking-badge,
- .admin-nav-booking-warning { margin-left: 2px; min-width: 21px; height: 21px; padding: 1px 6px; font-size: .69rem; }
+ .admin-nav-booking-warning,
+ .admin-nav-order-badge,
+ .admin-nav-order-warning { margin-left: 2px; min-width: 21px; height: 21px; padding: 1px 6px; font-size: .69rem; }
 }
 
 .admin-nav-planned {
