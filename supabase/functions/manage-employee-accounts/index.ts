@@ -49,7 +49,7 @@ function validatedUserId(value:unknown):value is string{
 }
 async function findEmployee(id:string){
  const {data,error}=await service.from('employee_accounts')
-  .select('user_id,username').eq('user_id',id).maybeSingle()
+  .select('user_id,username,email').eq('user_id',id).maybeSingle()
  if(error)throw error
  return data
 }
@@ -132,6 +132,34 @@ Deno.serve(async(req:Request)=>{
    const {error}=await service.auth.admin.updateUserById(id,{password:body.password})
    if(error)return reply(req,500,{error:'無法重設員工密碼，請稍後再試'})
    return reply(req,200,{ok:true,message:'員工登入密碼已重設，請私下通知本人使用新密碼'})
+  }
+
+  if(body.action==='convert_legacy'){
+   const id=body.userId
+   const username=validatedUsername(body.username)
+   if(!validatedUserId(id)||!username||!validatedPassword(body.password))
+    return reply(req,400,{error:'新帳號名稱或密碼不符合規則'})
+   const employee=await findEmployee(id)
+   if(!employee||await isManager(id)||!employee.username.startsWith('legacy_'))
+    return reply(req,404,{error:'找不到需要轉換的舊版員工帳號'})
+   const {data:duplicate,error:duplicateError}=await service.from('employee_accounts')
+    .select('user_id').eq('username',username).maybeSingle()
+   if(duplicateError)return reply(req,500,{error:'無法確認新帳號是否可用'})
+   if(duplicate&&duplicate.user_id!==id)return reply(req,409,{error:'新登入名稱已被使用'})
+   const email=username+'@'+internalDomain
+   const {error:rowError}=await service.from('employee_accounts')
+    .update({username,email}).eq('user_id',id)
+   if(rowError)return reply(req,500,{error:'無法更新員工登入名稱'})
+   const {error:authError}=await service.auth.admin.updateUserById(id,{
+    email,password:body.password,email_confirm:true,
+   })
+   if(authError){
+    const {error:rollbackError}=await service.from('employee_accounts')
+     .update({username:employee.username,email:employee.email}).eq('user_id',id)
+    if(rollbackError)console.error('Legacy account conversion rollback failed',rollbackError.code)
+    return reply(req,500,{error:'舊帳號轉換失敗，請確認原登入方式仍可使用後再重新操作'})
+   }
+   return reply(req,200,{ok:true,message:'舊員工帳號已轉換為新登入名稱及管理員設定的密碼，原有權限保留'})
   }
 
   if(body.action==='delete'){
