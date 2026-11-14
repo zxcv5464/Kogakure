@@ -42,7 +42,7 @@ export default function BookingPage(){
   Promise.all([loadPublicStaff(),loadBookingPlans(),loadStaffPresence()])
    .then(([staff,loadedPlans,status])=>{
     if(!live)return
-    setPeople(staff.filter(p=>p.published))
+    setPeople(staff.filter(p=>p.published&&p.role.includes('狐姬')))
     setPlans(loadedPlans);setPlanId(loadedPlans[0]?.id||'');setPresence(status)
    }).catch(e=>{if(live)setError(describeBookingError(e))})
    .finally(()=>{if(live)setLoading(false)})
