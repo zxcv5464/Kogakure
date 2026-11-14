@@ -26,7 +26,7 @@
 - 員工不會自動變更 GitHub、Supabase 專案的管理權限，也不會被加入 `admin_users`。
 
 ## 佈署及啟用
-1. 依序套用 migration：`supabase/migrations/20261115_01_employee_accounts_permissions.sql` 及 `supabase/migrations/20261115_02_employee_permission_invoker.sql`。第二個 migration 令員工權限驗證函式以登入者身分和 RLS 執行，不使用資料庫擁有者權限。
+1. 依序套用三份 migration：`20261115_01_employee_accounts_permissions.sql`、`20261115_02_employee_permission_invoker.sql`、`20261115_03_booking_operator_staff_read.sql`（均位於 `supabase/migrations/`）。第二份令員工權限驗證函式以登入者身分和 RLS 執行；第三份讓有預約權限的館員可**唯讀**尚未公開的人員資料，以確保接單時能阻止指名被關閉的人員，但不能編輯名帖。
 2. 部署 Edge Function：`supabase/functions/manage-employee-accounts/index.ts`，**verify_jwt=true**。依賴 Supabase 平台內建 `SUPABASE_URL`、`SUPABASE_SERVICE_ROLE_KEY` 服務端環境變數。
 3. 在 **Supabase Dashboard → Authentication → URL Configuration** 中確認允許 `https://zxcv5464.github.io/Kogakure/admin/` 作為 Auth Redirect URL；邀請信會使用此網址。
 4. 確認 Auth 已開啟 Email，且有寄送邀請信的郵件配額／SMTP 設定。
