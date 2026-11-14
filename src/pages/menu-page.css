@@ -43,10 +43,10 @@
 .tea-menu-cart-empty{margin:18px 0 0;color:#c4b9ad;line-height:1.7;font-size:.87rem}
 .tea-menu-total{display:flex;justify-content:space-between;gap:12px;margin:16px 0;color:#eedabd;font-size:1.03rem}
 .tea-menu-total strong{color:#ffd79d;font-variant-numeric:tabular-nums}
-.tea-menu-summary-actions{display:flex;flex-wrap:wrap;gap:10px}
-.tea-menu-summary-actions button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:43px;padding:10px 17px;border-radius:5px;font-size:.84rem}
-.tea-menu-copy{border:1px solid #dab585;background:#d6b486;color:#1a1820;font-weight:600}
-.tea-menu-clear{border:1px solid rgba(216,181,129,.4);background:transparent;color:#ead5ba}
+.tea-menu-summary-heading{flex-wrap:wrap;row-gap:9px}
+.tea-menu-clear{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:36px;padding:7px 12px;border:1px solid rgba(216,181,129,.4);border-radius:5px;background:transparent;color:#ead5ba;font-size:.77rem;white-space:nowrap}
+.tea-menu-clear:hover:not(:disabled){background:rgba(216,181,129,.1)}
+.tea-menu-clear:disabled{opacity:.46;cursor:not-allowed}
 .tea-menu-summary-note{margin:17px 0 0;font-size:.74rem;color:#baad9e;line-height:1.8}
 .tea-menu-ending{text-align:center;max-width:760px;margin:57px auto 0;border-top:1px solid rgba(213,173,123,.26);padding:27px 10px}
 .tea-menu-ending>span{color:#c3a57c}
@@ -78,3 +78,6 @@
 .tea-menu-order-success li{border:0;padding:2px 0;color:#e4e8d8;font-size:.79rem}
 .tea-menu-order-success strong{font-size:.81rem;color:#ead8a6}
 @media(max-width:600px){.tea-menu-order-fields{grid-template-columns:minmax(0,1fr)}.tea-menu-order-form button.tea-menu-send{width:100%}.tea-menu-order-success{padding:14px 12px}}
+
+/* Narrow screens: show the clear option on a second aligned row, not squeezed beside the total. */
+@media(max-width:490px){.tea-menu-summary-heading .tea-menu-clear{margin-left:auto}}
