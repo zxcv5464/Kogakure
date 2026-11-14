@@ -48,3 +48,7 @@ jobs:
         env:
           VITE_OFFLINE_PREVIEW: 'true'
         run: node scripts/qa-staff-crop.mjs
+      - name: Verify booking cards visibility and admin create/delete workflow
+        env:
+          VITE_OFFLINE_PREVIEW: 'true'
+        run: node scripts/qa-booking-admin-crud.mjs

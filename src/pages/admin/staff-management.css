@@ -382,3 +382,7 @@
  color: #c4e4c9;
  line-height: 1.65;
 }
+
+.staff-booking-toggle{margin-top:16px;padding-top:16px;border-top:1px solid rgba(215,211,206,.15)}
+.staff-booking-toggle strong{color:#e4c8a0}
+.staff-booking-toggle input{accent-color:#cfa873}

@@ -4,8 +4,8 @@ import { Check, Clock3, Send, Sparkles, X } from 'lucide-react'
 import { configured } from '../lib/config'
 import { BOOKING_PAGE_READY_EVENT } from '../lib/route-events'
 import BookingLoading from '../components/BookingLoading'
-import '../components/staff-card.css'
 import { loadPublicStaff } from '../lib/public-staff'
+import { getStaff } from '../lib/staff'
 import {
  describeBookingError, isStaffBusy, loadBookingPlans, loadStaffPresence,
  submitNomination, watchBookingChanges,
@@ -42,7 +42,7 @@ export default function BookingPage(){
   Promise.all([loadPublicStaff(),loadBookingPlans(),loadStaffPresence()])
    .then(([staff,loadedPlans,status])=>{
     if(!live)return
-    setPeople(staff.filter(p=>p.published&&p.role.includes('狐姬')))
+    setPeople(staff.filter(p=>p.published&&p.bookingVisible&&p.role.includes('狐姬')))
     setPlans(loadedPlans);setPlanId(loadedPlans[0]?.id||'');setPresence(status)
    }).catch(e=>{if(live)setError(describeBookingError(e))})
    .finally(()=>{if(live)setLoading(false)})
@@ -57,6 +57,7 @@ export default function BookingPage(){
   const refresh=()=>{
    void loadStaffPresence().then(p=>{if(live)setPresence(p)}).catch(()=>{})
    // Plans are editable in the admin console; refresh while this page is open.
+   void getStaff().then(rows=>{if(live)setPeople(rows.filter(p=>p.published&&p.bookingVisible&&p.role.includes('狐姬')))}).catch(()=>{})
    void loadBookingPlans().then(updated=>{
     if(!live)return
     setPlans(updated)
@@ -138,22 +139,26 @@ export default function BookingPage(){
     {people.map((person,index)=>{
      const busyUntil=statusByStaff.get(person.id)
      const busy=isStaffBusy(busyUntil,now)
-     return <article className={'booking-profile staff-entry effect-'+person.effect+(person.thumbnailUrl.includes('-crop.webp')?' has-manual-crop':'')} key={person.id}
+     return <article className={'booking-profile effect-'+person.effect+(person.thumbnailUrl.includes('-crop.webp')?' has-manual-crop':'')} key={person.id}
       style={{'--accent':person.themeColor||'#c4ac83','--booking-delay':Math.min(index,8)*95+'ms'} as CSSProperties}>
-      <button className="omamori-card booking-profile-action" type="button"
+      <button className="booking-profile-action" type="button"
        onClick={()=>openBooking(person)} disabled={busy||!plans.length}
        aria-label={person.name+(busy?'指名中，暫不開放預約':'空閒中，點選預約')}>
-       <span className="omamori-body">
-        <span className="omamori-border" aria-hidden="true"/>
-        <span className="omamori-art"><img src={person.thumbnailUrl||person.imageUrl} alt={person.name+'的角色照片'} loading={index>2?'lazy':'eager'} decoding="async"/><span className="photo-shadow"/></span>
-        <span className={'booking-card-status '+(busy?'is-booked':'is-available')}><i/>{busy?'指名中':'空閒中'}</span>
-        <span className="card-text">
-         <span className="card-role">{person.role||'狐姬'}</span>
-         <span className="card-name">{person.name}</span>
-         <span className="card-tagline">{person.tagline||'山間狐火，靜候有緣旅人。'}</span>
-         <span className="card-cta">{busy?'此刻正在接待':'點此指名 · 預約相逢'} <Sparkles size={15}/></span>
+       <span className="booking-portrait">
+        {person.thumbnailUrl||person.imageUrl
+         ? <img src={person.thumbnailUrl||person.imageUrl} alt={person.name+'的角色照片'} loading={index>2?'lazy':'eager'} decoding="async"/>
+         : <span className="booking-photo-placeholder"><Sparkles size={32}/></span>}
+       </span>
+       <span className="booking-card-details">
+        <span className="booking-card-topline"><span className="booking-card-overline">KOGAKURE · 指名名帖</span>
+         <span className={'booking-card-status '+(busy?'is-booked':'is-available')}><i/>{busy?'指名中':'空閒中'}</span>
         </span>
-        <span className="card-shine" aria-hidden="true"/>
+        <span className="booking-card-role">{person.role||'狐姬'}</span>
+        <span className="booking-card-name">{person.name}</span>
+        <span className="booking-card-ornament" aria-hidden="true"/>
+        <span className="booking-card-description">{person.tagline||'山間狐火，靜候有緣旅人。'}</span>
+        {person.services.length>0&&<span className="booking-card-services">{person.services.slice(0,2).map(service=><span key={service}>{service}</span>)}</span>}
+        <span className="booking-card-cta">{busy?'此刻正在接待，暫不開放指名':plans.length?'點選名片 · 提出指名申請':'等待館方開放方案'} <Sparkles size={15}/></span>
        </span>
       </button>
      </article>

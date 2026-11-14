@@ -76,3 +76,23 @@
 .booking-admin-detail-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:22px}
 @media(max-width:950px){.booking-admin-list{grid-template-columns:1fr}.booking-admin-plan-layout{grid-template-columns:1fr}.booking-admin-plan-list{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}}
 @media(max-width:640px){.booking-admin-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.booking-admin-header h1{font-size:1.5rem}.booking-admin-detail dl>div{grid-template-columns:1fr;gap:4px}.booking-admin-detail{padding:19px}.booking-admin-alert{flex-wrap:wrap}.booking-admin-plan-row{grid-template-columns:1fr}}
+
+/* 管理員手動新增預約：金色主操作與獨立編輯視窗 */
+.booking-admin-top-actions .booking-admin-new-button{background:#d5b17e;color:#211a21;font-weight:700;border-color:#d8bc92}
+.booking-admin-top-actions{flex-wrap:wrap}
+.booking-admin-create{width:min(100%,640px)}
+.booking-admin-create-intro{font-size:.83rem;line-height:1.85;color:#cdbba7;margin:0 0 18px}
+.booking-admin-create form{display:grid;gap:16px}
+.booking-admin-create form>label{display:grid;gap:7px;font-size:.82rem;color:#e6cfb2}
+.booking-admin-create input:not([type=checkbox]),.booking-admin-create textarea,.booking-admin-create select{width:100%;min-height:43px;padding:9px 12px;border:1px solid rgba(215,180,129,.35);border-radius:6px;color:#f3e7d6;background:#13131d}
+.booking-admin-create textarea{resize:vertical}
+.booking-admin-create select option{background:#22212e;color:#f0dfc9}
+.booking-admin-create fieldset{min-width:0;border:1px solid rgba(214,177,128,.25);border-radius:7px;padding:12px 15px}
+.booking-admin-create legend{padding:0 6px;color:#e4c49a;font-size:.82rem}
+.booking-admin-create fieldset>p{color:#c4b3a0;font-size:.8rem}
+.booking-admin-create .booking-admin-create-staff{display:flex;align-items:center;gap:11px;min-height:39px;color:#ead6bb;font-size:.86rem}
+.booking-admin-create-staff input{accent-color:#d6b480;width:18px;height:18px;flex:none}
+.booking-admin-create-staff small{color:#b8a993;font-size:.72rem;margin-left:auto}
+.booking-admin-create-actions{display:flex;justify-content:flex-end;gap:9px}
+.booking-admin-create-actions button{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 16px;min-height:44px;border:1px solid rgba(221,185,133,.4);border-radius:6px;color:#efd9b9;background:#27252f;font-size:.82rem}
+@media(max-width:600px){.booking-admin-create{max-height:94dvh;padding:20px 16px}.booking-admin-create-actions button{flex:1}.booking-admin-top-actions .booking-admin-new-button{flex:1}}
