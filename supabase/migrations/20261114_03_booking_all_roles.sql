@@ -33,7 +33,7 @@ begin
  select count(*) into v_count from public.staff s
  where s.id=any(v_staff_ids) and s.is_published=true and s.is_booking_visible=true;
  if v_count<>array_length(v_staff_ids,1)
- then raise exception '指定狐姬已不開放，請重新整理' using errcode='22023'; end if;
+ then raise exception '指定館員已停止開放指名，請重新整理' using errcode='22023'; end if;
  if exists(select 1 from public.staff_booking_presence o
            where o.staff_id=any(v_staff_ids) and o.busy_until>now())
  then raise exception '部分狐姬正在指名中，請重新選擇' using errcode='22023'; end if;
@@ -96,7 +96,7 @@ begin
  if coalesce(array_length(v_ids,1),0)=0 then
   raise exception '沒有可接取的狐姬' using errcode='P0001'; end if;
  if exists(select 1 from public.staff s where s.id=any(v_ids) and (not s.is_published or not s.is_booking_visible))
- then raise exception '有狐姬已取消公開，無法接取' using errcode='P0001'; end if;
+ then raise exception '有館員已停止公開或指名，無法接取' using errcode='P0001'; end if;
  insert into public.staff_booking_presence(staff_id) select unnest(v_ids)
   on conflict(staff_id) do nothing;
  -- Locks serialize competing admins booking the same fox maid.
@@ -145,7 +145,7 @@ begin
  select count(*) into v_count from public.staff s
  where s.id=any(v_ids) and s.is_published and s.is_booking_visible;
  if v_count <> array_length(v_ids,1) then
-  raise exception '部分狐姬未開放預約頁面，請重新整理' using errcode='22023';
+  raise exception '部分館員未開放指名，請重新整理' using errcode='22023';
  end if;
  insert into public.booking_requests(guest_name,guest_world,note,plan_id,plan_name,duration_minutes,price_gil)
  values(v_guest,v_world,v_note,v_plan.id,v_plan.name,v_plan.duration_minutes,v_plan.price_gil)
