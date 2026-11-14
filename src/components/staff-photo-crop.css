@@ -1,0 +1,32 @@
+/* Manual portrait selection uses the actual source-image bounds; the 0.655
+   selection ratio matches the omamori body exactly. */
+.staff-crop-workspace{width:100%;margin-top:17px;padding:19px;border:1px solid rgba(218,182,129,.42);border-radius:10px;background:linear-gradient(155deg,#29242f,#181b25);color:#e9dcc8}
+.staff-crop-heading{display:flex;align-items:start;gap:12px;justify-content:space-between;margin-bottom:14px}
+.staff-crop-heading h4{font-family:'Noto Serif TC',serif;font-size:1.05rem;color:#f4d6a7;margin:0 0 8px}
+.staff-crop-heading p{font-size:.78rem;color:#c8baa8;line-height:1.7;margin:0}
+.staff-crop-close{flex:none;display:grid;place-items:center;width:34px;height:34px;border:1px solid rgba(210,174,128,.25);border-radius:6px;background:#292631;color:#d9c2a0}
+.staff-crop-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(190px,228px);gap:20px;align-items:start;min-width:0}
+.staff-crop-stage{display:flex;justify-content:center;align-items:center;min-width:0;min-height:150px;padding:13px;border-radius:6px;background:#0c0d13;box-shadow:inset 0 0 0 1px rgba(208,180,133,.18)}
+.staff-crop-image-wrap{position:relative;display:inline-block;max-width:100%;overflow:hidden;line-height:0;user-select:none}
+.staff-crop-image-wrap>img{display:block;max-width:100%;max-height:445px;width:auto;height:auto;object-fit:contain;-webkit-user-drag:none}
+.staff-crop-selection{position:absolute;z-index:2;border:2px solid #f3cb85;box-shadow:0 0 0 1000px rgba(0,0,0,.56),inset 0 0 0 1px rgba(0,0,0,.55);cursor:grab;touch-action:none;user-select:none;border-radius:2px}
+.staff-crop-selection:active{cursor:grabbing}
+.staff-crop-selection:focus-visible{outline:3px solid #fff3d8}
+.staff-crop-grid-lines{position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,transparent 33%,rgba(254,227,176,.4) 33.3%,transparent 33.7%,transparent 66%,rgba(254,227,176,.4) 66.3%,transparent 66.7%),linear-gradient(0deg,transparent 33%,rgba(254,227,176,.35) 33.3%,transparent 33.7%,transparent 66%,rgba(254,227,176,.35) 66.3%,transparent 66.7%)}
+.staff-crop-handle{position:absolute;right:-5px;bottom:-5px;width:12px;height:12px;border:2px solid #1a1313;background:#ffd696;border-radius:50%;pointer-events:none}
+.staff-crop-controls{min-width:0;display:flex;flex-direction:column;gap:11px}
+.staff-crop-side-title{font-family:'Noto Serif TC',serif;color:#f1d4a9;font-size:.83rem;margin:0;text-align:center}
+.staff-crop-card-preview{position:relative;width:min(100%,165px);margin:0 auto;overflow:hidden;background:#101019;clip-path:polygon(0 12%,50% 0,100% 12%,100% 100%,0 100%);box-shadow:0 5px 22px rgba(0,0,0,.35)}
+.staff-crop-card-preview img{position:absolute;max-width:none;max-height:none;object-fit:fill;transform:none;-webkit-user-drag:none}
+.staff-crop-preview-mask{position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,transparent 20%,rgba(10,8,16,.2) 57%,rgba(9,8,15,.88));border:1px solid rgba(240,207,154,.64)}
+.staff-crop-zoom{display:grid;gap:7px;font-size:.8rem;color:#e0c9a7}
+.staff-crop-zoom strong{float:right;color:#f4d2a0;font-variant-numeric:tabular-nums}
+.staff-crop-zoom input{width:100%;height:22px;accent-color:#d4aa72;cursor:pointer}
+.staff-crop-controls-actions{display:flex;flex-wrap:wrap;gap:8px}
+.staff-crop-controls-actions button{display:inline-flex;align-items:center;justify-content:center;gap:5px;min-height:41px;padding:8px 10px;border-radius:5px;font-size:.76rem}
+.staff-crop-reset{background:#282633;color:#e8d1b1;border:1px solid rgba(224,181,119,.3)}
+.staff-crop-confirm{flex:1;background:#dabc8d;color:#20151a;font-weight:700;border:1px solid #e4bf8a}
+.staff-crop-controls button:disabled{cursor:not-allowed;opacity:.45}
+.staff-crop-controls>small{font-size:.72rem;line-height:1.75;color:#bba897}
+.staff-crop-error{color:#ffb9b3;padding:8px 0;font-size:.8rem}
+@media(max-width:720px){.staff-crop-workspace{padding:14px}.staff-crop-layout{grid-template-columns:minmax(0,1fr)}.staff-crop-stage{padding:9px}.staff-crop-image-wrap>img{max-height:50dvh}.staff-crop-card-preview{width:148px}.staff-crop-controls-actions button{min-width:120px}.staff-crop-controls{max-width:450px;margin:auto;width:100%}}
