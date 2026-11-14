@@ -1,0 +1,2 @@
+.booking-loading{min-height:min(69dvh,650px);display:grid;align-content:center;justify-items:center;gap:9px;color:#d7bd96;text-align:center;background:linear-gradient(180deg,rgba(12,12,21,.85),rgba(17,15,26,.95))}
+.booking-loading span{font-size:1.55rem;color:#e0ba84}.booking-loading p{margin:0;font-family:'Noto Serif TC',serif;font-size:.9rem;letter-spacing:.09em}
