@@ -57,7 +57,8 @@
 .booking-modal-shade{position:fixed;inset:0;z-index:600;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(8,9,14,.88);backdrop-filter:blur(8px)}
 .booking-modal{width:min(100%,640px);max-height:min(92dvh,950px);overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;padding:clamp(20px,4vw,34px);border-radius:11px;border:1px solid rgba(219,178,121,.47);background:linear-gradient(140deg,#2c2432,#191822 65%);box-shadow:0 30px 110px rgba(0,0,0,.72);color:#f0e0cb}
 .booking-modal-header{display:flex;justify-content:space-between;gap:14px;align-items:start;padding-bottom:18px;border-bottom:1px solid rgba(213,174,121,.25)}
-.booking-modal-header h2{font-family:'Noto Serif TC',serif;font-size:clamp(1.25rem,3vw,1.64rem);color:#f1d8ad;margin:9px 0 0}
+.booking-modal-header>div{flex:1;min-width:0}
+.booking-modal-header h2{font-family:'Noto Serif TC',serif;font-size:clamp(1.25rem,3vw,1.64rem);color:#f1d8ad;margin:9px 0 0;overflow-wrap:anywhere}
 .booking-modal-close{display:grid;place-items:center;width:41px;height:41px;border-radius:6px;border:1px solid rgba(224,190,143,.25);color:#f2d8b1;background:rgba(0,0,0,.14)}
 .booking-modal-close:disabled{opacity:.4}
 .booking-form{display:flex;flex-direction:column;gap:16px;padding-top:20px}
