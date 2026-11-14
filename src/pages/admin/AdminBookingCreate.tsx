@@ -48,7 +48,8 @@ export default function AdminBookingCreate({plans,close,onCreated}:Props){
  async function submit(event:FormEvent){
   event.preventDefault()
   if(busy)return
-  if(name.trim().length<2||world.trim().length<2||!planId||!staffIds.length){setError('請填寫角色姓名、伺服器、方案並選擇至少一位狐姬');return}
+  if(name.trim().length<2||world.trim().length<2||!planId||!staffIds.length){setError('請填寫角色姓名、伺服器、方案並選擇至少一位館員');return}
+  if(staffIds.length>2){setError('每筆預約最多指名 2 位館員（主要指名及追加指名各 1 位）');return}
   setBusy(true);setError('')
   try{
    const id=await createAdminBooking({name,world,planId,staffIds,note})
@@ -70,9 +71,9 @@ export default function AdminBookingCreate({plans,close,onCreated}:Props){
      <option value="">請選擇指名方案</option>
      {plans.map(p=><option key={p.id} value={p.id}>{p.name} · {p.durationMinutes} 分鐘{p.active?'':'（未公開，僅後台可用）'}</option>)}
     </select></label>
-    <fieldset><legend>選擇可指名館員（最多四位）</legend>
+    <fieldset><legend>選擇可指名館員（最多 2 位：主要指名＋追加 1 位）</legend>
      {loading?<p role="status">正在取得狐姬名單…</p>:!people.length?<p>目前沒有開放預約展示的館員。</p>:people.map(p=><label className="booking-admin-create-staff" key={p.id}>
-      <input type="checkbox" checked={staffIds.includes(p.id)} disabled={busy||(!staffIds.includes(p.id)&&staffIds.length>=4)}
+      <input type="checkbox" checked={staffIds.includes(p.id)} disabled={busy||(!staffIds.includes(p.id)&&staffIds.length>=2)}
        onChange={e=>setStaffIds(old=>e.target.checked?[...old,p.id]:old.filter(id=>id!==p.id))}/>
       <span>{p.name}</span><small>{p.role}</small>
      </label>)}

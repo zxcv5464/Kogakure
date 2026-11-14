@@ -64,3 +64,7 @@ jobs:
         env:
           VITE_OFFLINE_PREVIEW: 'true'
         run: node scripts/qa-admin-booking-sidebar.mjs
+      - name: Verify every additional nominee appears in booking confirmations and admin inbox
+        env:
+          VITE_OFFLINE_PREVIEW: 'true'
+        run: node scripts/qa-booking-extra-nominees.mjs

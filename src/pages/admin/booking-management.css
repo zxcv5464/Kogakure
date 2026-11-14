@@ -96,3 +96,10 @@
 .booking-admin-create-actions{display:flex;justify-content:flex-end;gap:9px}
 .booking-admin-create-actions button{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 16px;min-height:44px;border:1px solid rgba(221,185,133,.4);border-radius:6px;color:#efd9b9;background:#27252f;font-size:.82rem}
 @media(max-width:600px){.booking-admin-create{max-height:94dvh;padding:20px 16px}.booking-admin-create-actions button{flex:1}.booking-admin-top-actions .booking-admin-new-button{flex:1}}
+
+/* Every nomination is visible, including additional staff selected together.
+   Tags wrap safely with long names and on small admin screens. */
+.booking-admin-nominees{display:grid;gap:7px;align-items:start}
+.booking-admin-nominee-list{display:flex;flex-wrap:wrap;align-items:center;gap:7px;min-width:0;overflow-wrap:anywhere}
+.booking-admin-nominee-list>span{display:inline-flex;align-items:center;max-width:100%;padding:5px 9px;border:1px solid rgba(218,178,121,.35);border-radius:5px;background:rgba(218,178,121,.09);color:#f1d9b8;font-size:.8rem;line-height:1.5;overflow-wrap:anywhere;white-space:normal}
+.booking-admin-detail dd.booking-admin-nominee-list{display:flex;flex-wrap:wrap}
