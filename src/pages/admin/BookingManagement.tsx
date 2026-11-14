@@ -92,12 +92,11 @@ export default function BookingManagement(){
  }
  async function removeBooking(record:BookingRequest){
   if(busyRef.current)return
-  const phrase=window.prompt(
-   '即將永久刪除「'+record.guestName+'」的預約資料。\n'+
-   (record.status==='accepted'?'此筆正在指名中，刪除時會同步釋放狐姬的占用狀態。\n':'')+
-   '刪除後無法復原。請輸入「刪除」確認：'
-  )
-  if(phrase!=='刪除')return
+  if(!window.confirm(
+   '確定要刪除「'+record.guestName+'」的這筆預約嗎？\n'+
+   (record.status==='accepted'?'這筆預約正在指名中，刪除後將釋放相關館員的占用狀態。\n':'')+
+   '預約及指名紀錄將永久刪除，無法復原。'
+  ))return
   busyRef.current=true;setBusy(true);setError('');setNotice('')
   try{
    await deleteAdminBooking(record.id)
