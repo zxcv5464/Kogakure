@@ -79,6 +79,7 @@ try{
  assert.match(validateOwnPasswordChange('CurrentPassword123','123456789012','123456789012'),/英文/)
  assert.match(validateOwnPasswordChange('CurrentPassword123','CurrentPassword123','CurrentPassword123'),/不可/)
  assert.match(validateOwnPasswordChange('CurrentPassword123',valid,'not-the-same'),/不一致/)
- assert.match(validateOwnPasswordChange('CurrentPassword123','A'.repeat(127)+'1','A'.repeat(127)+'1'),/不/) === false // 128 chars valid
+ assert.equal(validateOwnPasswordChange('CurrentPassword123','A'.repeat(127)+'1','A'.repeat(127)+'1'),null)
+ assert.match(validateOwnPasswordChange('CurrentPassword123','A'.repeat(129)+'1','A'.repeat(129)+'1'),/128/)
  console.log('PASS: staff password form, current-password identity check, matching policy, no mail, no role escalation')
 }finally{await vite.close()}
