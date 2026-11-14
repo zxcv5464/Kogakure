@@ -16,8 +16,8 @@ const names=[
 ]
 const texts=await Promise.all(names.map(f=>readFile(f,'utf8')))
 const [page,admin,notice,api,transition,app,modules,sql,build]=texts
-assert.ok(page.includes('setPeople(staff.filter(p=>p.published&&p.bookingVisible&&p.role.includes(\'狐姬\')))'), 'Only fox maids belong in the booking gallery')
-for (const phrase of ['空閒中','指名中','預約者遊戲角色姓名','所在伺服器','指名方案','是否同時指名其他狐姬','送出預約申請'])
+assert.ok(page.includes('setPeople(staff.filter(p=>p.published&&p.bookingVisible))'), 'Booking gallery must use visibility flags regardless of role')
+for (const phrase of ['空閒中','指名中','預約者遊戲角色姓名','所在伺服器','指名方案','是否同時指名其他館員','送出預約申請'])
  assert.ok(page.includes(phrase),'Booking form missing '+phrase)
 for (const phrase of ['接取','婉拒','結束服務','同步倒數','剩餘','方案已儲存','待審核'])
  assert.ok(admin.includes(phrase),'Admin workflow missing '+phrase)

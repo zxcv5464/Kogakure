@@ -23,7 +23,7 @@ export default function AdminBookingCreate({plans,close,onCreated}:Props){
 
  useEffect(()=>{
   let alive=true
-  getStaff(true).then(staff=>{if(alive)setPeople(staff.filter(p=>p.published&&p.bookingVisible&&p.role.includes('狐姬')))})
+  getStaff(true).then(staff=>{if(alive)setPeople(staff.filter(p=>p.published&&p.bookingVisible))})
    .catch(e=>{if(alive)setError(describeBookingError(e))})
    .finally(()=>{if(alive)setLoading(false)})
   return()=>{alive=false}
@@ -70,8 +70,8 @@ export default function AdminBookingCreate({plans,close,onCreated}:Props){
      <option value="">請選擇指名方案</option>
      {plans.map(p=><option key={p.id} value={p.id}>{p.name} · {p.durationMinutes} 分鐘{p.active?'':'（未公開，僅後台可用）'}</option>)}
     </select></label>
-    <fieldset><legend>選擇狐姬（最多四位）</legend>
-     {loading?<p role="status">正在取得狐姬名單…</p>:!people.length?<p>目前沒有開放預約頁展示的狐姬。</p>:people.map(p=><label className="booking-admin-create-staff" key={p.id}>
+    <fieldset><legend>選擇可指名館員（最多四位）</legend>
+     {loading?<p role="status">正在取得狐姬名單…</p>:!people.length?<p>目前沒有開放預約展示的館員。</p>:people.map(p=><label className="booking-admin-create-staff" key={p.id}>
       <input type="checkbox" checked={staffIds.includes(p.id)} disabled={busy||(!staffIds.includes(p.id)&&staffIds.length>=4)}
        onChange={e=>setStaffIds(old=>e.target.checked?[...old,p.id]:old.filter(id=>id!==p.id))}/>
       <span>{p.name}</span><small>{p.role}</small>

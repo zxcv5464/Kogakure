@@ -71,13 +71,13 @@ export default function BookingManagement(){
  async function act(booking:BookingRequest,action:'accept'|'reject'|'complete'){
   if(busyRef.current)return
   const label=action==='accept'?'接取':action==='reject'?'婉拒':'結束'
-  if(!window.confirm('確定'+label+'「'+booking.guestName+'」的指名？'+(action==='accept'?'接取後所有指定狐姬即刻顯示指名中並開始計時。':'')))return
+  if(!window.confirm('確定'+label+'「'+booking.guestName+'」的指名？'+(action==='accept'?'接取後所有指定館員即刻顯示指名中並開始計時。':'')))return
   busyRef.current=true;setBusy(true);setError('');setNotice('')
   try{
    await decideBooking(booking.id,action)
    await refresh()
    setIncoming(null)
-   setNotice('已'+label+'申請，狐姬狀態與計時已同步更新。')
+   setNotice('已'+label+'申請，館員狀態與計時已同步更新。')
   }catch(e){setError(describeBookingError(e))}
   finally{busyRef.current=false;setBusy(false)}
  }

@@ -52,3 +52,7 @@ jobs:
         env:
           VITE_OFFLINE_PREVIEW: 'true'
         run: node scripts/qa-booking-admin-crud.mjs
+      - name: Verify responsive booking cards and role-agnostic nominations
+        env:
+          VITE_OFFLINE_PREVIEW: 'true'
+        run: node scripts/qa-booking-role-layout.mjs
