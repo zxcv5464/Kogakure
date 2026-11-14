@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import type { FormEvent } from 'react'
 import { Check, ClipboardList, Minus, Plus, RefreshCcw, Send, CircleCheck } from 'lucide-react'
 import { configured } from '../lib/config'
 import { fetchMenu, initialMenu, sortMenu } from '../lib/menu-catalog'
@@ -64,7 +65,7 @@ export default function MenuPage() {
   ...selected.map(item => `${item.name} × ${quantities[item.id]}　${(item.priceGil * quantities[item.id]).toLocaleString('en-US')} Gil`),
   '合計：' + total.toLocaleString('en-US') + ' Gil',
  ]
- async function sendOrder(e:React.FormEvent){
+ async function sendOrder(e:FormEvent){
   e.preventDefault()
   if(sending)return
   setOrderError('');setReceipt(null)
