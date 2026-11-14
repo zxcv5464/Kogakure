@@ -10,11 +10,13 @@ import { configured } from '../lib/config'
 import { ADMIN_MODULES } from './admin/modules'
 import { useAdminEditGuard } from './admin/AdminEditGuard'
 import BookingNotification, { usePendingBookings } from './admin/BookingNotification'
+import OrderNotification, {usePendingTeaOrders} from './admin/OrderNotification'
 import './admin/admin-workspace.css'
 
 const StaffManagement = lazy(() => import('./admin/StaffManagement'))
 const MenuManagement = lazy(() => import('./admin/MenuManagement'))
 const BookingManagement = lazy(() => import('./admin/BookingManagement'))
+const OrdersManagement = lazy(() => import('./admin/OrdersManagement'))
 const EmployeeAccountsManagement = lazy(() => import('./admin/EmployeeAccountsManagement'))
 
 // Authentication and authorization belong to the shared admin shell, not to
@@ -120,6 +122,7 @@ function allowed(access:BackofficeAccess,id:string){
  if(id==='staff')return permitted(access,'staff.manage')
  if(id==='menu')return permitted(access,'menu.manage')
  if(id==='booking')return permitted(access,'booking.manage')
+ if(id==='orders')return permitted(access,'orders.manage')
  return false
 }
 function ProtectedModule({access,module,children}:{
@@ -133,6 +136,7 @@ function AdminWorkspace({ access,busy, onLogout }: {
  const { pathname } = useLocation()
  const {canLeave, confirmNavigation} = useAdminEditGuard()
  const { pendingCount, unread, failed, dismiss } = usePendingBookings(allowed(access,'booking'))
+ const {pendingCount:pendingOrders,failed:ordersFailed}=usePendingTeaOrders(allowed(access,'orders'))
  const active = ADMIN_MODULES.find(module => module.path && allowed(access,module.id) && (pathname === module.path || pathname === module.path + '/'))
 
  return <div className="admin-workspace">
@@ -145,17 +149,25 @@ function AdminWorkspace({ access,busy, onLogout }: {
     {ADMIN_MODULES.filter(module => module.status === 'available' && module.path && allowed(access,module.id)).map(module => {
      const Icon = module.icon
      const bookingItem = module.id === 'booking'
+     const orderItem = module.id === 'orders'
      const hasPending = bookingItem && !failed && pendingCount !== null && pendingCount > 0
+     const hasOrderPending = orderItem && !ordersFailed && pendingOrders !== null && pendingOrders > 0
      return <NavLink key={module.id} to={module.path!} onClick={confirmNavigation}
       aria-label={bookingItem
        ? failed ? '預約管理，待審核數量暫時無法更新'
         : pendingCount !== null ? '預約管理，' + pendingCount + ' 筆待審核預約'
         : '預約管理，正在更新預約數量'
+       : orderItem
+        ? ordersFailed ? '訂單管理，待接單數量暫時無法更新'
+         : pendingOrders !== null ? '訂單管理，' + pendingOrders + ' 筆待接單'
+         : '訂單管理，正在更新訂單數量'
        : undefined}
-      className={({ isActive }) => 'admin-nav-link' + (isActive ? ' is-active' : '') + (hasPending ? ' has-booking-pending' : '')}>
+      className={({ isActive }) => 'admin-nav-link' + (isActive ? ' is-active' : '') + (hasPending ? ' has-booking-pending' : '') + (hasOrderPending ? ' has-order-pending' : '')}>
       <Icon size={18}/> <span>{module.title}</span>
       {hasPending && <span className="admin-nav-booking-badge" aria-hidden="true" title={pendingCount + ' 筆待審核預約'}>{pendingCount}</span>}
       {bookingItem && failed && <span className="admin-nav-booking-warning" aria-hidden="true" title="預約數量暫時無法更新">!</span>}
+      {hasOrderPending && <span className="admin-nav-order-badge" aria-hidden="true" title={pendingOrders+' 筆待接單'}>{pendingOrders}</span>}
+      {orderItem && ordersFailed && <span className="admin-nav-order-warning" aria-hidden="true" title="訂單數量暫時無法更新">!</span>}
      </NavLink>
     })}
    </nav>
@@ -170,11 +182,13 @@ function AdminWorkspace({ access,busy, onLogout }: {
   </aside>
   <div className="admin-workspace-content" id="admin-workspace-content">
    {allowed(access,'booking')&&<BookingNotification pendingCount={pendingCount} unread={unread} onDismiss={dismiss} />}
+   {allowed(access,'orders')&&<OrderNotification count={pendingOrders}/>} 
    <Routes>
     <Route path="/admin" element={<AdminOverview access={access}/>}/>
     <Route path="/admin/staff" element={<ProtectedModule access={access} module="staff"><Suspense fallback={<div className="admin-module-loading" role="status">正在開啟員工名帖管理…</div>}><StaffManagement/></Suspense></ProtectedModule>}/>
     <Route path="/admin/menu" element={<ProtectedModule access={access} module="menu"><Suspense fallback={<div className="admin-module-loading" role="status">正在開啟茶宴菜單管理…</div>}><MenuManagement/></Suspense></ProtectedModule>}/>
     <Route path="/admin/booking" element={<ProtectedModule access={access} module="booking"><Suspense fallback={<div className="admin-module-loading" role="status">正在開啟預約管理…</div>}><BookingManagement/></Suspense></ProtectedModule>}/>
+    <Route path="/admin/orders" element={<ProtectedModule access={access} module="orders"><Suspense fallback={<div className="admin-module-loading" role="status">正在開啟茶宴訂單管理…</div>}><OrdersManagement/></Suspense></ProtectedModule>}/>
     <Route path="/admin/accounts" element={<ProtectedModule access={access} module="accounts"><Suspense fallback={<div className="admin-module-loading" role="status">正在開啟員工帳號管理…</div>}><EmployeeAccountsManagement/></Suspense></ProtectedModule>}/>
     <Route path="*" element={<Navigate to="/admin" replace/>}/>
    </Routes>
