@@ -121,8 +121,9 @@ assert.ok(invoker.includes('alter function public.has_backoffice_permission(text
 assert.ok(bookingRead.includes("has_backoffice_permission('booking.manage')"),
  'Booking operators need read-only access for booking validation')
 assert.ok(notice.includes('usePendingBookings(enabled = true)'),'Booking notifications remain scoped')
-assert.ok(!docs.includes('inviteUserByEmail')&&!docs.includes('Email 邀請')&&!docs.includes('建立並寄送邀請'),
- 'Documentation must not describe the retired email invitation flow')
+assert.ok(!docs.includes('inviteUserByEmail')&&!docs.includes('建立並寄送邀請')
+ &&docs.includes('不會寄出任何員工邀請'),
+ 'Documentation must describe direct account creation while allowing legacy-user migration notes')
 
 const vite=await createServer({server:{middlewareMode:true,hmr:false},appType:'custom'})
 try{
