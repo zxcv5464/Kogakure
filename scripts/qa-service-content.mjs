@@ -100,6 +100,19 @@ try{
  for(const word of ['湯浴之儀','占卜之儀','留影之儀','拍立得合照','等待上傳']){
   assert.ok(rendered.includes(word),'Offline service preview missing: '+word)
  }
+ const {default:ServicePhotoGallery}=await vite.ssrLoadModule('/src/components/ServicePhotoGallery.tsx')
+ const {previewServices}=await vite.ssrLoadModule('/src/lib/service-content.ts')
+ const twoPhotos=renderToStaticMarkup(createElement(ServicePhotoGallery,{
+  service:{...previewServices[0],imageUrls:['https://example.invalid/one.webp','https://example.invalid/two.webp']},
+  number:'01',
+ }))
+ assert.equal((twoPhotos.match(/class="services-photo-slide/g)||[]).length,2,
+  'Two uploaded photos must render as crossfade layers')
+ assert.ok(twoPhotos.includes('01 / 02'),'Multiple photos must show current position')
+ const onePhoto=renderToStaticMarkup(createElement(ServicePhotoGallery,{
+  service:{...previewServices[0],imageUrls:['https://example.invalid/one.webp']},number:'01',
+ }))
+ assert.ok(!onePhoto.includes('services-photo-counter'),'A single photo must not show a slideshow counter')
  const {default:ServiceManagement}=await vite.ssrLoadModule('/src/pages/admin/ServiceManagement.tsx')
  assert.equal(typeof ServiceManagement,'function')
  console.log('PASS: published dynamic service pages, polaroid intro, safe editable admin, photo placeholders, RLS and storage')
