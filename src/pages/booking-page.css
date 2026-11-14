@@ -60,6 +60,7 @@
 .booking-form>label:not(.booking-choice){display:flex;flex-direction:column;gap:7px;font-size:.86rem;color:#ebd7b9}
 .booking-form input:not([type=checkbox]),.booking-form select,.booking-form textarea{width:100%;min-height:43px;background:#13141c;border:1px solid rgba(217,181,125,.34);border-radius:5px;color:#f5e6d3;padding:10px 12px;font-size:.9rem}
 .booking-form textarea{min-height:80px;resize:vertical}
+.booking-plan-unavailable{margin:0;padding:11px 13px;background:rgba(187,142,78,.11);border:1px solid rgba(218,180,126,.35);border-radius:6px;color:#e3d0b0;line-height:1.8;font-size:.8rem}
 .booking-plan-note{display:flex;gap:8px;align-items:start;line-height:1.8;margin:-4px 0 0;font-size:.78rem;color:#c8baa5}
 .booking-plan-note svg{flex:none;margin-top:4px}
 .booking-choice{display:flex;align-items:center;gap:10px;color:#efd9b9;font-size:.87rem;cursor:pointer}
