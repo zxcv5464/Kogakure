@@ -15,16 +15,17 @@ for(const path of ['src/pages/admin/modules.ts','src/pages/AdminPage.tsx','src/p
  assert.equal(ast.parseDiagnostics.length,0,'Invalid TypeScript syntax in '+path+': '+ast.parseDiagnostics.map(d=>ts.flattenDiagnosticMessageText(d.messageText,' ')).join('; '))
 }
 const paths=[
- 'src/pages/ServicesPage.tsx','src/lib/service-content.ts',
+ 'src/pages/ServicesPage.tsx','src/components/ServicePhotoGallery.tsx','src/lib/service-content.ts',
  'src/pages/admin/ServiceManagement.tsx','src/pages/AdminPage.tsx',
  'src/pages/admin/modules.ts','scripts/prepare-pages.mjs',
  'src/pages/services-page.css','src/pages/admin/service-management.css',
  'supabase/migrations/20261115_07_service_content_management.sql',
+ 'supabase/migrations/20261115_08_service_photo_gallery.sql',
 ]
-const [page,lib,admin,shell,modules,pages,css,adminCss,sql]=await Promise.all(paths.map(p=>readFile(p,'utf8')))
+const [page,gallery,lib,admin,shell,modules,pages,css,adminCss,sql,gallerySql]=await Promise.all(paths.map(p=>readFile(p,'utf8')))
 for(const term of [
  'fetchServiceContents()','service.slug','service.category','service.paragraphs.map',
- 'service.details.map','service.imageUrl','service.photoLabel','services-photo-placeholder',
+ 'service.details.map','ServicePhotoGallery',
 ]){
  assert.ok(page.includes(term),'Public service content must be dynamic: '+term)
 }
@@ -42,7 +43,7 @@ for(const term of ['saveServiceContent','deleteServiceContent','uploadServicePho
 ]){
  assert.ok(admin.includes(term),'Management flow missing: '+term)
 }
-assert.ok(admin.includes('if(savedToDatabase){')&&admin.includes('if(uploadedPath){'),
+assert.ok(admin.includes('if(savedToDatabase){')&&admin.includes('for(const path of uploadedPaths){'),
  'A failed refresh must never delete a photo already saved in the database')
 assert.ok(lib.includes(".eq('updated_at',service.updatedAt)"),
  'Service writes must detect stale edits')
@@ -69,8 +70,28 @@ for(const phrase of [
 ])assert.ok(sql.includes(phrase),'Service schema and authorization missing: '+phrase)
 assert.ok(!sql.includes('delete from public.booking_requests')&&!sql.includes('drop table'),
  'Service management migration must be non-destructive')
-assert.ok(css.includes('.services-photo-placeholder'),'Unuploaded image placeholder must remain')
+assert.ok(gallery.includes('services-photo-placeholder')&&gallery.includes('service.photoLabel'),'Unuploaded image placeholder must remain')
 assert.ok(adminCss.includes('@media(max-width:850px)'),'Admin form must respond on mobile')
+for(const phrase of [
+ 'slideIntervalMs=5000',
+ 'window.setInterval',
+ "document.visibilityState==='visible'",
+ 'services-photo-slide',
+ "photos.length>1",
+])assert.ok(gallery.includes(phrase),'Timed service slideshow missing: '+phrase)
+assert.ok(css.includes('.services-photo-slide.is-visible')&&css.includes('transition:opacity 1100ms')
+ &&css.includes('prefers-reduced-motion:reduce'), 'Service gallery needs slow crossfade with reduced-motion accessibility')
+for(const term of ['multiple disabled={busy','function choosePhotos','function movePhoto','function removePhoto',
+ 'maxServicePhotos=12','for(const photo of photoSlots)','imageUrls:imageUrls','const uploadedPaths:string[]=[]']){
+ assert.ok(admin.includes(term)||lib.includes(term),'Service photo editor lacks: '+term)
+}
+assert.ok(lib.includes('image_urls:service.imageUrls')&&lib.includes('image_url:service.imageUrls[0]||null'),
+ 'Save ordered photo URLs and legacy first-image mirror')
+for(const term of ['add column if not exists image_urls text[]','set image_urls=array[image_url]',
+ 'cardinality(image_urls)<=12']){
+ assert.ok(gallerySql.includes(term),'Missing photo migration compatibility: '+term)
+}
+
 
 const vite=await createServer({server:{middlewareMode:true,hmr:false},appType:'custom'})
 try{
