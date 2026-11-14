@@ -22,7 +22,7 @@ type EmployeeRow={
 }
 const allIds=EMPLOYEE_PERMISSIONS.map(item=>item.id)
 export const STAFF_LOGIN_PATTERN=/^[a-z][a-z0-9_-]{2,23}$/
-export const STAFF_PASSWORD_VALID=(password:string)=>password.length>=12&&password.length<=128&&/[a-zA-Z]/.test(password)&&/[0-9]/.test(password)
+export const STAFF_PASSWORD_VALID=(password:string)=>password.length>=8&&password.length<=16&&/[a-zA-Z]/.test(password)&&/[0-9]/.test(password)
 export function staffLoginEmail(value:string):string|null {
  const username=value.trim().toLowerCase()
  return STAFF_LOGIN_PATTERN.test(username)?username+'@staff.kogakure.invalid':null
@@ -33,7 +33,7 @@ export function staffLoginEmail(value:string):string|null {
  */
 export function validateOwnPasswordChange(current:string,next:string,confirmation:string):string|null {
  if(!current)return '請輸入目前的登入密碼'
- if(!STAFF_PASSWORD_VALID(next))return '新密碼需 12～128 字，並包含英文字母與數字'
+ if(!STAFF_PASSWORD_VALID(next))return '新密碼需 8～16 字，並包含英文字母與數字'
  if(next===current)return '新密碼不可與目前密碼相同'
  if(next!==confirmation)return '新密碼與確認密碼不一致'
  return null
