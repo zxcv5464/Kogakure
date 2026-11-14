@@ -13,7 +13,7 @@ const [admin,notification,css] = await Promise.all([
  'src/pages/admin/admin-workspace.css',
 ].map(path => readFile(path, 'utf8')))
 
-assert.ok(admin.includes('usePendingBookings()'), 'The admin frame must own the shared pending state')
+assert.ok(admin.includes("usePendingBookings(allowed(access,'booking'))"), 'The admin frame must own the shared pending state')
 assert.ok(admin.includes("module.id === 'booking'"), 'The badge must only appear beside booking management')
 assert.ok(admin.includes('pendingCount > 0'), 'Never show a zero pending-count badge')
 assert.ok(admin.includes('hasPending && <span className="admin-nav-booking-badge"'), 'The sidebar badge must show the current count')
