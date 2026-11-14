@@ -21,7 +21,7 @@ function blankStaff(sortOrder = 1024): Staff {
  return {
   id: crypto.randomUUID(), name: '', role: '接待者', tagline: '', bio: '',
   imageUrl: '', thumbnailUrl: '', themeColor: '#82c8bc',
-  effect: 'foxfire', socials: [], services: [], published: false, sortOrder,
+  effect: 'foxfire', socials: [], services: [], published: false, bookingVisible: true, sortOrder,
  }
 }
 function cloneStaff(staff: Staff): Staff {
@@ -427,6 +427,7 @@ export default function StaffManagement() {
       </div>
       <div className="staff-editor-publish">
        <label className="publish-toggle"><input type="checkbox" checked={selected.published} onChange={event => patch('published', event.target.checked)}/><span><strong>公開顯示這張名帖</strong><small>{selected.published ? '儲存後，前台訪客可以看到這位員工。' : '儲存後會保持草稿，只有管理員可查看。'}</small></span></label>
+       <label className="publish-toggle staff-booking-toggle"><input type="checkbox" checked={selected.bookingVisible} onChange={event => patch('bookingVisible', event.target.checked)}/><span><strong>在狐姬預約頁面顯示</strong><small>{selected.bookingVisible ? '儲存後可在預約頁顯示橫式指名名片；仍須先公開名帖且職稱包含「狐姬」。' : '儲存後不顯示於預約頁，也不接受新的指名；原有名帖與已接取服務不受影響。'}</small></span></label>
       </div>
       <div className="editor-footer staff-editor-footer">
        <span className="staff-editor-save-hint">{dirty ? '變更尚未儲存' : '已與上次儲存內容同步'}</span>
