@@ -18,6 +18,8 @@ export default function AdminBookingCreate({plans,close,onCreated}:Props){
  const [error,setError]=useState('')
  const [busy,setBusy]=useState(false)
  const dialog=useRef<HTMLDivElement>(null)
+ const closeRef=useRef(close)
+ closeRef.current=close
 
  useEffect(()=>{
   let alive=true
@@ -31,7 +33,7 @@ export default function AdminBookingCreate({plans,close,onCreated}:Props){
   document.body.style.overflow='hidden'
   dialog.current?.focus()
   const onKey=(event:KeyboardEvent)=>{
-   if(event.key==='Escape'&&!busy){event.preventDefault();close()}
+   if(event.key==='Escape'&&!busy){event.preventDefault();closeRef.current()}
    if(event.key==='Tab'&&dialog.current){
     const controls=Array.from(dialog.current.querySelectorAll<HTMLElement>('button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled)'))
     if(!controls.length)return
@@ -41,7 +43,7 @@ export default function AdminBookingCreate({plans,close,onCreated}:Props){
   }
   document.addEventListener('keydown',onKey)
   return()=>{document.body.style.overflow=previous;document.removeEventListener('keydown',onKey)}
- },[busy,close])
+ },[busy])
 
  async function submit(event:FormEvent){
   event.preventDefault()
