@@ -47,14 +47,14 @@ export default function EmployeeSelfPassword(){
     <input type="password" autoComplete="current-password" value={current}
      onChange={e=>setCurrent(e.target.value)} required disabled={busy} placeholder="請輸入目前使用的登入密碼"/>
    </label>
-   <label>新密碼（12～128 字，包含英文及數字）
+   <label>新密碼（8～16 字，包含英文及數字）
     <input type="password" autoComplete="new-password" value={next}
-     onChange={e=>setNext(e.target.value)} required minLength={12} maxLength={128} disabled={busy}
+     onChange={e=>setNext(e.target.value)} required minLength={8} maxLength={16} disabled={busy}
      placeholder="設定新的登入密碼"/>
    </label>
    <label>再次輸入新密碼
     <input type="password" autoComplete="new-password" value={confirm}
-     onChange={e=>setConfirm(e.target.value)} required minLength={12} maxLength={128} disabled={busy}
+     onChange={e=>setConfirm(e.target.value)} required minLength={8} maxLength={16} disabled={busy}
      placeholder="再次確認新的登入密碼"/>
    </label>
    <button className="action-button" type="submit" disabled={busy||!current||!next||!confirm}>
