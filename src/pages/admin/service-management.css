@@ -66,3 +66,22 @@
 @media(max-width:1050px){.service-admin-layout{grid-template-columns:minmax(225px,.8fr) minmax(0,1.3fr)}}
 @media(max-width:850px){.service-admin-layout{grid-template-columns:minmax(0,1fr)}.service-admin-photo-content{grid-template-columns:minmax(0,1fr)}.service-admin-preview{max-width:360px;width:100%}}
 @media(max-width:520px){.service-admin-fields.two{grid-template-columns:minmax(0,1fr)}.service-admin-actions .is-save{margin-left:0}.service-admin-publish{grid-template-columns:auto minmax(0,1fr)}}
+
+/* Multi-image service gallery editor. All photos share one ordered service record. */
+.service-admin-photo-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.service-admin-photo-head h3{margin:0}
+.service-admin-photo-head>span{font-size:.76rem;color:#c4ad90}
+.service-admin-photo-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:13px;margin-bottom:18px}
+.service-admin-photo-card{min-width:0;border:1px solid rgba(216,181,130,.27);padding:8px;border-radius:5px;background:rgba(16,14,24,.65)}
+.service-admin-photo-card .service-admin-preview{max-width:none;width:100%;aspect-ratio:4/3}
+.service-admin-photo-card-tools{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:8px;color:#d4bea1;font-size:.76rem}
+.service-admin-photo-card-tools>div{display:flex;gap:5px}
+.service-admin-photo-card-tools button{display:grid;place-items:center;width:33px;height:33px;min-width:33px;padding:0;border:1px solid rgba(214,180,134,.4);border-radius:4px;background:rgba(41,32,46,.75);color:#ecd1ab;cursor:pointer}
+.service-admin-photo-card-tools button:hover:not(:disabled){background:rgba(121,91,93,.4)}
+.service-admin-photo-card-tools button.is-remove{color:#efb4b1;border-color:rgba(219,139,134,.4)}
+.service-admin-photo-empty{grid-column:1/-1;min-height:154px;display:grid;place-content:center;justify-items:center;gap:12px;border:1px dashed rgba(211,173,124,.35);border-radius:5px;color:#ceb391;font-size:.83rem}
+.service-admin-photo-block .service-admin-photo-actions{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:12px}
+.service-admin-photo-actions .service-admin-upload{min-height:46px;white-space:nowrap}
+.service-admin-photo-block .service-admin-photo-actions>small{grid-column:1/-1;line-height:1.8}
+@media(max-width:620px){.service-admin-photo-block .service-admin-photo-actions{grid-template-columns:minmax(0,1fr)}.service-admin-photo-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.service-admin-photo-card{padding:6px}.service-admin-photo-card-tools button{width:31px;height:31px;min-width:31px}}
+@media(max-width:360px){.service-admin-photo-list{grid-template-columns:minmax(0,1fr)}}
