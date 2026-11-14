@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
-import { CalendarDays, ClipboardList, Clock3, FileText, Soup, UsersRound } from 'lucide-react'
+import { CalendarDays, ClipboardList, Clock3, FileText, Soup, UsersRound, ShieldCheck } from 'lucide-react'
 
 // The admin catalog is the extension point for future, separately permissioned
 // features. Planned entries are deliberately not links until implemented.
@@ -12,6 +12,7 @@ export type AdminModule = {
  status: 'available' | 'planned'
 }
 export const ADMIN_MODULES: AdminModule[] = [
+ { id: 'accounts', title: '員工帳號', summary: '邀請登入、設定可使用的後台功能及停用帳號', icon: ShieldCheck, path: '/admin/accounts', status: 'available' },
  { id: 'staff', title: '員工名帖', summary: '管理人員介紹、照片、顯示順序與公開狀態', icon: UsersRound, path: '/admin/staff', status: 'available' },
  { id: 'announcements', title: '公告管理', summary: '館內公告、最新消息與首頁資訊', icon: FileText, status: 'planned' },
  { id: 'hours', title: '營業資訊', summary: '營業時間、館內說明與基本資料', icon: Clock3, status: 'planned' },
