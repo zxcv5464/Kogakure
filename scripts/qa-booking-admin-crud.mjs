@@ -25,7 +25,7 @@ assert.ok(bookingCss.includes('object-fit:contain'), 'Selected portrait must rem
 assert.ok(bookingCss.includes('.booking-profile.has-manual-crop .booking-portrait img'), 'Manual crop must not be auto cropped')
 for(const phrase of ['新增預約','永久刪除','removeBooking','setCreatingBooking(true)','<AdminBookingCreate'])
  assert.ok(admin.includes(phrase),'Admin booking action missing '+phrase)
-for(const phrase of ['預約者遊戲角色姓名','伺服器','選擇狐姬','新增待審核申請','createAdminBooking'])
+for(const phrase of ['預約者遊戲角色姓名','伺服器','選擇可指名館員','新增待審核申請','createAdminBooking'])
  assert.ok(manual.includes(phrase),'Manual form missing '+phrase)
 assert.ok(api.includes("rpc('admin_create_booking_request'"))
 assert.ok(api.includes("rpc('admin_delete_booking_request'"))
