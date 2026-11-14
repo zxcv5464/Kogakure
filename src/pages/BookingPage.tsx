@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { CSSProperties, FormEvent } from 'react'
 import { Check, Clock3, Send, Sparkles, X } from 'lucide-react'
 import { configured } from '../lib/config'
+import { resolveBookingNominees } from '../lib/booking-selection'
+import type { BookingNominee } from '../lib/booking-selection'
 import { BOOKING_PAGE_READY_EVENT } from '../lib/route-events'
 import BookingLoading from '../components/BookingLoading'
 import { loadPublicStaff } from '../lib/public-staff'
@@ -15,6 +17,16 @@ import type { Staff } from '../types'
 import './booking-page.css'
 
 const maximumStaff = 4
+
+function NomineeSummary({nominees}: {nominees: BookingNominee[]}) {
+ return <div className="booking-nominee-summary" aria-label="完整指名名單">
+  <strong>本次指名人員 · {nominees.length} 位</strong>
+  <ul>{nominees.map(person=><li key={person.id}>
+   <span className="booking-nominee-kind">{person.primary?'主要指名':'追加指名'}</span>
+   <span className="booking-nominee-name">{person.name}</span>
+  </li>)}</ul>
+ </div>
+}
 
 export default function BookingPage(){
  const [people,setPeople]=useState<Staff[]>([])
@@ -32,6 +44,7 @@ export default function BookingPage(){
  const [note,setNote]=useState('')
  const [sending,setSending]=useState(false)
  const [result,setResult]=useState('')
+ const [submittedNominees,setSubmittedNominees]=useState<BookingNominee[]>([])
  const [formError,setFormError]=useState('')
  const dialog=useRef<HTMLDivElement>(null)
  const returnFocus=useRef<HTMLElement|null>(null)
@@ -74,15 +87,16 @@ export default function BookingPage(){
 
  const statusByStaff=useMemo(()=>new Map(presence.map(p=>[p.staffId,p.busyUntil])),[presence])
  const activePlan=plans.find(p=>p.id===planId)
+ const nominees=resolveBookingNominees(selected,people,others,withOthers)
 
  function openBooking(person:Staff){
   if(isStaffBusy(statusByStaff.get(person.id),Date.now()))return
   returnFocus.current=document.activeElement as HTMLElement
-  setSelected(person);setOthers([]);setWithOthers(false);setResult('');setFormError('')
+  setSelected(person);setOthers([]);setWithOthers(false);setResult('');setFormError('');setSubmittedNominees([])
  }
  function close(){
   if(sending)return
-  setSelected(null);setResult('');setFormError('')
+  setSelected(null);setResult('');setFormError('');setSubmittedNominees([])
   window.requestAnimationFrame(()=>returnFocus.current?.focus())
  }
  useEffect(()=>{
@@ -107,15 +121,19 @@ export default function BookingPage(){
  async function submit(event:FormEvent){
   event.preventDefault()
   if(!selected||sending)return
-  const ids=[selected.id,...(withOthers?others:[])]
+  const chosen=resolveBookingNominees(selected,people,others,withOthers)
+  const ids=chosen.map(person=>person.id)
+  if(ids.length!==1+(withOthers?others.length:0)){
+   setFormError('部分追加指名的人員已更新，請重新確認指名名單');return
+  }
   if(ids.length>maximumStaff){setFormError('一次最多指名四位館員');return}
   if(ids.some(id=>isStaffBusy(statusByStaff.get(id),Date.now()))){setFormError('有受指名人員已進入指名中，請重新選擇');return}
   if(name.trim().length<2||world.trim().length<2||!planId){setFormError('請填寫遊戲角色姓名、伺服器並選擇方案');return}
   setSending(true);setFormError('')
   try{
    const bookingId=await submitNomination({name,world,planId,staffIds:ids,note})
+   setSubmittedNominees(chosen)
    setResult(bookingId)
-   setOthers([]);setWithOthers(false)
   }catch(e){setFormError(describeBookingError(e))}
   finally{setSending(false)}
  }
@@ -175,6 +193,7 @@ export default function BookingPage(){
     {result ? <div className="booking-success" role="status">
      <Check size={35}/><h3>預約申請已送出</h3>
      <p>館方將於後台審核，尚未代表預約成功，也不會立即占用館員。請依館方接待安排為準。</p>
+     <NomineeSummary nominees={submittedNominees}/>
      <p className="booking-number">申請編號：{result.slice(0,8).toUpperCase()}</p>
      <button className="booking-primary" type="button" onClick={close}>返回狐隱</button>
     </div> : <form onSubmit={e=>void submit(e)} className="booking-form">
@@ -198,6 +217,7 @@ export default function BookingPage(){
       })}
       <p>所有選取館員會隨同一預約方案開始計時，實際接取以館方確認為準。</p>
      </fieldset>}
+     <NomineeSummary nominees={nominees}/>
      <label>補充說明（選填） <textarea rows={3} maxLength={240} value={note} onChange={e=>setNote(e.target.value)} placeholder="給館方的簡短備註，請勿填寫現實個人資料"/></label>
      {formError&&<p className="booking-form-error" role="alert">{formError}</p>}
      <button className="booking-primary" type="submit" disabled={sending||!plans.length}>
