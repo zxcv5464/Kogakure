@@ -121,6 +121,14 @@
  object-fit: cover;
  object-position: center;
 }
+/* A quiet 5-second carousel. Overlaid layers crossfade instead of flashing between slides. */
+.services-photo-slides{position:absolute;inset:0;overflow:hidden;background:#211d2a}
+.services-photo-slide{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;opacity:0;transition:opacity 1100ms ease-in-out;pointer-events:none}
+.services-photo-slide.is-visible{opacity:1}
+.services-photo-counter{position:absolute;z-index:3;top:20px;right:21px;padding:5px 9px;border:1px solid rgba(222,186,143,.24);border-radius:3px;background:rgba(20,16,28,.59);color:#f1d7b5;font: .7rem Georgia,'Times New Roman',serif;letter-spacing:.13em;font-variant-numeric:tabular-nums}
+@media(prefers-reduced-motion:reduce){.services-photo-slide{transition:none}}
+@media(max-width:480px){.services-photo-counter{top:12px;right:12px;font-size:.66rem}}
+
 .services-photo-placeholder {
  position: absolute;
  inset: 0;
