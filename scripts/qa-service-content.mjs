@@ -5,6 +5,7 @@ import {readFile} from 'node:fs/promises'
 import {createElement} from 'react'
 import {renderToStaticMarkup} from 'react-dom/server'
 import {createServer} from 'vite'
+import {MemoryRouter} from 'react-router-dom'
 const paths=[
  'src/pages/ServicesPage.tsx','src/lib/service-content.ts',
  'src/pages/admin/ServiceManagement.tsx','src/pages/AdminPage.tsx',
@@ -66,7 +67,7 @@ assert.ok(adminCss.includes('@media(max-width:850px)'),'Admin form must respond 
 const vite=await createServer({server:{middlewareMode:true,hmr:false},appType:'custom'})
 try{
  const {default:ServicesPage}=await vite.ssrLoadModule('/src/pages/ServicesPage.tsx')
- const rendered=renderToStaticMarkup(createElement(ServicesPage))
+ const rendered=renderToStaticMarkup(createElement(MemoryRouter,null,createElement(ServicesPage)))
  for(const word of ['湯浴之儀','占卜之儀','留影之儀','拍立得合照','等待上傳']){
   assert.ok(rendered.includes(word),'Offline service preview missing: '+word)
  }
