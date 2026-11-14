@@ -82,7 +82,7 @@ for(const phrase of [
 assert.ok(css.includes('.services-photo-slide.is-visible')&&css.includes('transition:opacity 1100ms')
  &&css.includes('prefers-reduced-motion:reduce'), 'Service gallery needs slow crossfade with reduced-motion accessibility')
 for(const term of ['multiple disabled={busy','function choosePhotos','function movePhoto','function removePhoto',
- 'maxServicePhotos=12','for(const photo of photoSlots)','imageUrls:imageUrls','const uploadedPaths:string[]=[]']){
+ 'maxServicePhotos=12','for(const photo of photoSlots)','const record={...draft,paragraphs,details,imageUrls,imageUrl:imageUrls[0]||null}','const uploadedPaths:string[]=[]']){
  assert.ok(admin.includes(term)||lib.includes(term),'Service photo editor lacks: '+term)
 }
 assert.ok(lib.includes('image_urls:service.imageUrls')&&lib.includes('image_url:service.imageUrls[0]||null'),
