@@ -103,6 +103,7 @@
  .tea-menu-ending
 ){animation-play-state:paused}
 /* 狐姬指名：維持全站緩動節奏，先顯示標題再顯示角色卡。 */
+.route-stage .booking-profile.staff-entry{animation:bookingReveal 1.25s cubic-bezier(.22,.65,.25,1) var(--booking-delay,0ms) both}
 .route-stage .booking-eyebrow,.route-stage .booking-emblem{animation:quietRise 1.12s cubic-bezier(.22,.65,.25,1) .16s both}
 .route-stage .booking-hero h1{animation:quietRise 1.26s cubic-bezier(.22,.65,.25,1) .34s both}
 .route-stage .booking-hero-label,.route-stage .booking-hero-verse{animation:quietRise 1.2s cubic-bezier(.22,.65,.25,1) .6s both}
