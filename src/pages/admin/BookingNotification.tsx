@@ -41,7 +41,7 @@ export default function BookingNotification(){
    <strong>{unread?'新指名申請 · '+unread.guest_name+'（'+unread.guest_world+'）':'目前有 '+pending.length+' 筆待處理預約'}</strong>
    <small>{unread?unread.plan_name+'，請查看完整指名資訊並決定是否接取':'管理員接取後，狐姬狀態與方案倒數即刻同步'}</small>
   </span>
-  <Link to="/admin/booking" onClick={()=>{setUnread(null);confirmNavigation()}}>前往預約管理</Link>
+  <Link to="/admin/booking" onClick={event=>{confirmNavigation(event);if(!event.defaultPrevented)setUnread(null)}}>前往預約管理</Link>
   {unread&&<button type="button" aria-label="關閉新預約提示" onClick={()=>setUnread(null)}>×</button>}
  </div>
 }
