@@ -16,6 +16,7 @@ export const demoStaff: Staff[] = [
   socials:[],
   services:['占卜'],
   published:true,
+  bookingVisible:true,
   sortOrder:1,
  },
  {
@@ -31,6 +32,7 @@ export const demoStaff: Staff[] = [
   socials:[],
   services:['接待'],
   published:true,
+  bookingVisible:true,
   sortOrder:2,
  },
 ]
