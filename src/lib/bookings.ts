@@ -96,6 +96,23 @@ export async function decideBooking(id:string,action:'accept'|'reject'|'complete
  const {error}=await client().rpc('decide_booking_request',{p_booking_id:id,p_action:action})
  if(error)throw error
 }
+// Admin-only write operations: both RPCs perform the entire transaction on
+// the database; no client-side direct INSERT/DELETE of guest records.
+export async function createAdminBooking(input:{
+ name:string;world:string;planId:string;staffIds:string[];note:string
+}):Promise<string>{
+ const {data,error}=await client().rpc('admin_create_booking_request',{
+  p_guest_name:input.name.trim(),p_guest_world:input.world.trim(),
+  p_plan_id:input.planId,p_staff_ids:input.staffIds,p_note:input.note.trim(),
+ })
+ if(error)throw error
+ if(typeof data!=='string')throw new Error('新增申請未回傳編號，請重新整理確認')
+ return data
+}
+export async function deleteAdminBooking(id:string):Promise<void>{
+ const {error}=await client().rpc('admin_delete_booking_request',{p_booking_id:id})
+ if(error)throw error
+}
 export async function saveBookingPlan(plan:BookingPlan,newPlan:boolean):Promise<void>{
  const db=client()
  const row={id:plan.id,name:plan.name.trim(),description:plan.description.trim(),
