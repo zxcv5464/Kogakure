@@ -20,6 +20,8 @@ export default function MenuPage() {
  const [orderError,setOrderError] = useState('')
  const [receipt,setReceipt] = useState<{id:string;name:string;world:string;items:string[];total:number;isAddOn:boolean}|null>(null)
  const [isAdding,setIsAdding] = useState(false)
+ const [lastSubmittedAt,setLastSubmittedAt] = useState<number|null>(null)
+ const [clock,setClock] = useState(Date.now())
 
  useEffect(() => {
   if (!configured) return
@@ -50,6 +52,13 @@ export default function MenuPage() {
  const selected = items.filter(item => (quantities[item.id] || 0) > 0 && item.available)
  const total = selected.reduce((sum,item) => sum + item.priceGil * (quantities[item.id] || 0), 0)
  const count = selected.reduce((sum,item) => sum + (quantities[item.id] || 0), 0)
+ const addOnWaitSeconds = isAdding&&lastSubmittedAt!==null
+  ? Math.max(0,Math.ceil((lastSubmittedAt+15000-clock)/1000)):0
+ useEffect(()=>{
+  if(!isAdding||!addOnWaitSeconds)return
+  const timer=window.setTimeout(()=>setClock(Date.now()),1000)
+  return()=>window.clearTimeout(timer)
+ },[isAdding,addOnWaitSeconds])
 
  function changeQuantity(id:string,delta:number) {
   if(receipt)return // A submitted order remains closed until the guest explicitly opens a new add-on order.
@@ -60,6 +69,7 @@ export default function MenuPage() {
  function startAddOn(){
   setReceipt(null)
   setIsAdding(true)
+  setClock(Date.now())
   setQuantities({})
   setOrderError('')
   // Return to the dishes while retaining the game character and world for the next, independent order.
@@ -73,12 +83,14 @@ export default function MenuPage() {
   if(mode!=='live'){setOrderError('目前為展示菜單，尚未開放送出訂單');return}
   if(!count){setOrderError('請先選擇至少一份茶宴餐點');return}
   if(selected.length>20||count>100){setOrderError('單次最多 20 種品項、100 份餐點');return}
+  if(isAdding&&lastSubmittedAt!==null&&Date.now()-lastSubmittedAt<15000){setOrderError('為避免重複送單，請稍候 15 秒再送出加點。');return}
   setSending(true)
   const snapshot=selected.map(x=>x.name+' × '+quantities[x.id])
   const name=guestName.trim(),world=guestWorld.trim()
   try{
    const id=await submitTeaOrder(name,world,selected.map(x=>({id:x.id,quantity:quantities[x.id]})))
    setReceipt({id,name,world,items:snapshot,total,isAddOn:isAdding})
+   setLastSubmittedAt(Date.now())
    setIsAdding(false)
    setQuantities({})
   }catch(error){setOrderError(error instanceof Error?error.message:'訂單未能送出，請稍後重試')}
@@ -121,9 +133,9 @@ export default function MenuPage() {
        </div>
        <p className="tea-menu-item-desc">{item.description}</p>
        {!item.available ? <span className="tea-menu-unavailable">暫停供應</span> : <div className="tea-menu-qty" aria-label={item.name+'選擇數量'}>
-        <button type="button" aria-label={'減少'+item.name} disabled={!!receipt||!(quantities[item.id] > 0)} onClick={()=>changeQuantity(item.id,-1)}><Minus size={15}/></button>
+        <button type="button" aria-label={'減少'+item.name} disabled={sending||!!receipt||!(quantities[item.id] > 0)} onClick={()=>changeQuantity(item.id,-1)}><Minus size={15}/></button>
         <output aria-label="數量">{quantities[item.id] || 0}</output>
-        <button type="button" aria-label={'增加'+item.name} disabled={!!receipt||quantities[item.id]>=99} onClick={()=>changeQuantity(item.id,1)}><Plus size={15}/></button>
+        <button type="button" aria-label={'增加'+item.name} disabled={sending||!!receipt||quantities[item.id]>=99} onClick={()=>changeQuantity(item.id,1)}><Plus size={15}/></button>
        </div>}
       </article>)}
      </div> : <p className="tea-menu-empty">這一卷御品尚在準備中。</p>}
@@ -167,8 +179,8 @@ export default function MenuPage() {
        </label>
       </div>
       {orderError&&<p className="tea-menu-order-error" role="alert">{orderError}</p>}
-      <button className="tea-menu-send" type="submit" disabled={sending||mode!=='live'}>
-       <Send size={17}/>{sending?'正在送出點單…':isAdding?'確認送出加點訂單':'確認送出訂單'}
+      <button className="tea-menu-send" type="submit" disabled={sending||mode!=='live'||addOnWaitSeconds>0}>
+       <Send size={17}/>{sending?'正在送出點單…':addOnWaitSeconds>0?'請再等 '+addOnWaitSeconds+' 秒':isAdding?'確認送出加點訂單':'確認送出訂單'}
       </button>
       {mode!=='live'&&<p className="tea-menu-order-error">展示菜單無法送出訂單；待正式菜單連線後開放。</p>}
      </form>
