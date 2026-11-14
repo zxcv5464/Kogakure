@@ -38,6 +38,8 @@ export function usePendingBookings() {
     if (!active || version !== requestVersion) return
     if (error || count === null) {
      setFailed(true)
+     setPendingCount(null)
+     setUnread(null)
      return
     }
     const rows = data as PendingInfo[]
@@ -53,7 +55,11 @@ export function usePendingBookings() {
     ids.current = new Set(rows.map(row => row.id))
     initialized.current = true
    } catch {
-    if (active && version === requestVersion) setFailed(true)
+    if (active && version === requestVersion) {
+     setFailed(true)
+     setPendingCount(null)
+     setUnread(null)
+    }
    }
   }
 
