@@ -48,6 +48,10 @@ jobs:
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
           VITE_BASE_PATH: /Kogakure/
         run: npm run build
+      - name: Verify service content and admin editor before publication
+        env:
+          VITE_OFFLINE_PREVIEW: 'true'
+        run: node scripts/qa-service-content.mjs
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
         with:
