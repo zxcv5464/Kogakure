@@ -17,7 +17,7 @@ export const ADMIN_MODULES: AdminModule[] = [
  { id: 'announcements', title: '公告管理', summary: '館內公告、最新消息與首頁資訊', icon: FileText, status: 'planned' },
  { id: 'hours', title: '營業資訊', summary: '營業時間、館內說明與基本資料', icon: Clock3, status: 'planned' },
  { id: 'menu', title: '菜單管理', summary: '茶宴分類、品項、Gil 金額、供應狀態與公開排序', icon: Soup, path: '/admin/menu', status: 'available' },
- { id: 'services', title: '服務內容管理', summary: '新增服務介紹、替換照片、修改特色、顯示順序與公開狀態（管理員）', icon: ScrollText, path: '/admin/services', status: 'available' }
+ { id: 'services', title: '服務內容管理', summary: '新增服務介紹、替換照片、修改特色、顯示順序與公開狀態（管理員）', icon: ScrollText, path: '/admin/services', status: 'available' },
  { id: 'orders', title: '訂單管理', summary: '查看旅人茶宴點單、接單、完成與取消訂單', icon: ShoppingBag, path: '/admin/orders', status: 'available' },
  { id: 'booking', title: '預約管理', summary: '狐姬指名申請、審核、方案設定與即時計時', icon: ClipboardList, path: '/admin/booking', status: 'available' },
  { id: 'shifts', title: '值班排班', summary: '接待人員排班及值班資訊', icon: CalendarDays, status: 'planned' },
