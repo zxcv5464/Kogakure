@@ -26,6 +26,14 @@ assert.ok(page.includes('!loading&&!error&&!people.length&&<div className="booki
  'No-staff message must remain present')
 assert.ok(page.includes('!loading&&!error&&people.length>0&&<div className="booking-grid">'),
  'Do not render an empty grid with unwanted padding below the message')
+assert.ok(page.includes('<span>當館方接取申請後，相關館員將同步顯示為「指名中」。</span>'),
+ 'The first booking note line should be a complete sentence')
+assert.ok(page.includes('<span>倒數結束後狀態會恢復空閒；館方亦可提前結束服務。</span>'),
+ 'The second booking note line should be a complete sentence')
+assert.ok(css.includes('.booking-footnote>span{display:block;text-wrap:balance;overflow-wrap:anywhere}'),
+ 'Short viewport widths must balance each booking note line instead of creating a one-character orphan')
+assert.ok(css.includes('.booking-footnote>span+span{margin-top:.28em}'),
+ 'The two booking note sentences need a small visual separation')
 for (const part of [
  '.route-stage .booking-notice{animation:quietRise 1.28s var(--public-reveal-ease) 1.16s both}',
  '.route-stage .booking-notice+.booking-notice{animation-delay:1.34s}',
