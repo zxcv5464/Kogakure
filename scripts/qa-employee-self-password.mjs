@@ -27,7 +27,7 @@ assert.ok(component.includes('useAdminEditGuard')&&component.includes('setEditin
 for(const phrase of [
  '我的帳號安全 · 自行修改密碼',
  '目前密碼',
- '新密碼（12～128 字，包含英文及數字）',
+ '新密碼（8～16 字，包含英文及數字）',
  '再次輸入新密碼',
  'autoComplete="current-password"',
  'autoComplete="new-password"',
@@ -71,15 +71,17 @@ assert.ok(docs.includes('忘記目前密碼'),
 const vite=await createServer({server:{middlewareMode:true,hmr:false},appType:'custom'})
 try{
  const {validateOwnPasswordChange}=await vite.ssrLoadModule('/src/lib/employee-accounts.ts')
- const valid='NewStaffPassword2026'
+ const valid='NewStaffPass2026'
  assert.equal(validateOwnPasswordChange('CurrentPassword123',valid,valid),null)
  assert.match(validateOwnPasswordChange('',valid,valid),/目前/)
- assert.match(validateOwnPasswordChange('CurrentPassword123','short1','short1'),/12/)
- assert.match(validateOwnPasswordChange('CurrentPassword123','abcdefghijkl','abcdefghijkl'),/英文/)
- assert.match(validateOwnPasswordChange('CurrentPassword123','123456789012','123456789012'),/英文/)
- assert.match(validateOwnPasswordChange('CurrentPassword123','CurrentPassword123','CurrentPassword123'),/不可/)
+ assert.match(validateOwnPasswordChange('OldPassword123','short1','short1'),/8/)
+ assert.match(validateOwnPasswordChange('OldPassword123','abcdefghijkl','abcdefghijkl'),/英文/)
+ assert.match(validateOwnPasswordChange('OldPassword123','123456789012','123456789012'),/英文/)
+ assert.match(validateOwnPasswordChange('OldPassword123','OldPassword123','OldPassword123'),/不可/)
  assert.match(validateOwnPasswordChange('CurrentPassword123',valid,'not-the-same'),/不一致/)
- assert.equal(validateOwnPasswordChange('CurrentPassword123','A'.repeat(127)+'1','A'.repeat(127)+'1'),null)
- assert.match(validateOwnPasswordChange('CurrentPassword123','A'.repeat(129)+'1','A'.repeat(129)+'1'),/128/)
+ assert.equal(validateOwnPasswordChange('OldPassword123','A'.repeat(15)+'1','A'.repeat(15)+'1'),null)
+ assert.equal(validateOwnPasswordChange('OldPassword123','Abcdefg1','Abcdefg1'),null)
+ assert.match(validateOwnPasswordChange('OldPassword123','Abcdef1','Abcdef1'),/8/)
+ assert.match(validateOwnPasswordChange('OldPassword123','A'.repeat(16)+'1','A'.repeat(16)+'1'),/16/)
  console.log('PASS: staff password form, current-password identity check, matching policy, no mail, no role escalation')
 }finally{await vite.close()}
