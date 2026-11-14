@@ -13,7 +13,7 @@ type PendingInfo = { id: string; guest_name: string; guest_world: string; plan_n
  * incoming-request notice. The exact count is not capped by the 20 rows
  * fetched for detecting a new arrival.
  */
-export function usePendingBookings() {
+export function usePendingBookings(enabled = true) {
  const [pendingCount, setPendingCount] = useState<number | null>(null)
  const [unread, setUnread] = useState<PendingInfo | null>(null)
  const [failed, setFailed] = useState(false)
@@ -21,7 +21,7 @@ export function usePendingBookings() {
  const initialized = useRef(false)
 
  useEffect(() => {
-  if (!supabase) return
+  if (!supabase || !enabled) return
   const client = supabase
   let active = true
   let requestVersion = 0
@@ -82,7 +82,7 @@ export function usePendingBookings() {
    document.removeEventListener('visibilitychange', onVisible)
    window.removeEventListener('focus', onFocus)
   }
- }, [])
+ }, [enabled])
 
  return { pendingCount, unread, failed, dismiss: () => setUnread(null) }
 }

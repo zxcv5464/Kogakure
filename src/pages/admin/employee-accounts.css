@@ -1,0 +1,55 @@
+.employee-admin{color:#e9dbcb;padding-bottom:75px}
+.employee-admin-heading{display:flex;justify-content:space-between;align-items:start;gap:18px;flex-wrap:wrap}
+.employee-admin-heading .eyebrow{font-size:.73rem;letter-spacing:.16em;color:#c8a67b;margin:0 0 7px}
+.employee-admin-heading h1{font-family:'Noto Serif TC',serif;font-size:clamp(1.45rem,3vw,1.85rem);color:#f2d7b4;margin:0 0 8px}
+.employee-admin-heading p:last-child{font-size:.85rem;color:#c3b2a3;line-height:1.8;margin:0}
+.employee-admin-heading-actions{display:flex;align-items:center;flex-wrap:wrap;gap:9px}
+.employee-admin button{font-family:inherit}
+.employee-admin-heading-actions button,.employee-admin-editor-buttons button{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:42px;padding:9px 14px;border-radius:5px;border:1px solid rgba(219,176,124,.37);color:#ecd6b9;background:#282530;font-size:.84rem}
+.employee-admin button.employee-action-primary{background:#d7b584;color:#201a22;border-color:#d7b584;font-weight:700}
+.employee-admin button:disabled{opacity:.5;cursor:not-allowed}
+.employee-admin-explainer{display:flex;gap:12px;padding:15px 16px;margin:23px 0;border:1px solid rgba(214,172,118,.3);border-radius:7px;background:rgba(218,180,126,.06);color:#dfcdb6}
+.employee-admin-explainer svg{flex:none;color:#d6b078;margin-top:3px}
+.employee-admin-explainer p{font-size:.79rem;line-height:1.9;margin:0}
+.employee-admin-layout{display:grid;grid-template-columns:minmax(220px,325px) minmax(0,1fr);align-items:start;gap:15px}
+.employee-admin-list,.employee-admin-editor{border:1px solid rgba(214,176,132,.26);border-radius:8px;background:linear-gradient(155deg,#292631,#1e202b);padding:16px}
+.employee-admin-list h2{font-size:1.02rem;color:#edcfaa;display:flex;gap:9px;align-items:center;margin:0 0 15px}
+.employee-admin-list h2 span{font-size:.82rem;color:#ba9d7c}
+.employee-admin-empty{font-size:.85rem;line-height:1.8;color:#bfb0a0;margin:10px 0}
+.employee-admin-person{width:100%;display:flex;align-items:start;gap:10px;text-align:left;padding:13px 10px;margin:0 0 8px;background:rgba(15,16,25,.46);border:1px solid rgba(209,175,130,.19);border-radius:6px;color:#ead9c5}
+.employee-admin-person:hover:not(:disabled),.employee-admin-person.is-selected{border-color:rgba(229,190,133,.75);background:rgba(215,171,117,.1)}
+.employee-admin-avatar{flex:none;border:1px solid rgba(209,178,129,.3);border-radius:50%;height:37px;width:37px;display:grid;place-items:center;color:#d8bb97}
+.employee-admin-person-content{min-width:0;display:flex;flex:1;flex-direction:column;gap:3px}
+.employee-admin-person-content strong{font-size:.88rem;color:#f3dab7;overflow-wrap:anywhere}
+.employee-admin-person-content small{font-size:.72rem;color:#b6a698;overflow-wrap:anywhere}
+.employee-admin-person-content em{font-size:.72rem;font-style:normal;color:#d1b590;line-height:1.55;overflow-wrap:anywhere}
+.employee-admin-status{flex:none;font-size:.64rem;line-height:1.5;white-space:nowrap;color:#b4ada2;border:1px solid rgba(199,187,166,.3);border-radius:50px;padding:3px 6px}
+.employee-admin-status.is-active{color:#b5e3c6;border-color:rgba(116,200,154,.4)}
+.employee-admin-status.is-disabled{color:#ffb6ac;border-color:rgba(227,126,114,.34)}
+.employee-admin-placeholder{min-height:250px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:11px;text-align:center}
+.employee-admin-placeholder svg{color:#d9b889}
+.employee-admin-placeholder h2{color:#e8d1af;font-family:'Noto Serif TC',serif;font-size:1.12rem;margin:0}
+.employee-admin-placeholder p{color:#bcb0a3;font-size:.84rem;line-height:1.8;max-width:390px;margin:0}
+.employee-admin-editor form{display:grid;gap:16px}
+.employee-admin-editor form>h2{font-family:'Noto Serif TC',serif;color:#f1d7b5;font-size:1.19rem;margin:3px 0 1px}
+.employee-admin-editor form>label{display:grid;gap:7px;color:#e9d5b8;font-size:.85rem}
+.employee-admin-editor form input:not([type=checkbox]){width:100%;min-height:43px;border:1px solid rgba(214,178,131,.38);border-radius:5px;padding:9px 12px;background:#151723;color:#f3e5ce;font-size:.87rem}
+.employee-admin-editor form input:disabled{opacity:.65}
+.employee-admin-hint{margin:-6px 0 1px;color:#c9b9a5;font-size:.76rem;line-height:1.8}
+.employee-admin-permissions{min-width:0;display:grid;gap:6px;padding:13px;border:1px solid rgba(218,180,129,.3);border-radius:7px}
+.employee-admin-permissions legend{padding:0 8px;color:#ebcf9e;font-size:.85rem}
+.employee-permission,.employee-admin-active{display:flex!important;gap:11px!important;align-items:center;cursor:pointer;padding:10px 7px;border-radius:5px}
+.employee-permission:hover{background:rgba(209,165,108,.07)}
+.employee-permission input,.employee-admin-active input{flex:none;width:18px;height:18px;accent-color:#d9ae77}
+.employee-permission span,.employee-admin-active span{display:flex;flex-direction:column;gap:3px;min-width:0}
+.employee-permission strong,.employee-admin-active strong{font-size:.84rem;color:#ead4b6}
+.employee-permission small,.employee-admin-active small{font-size:.74rem;color:#bcae9d;line-height:1.6}
+.employee-admin-permissions>p{font-size:.74rem;color:#afaaa4;line-height:1.8;margin:7px 2px 0}
+.employee-admin-active{border:1px solid rgba(207,172,129,.27);padding:13px!important}
+.employee-admin-editor-buttons{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+.employee-admin-danger{display:flex;gap:7px;align-items:start;color:#efb0a6;font-size:.75rem;line-height:1.6;margin:0}
+.employee-admin-danger svg{flex:none}
+.employee-admin-error,.employee-admin-success{margin:13px 0;padding:12px 15px;border:1px solid rgba(221,122,113,.5);border-radius:6px;color:#ffbab2;background:rgba(146,61,59,.14);line-height:1.6;overflow-wrap:anywhere;font-size:.82rem}
+.employee-admin-success{display:flex;align-items:center;gap:9px;border-color:rgba(115,192,133,.45);color:#b7e3bb;background:rgba(68,118,79,.14)}
+@media(max-width:850px){.employee-admin-layout{grid-template-columns:minmax(0,1fr)}.employee-admin-list{display:block}.employee-admin-heading-actions{width:100%}.employee-admin-heading-actions button{flex:1}}
+@media(max-width:500px){.employee-admin-list,.employee-admin-editor{padding:12px}.employee-admin-person{flex-wrap:wrap}.employee-admin-editor-buttons button{flex:1}}

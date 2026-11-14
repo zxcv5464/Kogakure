@@ -70,3 +70,7 @@ jobs:
         env:
           VITE_OFFLINE_PREVIEW: 'true'
         run: node scripts/qa-booking-extra-nominees.mjs
+      - name: Verify secure employee account invitations and module permissions
+        env:
+          VITE_OFFLINE_PREVIEW: 'true'
+        run: node scripts/qa-employee-permissions.mjs
