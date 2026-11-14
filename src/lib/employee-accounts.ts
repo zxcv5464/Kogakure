@@ -1,3 +1,5 @@
+import { createClient } from '@supabase/supabase-js'
+import { configured, supabaseKey, supabaseUrl } from './config'
 import { supabase } from './supabase'
 
 export const EMPLOYEE_PERMISSIONS = [
@@ -25,6 +27,48 @@ export function staffLoginEmail(value:string):string|null {
  const username=value.trim().toLowerCase()
  return STAFF_LOGIN_PATTERN.test(username)?username+'@staff.kogakure.invalid':null
 }
+/**
+ * Password rules shared with the admin-provisioned employee credentials.
+ * Neither current nor new password is persisted in a website database.
+ */
+export function validateOwnPasswordChange(current:string,next:string,confirmation:string):string|null {
+ if(!current)return '請輸入目前的登入密碼'
+ if(!STAFF_PASSWORD_VALID(next))return '新密碼需 12～128 字，並包含英文字母與數字'
+ if(next===current)return '新密碼不可與目前密碼相同'
+ if(next!==confirmation)return '新密碼與確認密碼不一致'
+ return null
+}
+
+/**
+ * Verify the current password using an isolated, non-persistent Auth client.
+ * The app's active employee session is never replaced by this verification.
+ * updateUser can only update the *currently signed-in* Supabase Auth user.
+ */
+export async function changeOwnPassword(current:string,next:string,confirmation:string):Promise<void>{
+ const problem=validateOwnPasswordChange(current,next,confirmation)
+ if(problem)throw new Error(problem)
+ if(!configured||!supabase)throw new Error('尚未連接帳號驗證服務')
+ const {data:{user},error:identityError}=await supabase.auth.getUser()
+ if(identityError||!user||!user.email||user.is_anonymous)
+  throw new Error('登入狀態已失效，請重新登入')
+ const checkClient=createClient(supabaseUrl,supabaseKey,{
+  auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false},
+ })
+ try{
+  const {data,error}=await checkClient.auth.signInWithPassword({
+   email:user.email,password:current,
+  })
+  if(error||!data.user||data.user.id!==user.id)
+   throw new Error('目前密碼不正確，請重新輸入')
+ }finally{
+  // Only clear the temporary client's own tokens; do not revoke the
+  // employee's existing logged-in session or the manager's reset ability.
+  await checkClient.auth.signOut({scope:'local'}).catch(()=>undefined)
+ }
+ const {error:updateError}=await supabase.auth.updateUser({password:next})
+ if(updateError)throw new Error('新密碼未能儲存，請稍後重新操作')
+}
+
 const isPermission=(x:string):x is EmployeePermission => allIds.includes(x as EmployeePermission)
 export function permitted(access:BackofficeAccess,permission:EmployeePermission){
  return access.kind==='owner' || (access.active && access.permissions.includes(permission))

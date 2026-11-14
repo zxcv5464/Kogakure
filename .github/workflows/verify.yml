@@ -74,3 +74,7 @@ jobs:
         env:
           VITE_OFFLINE_PREVIEW: 'true'
         run: node scripts/qa-employee-permissions.mjs
+      - name: Verify staff can securely change their own password
+        env:
+          VITE_OFFLINE_PREVIEW: 'true'
+        run: node scripts/qa-employee-self-password.mjs

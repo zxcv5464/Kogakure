@@ -1,6 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { getBackofficeAccess, permitted, staffLoginEmail } from '../lib/employee-accounts'
+import EmployeeSelfPassword from './admin/EmployeeSelfPassword'
 import type { BackofficeAccess } from '../lib/employee-accounts'
 import { Link, Navigate, NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import { ArrowRight, LayoutDashboard, LogOut, ShieldCheck } from 'lucide-react'
@@ -203,6 +204,7 @@ function AdminOverview({access}:{access:BackofficeAccess}) {
     </Link>
    })}
   </div>
+  {access.kind==='employee'&&<EmployeeSelfPassword/>}
   {access.kind==='owner'&&<><div className="admin-overview-section-heading is-planned"><h2>後續規劃</h2><span>{planned.length} 個預留模組</span></div>
   <div className="admin-module-grid">
    {planned.map(module => {
