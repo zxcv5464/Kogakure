@@ -27,7 +27,8 @@
    Sections inserted after the async menu fetch reveal when they actually mount. */
 .route-stage .house-rules-page,
 .route-stage .tea-menu-page,
-.route-stage .services-page{--public-reveal-ease:cubic-bezier(.22,.65,.25,1)}
+.route-stage .services-page,
+.route-stage .booking-page{--public-reveal-ease:cubic-bezier(.22,.65,.25,1)}
 /* 入館須知：題字 → 引言 → 歡迎詞 → 目錄 → 五章館約 */
 .route-stage .house-rules-brand,
 .route-stage .house-rules-hero>.house-rules-ornament{animation:quietRise 1.12s var(--public-reveal-ease) .16s both}
@@ -102,13 +103,16 @@
  .tea-menu-summary,
  .tea-menu-ending
 ){animation-play-state:paused}
-/* 狐姬指名：維持全站緩動節奏，先顯示標題再顯示角色卡。 */
-.route-stage .booking-profile.staff-entry{animation:bookingReveal 1.25s cubic-bezier(.22,.65,.25,1) var(--booking-delay,0ms) both}
-.route-stage .booking-eyebrow,.route-stage .booking-emblem{animation:quietRise 1.12s cubic-bezier(.22,.65,.25,1) .16s both}
-.route-stage .booking-hero h1{animation:quietRise 1.26s cubic-bezier(.22,.65,.25,1) .34s both}
-.route-stage .booking-hero-label,.route-stage .booking-hero-verse{animation:quietRise 1.2s cubic-bezier(.22,.65,.25,1) .6s both}
-.route-stage .booking-legend{animation:quietRise 1.2s cubic-bezier(.22,.65,.25,1) .8s both}
-.route-stage:is(.is-covering,.intro-waiting) :is(.booking-eyebrow,.booking-emblem,.booking-hero h1,.booking-hero-label,.booking-hero-verse,.booking-legend,.booking-profile){animation-play-state:paused}
+/* 預約名片：與狐姬名冊共用 staffReveal 節奏，先題字、再介紹、
+   最後按名帖同樣的延遲和緩動方式逐張浮現。 */
+.route-stage .booking-eyebrow,.route-stage .booking-emblem{animation:quietRise 1.12s var(--public-reveal-ease) .15s both}
+.route-stage .booking-hero h1{animation:quietRise 1.26s var(--public-reveal-ease) .33s both}
+.route-stage .booking-hero-label{animation:quietRise 1.18s var(--public-reveal-ease) .54s both}
+.route-stage .booking-hero-verse{animation:quietRise 1.28s var(--public-reveal-ease) .72s both}
+.route-stage .booking-legend{animation:quietRise 1.22s var(--public-reveal-ease) .9s both}
+.route-stage .booking-profile{animation:staffReveal 1.34s var(--public-reveal-ease) both;animation-delay:calc(1.2s + min(var(--booking-delay,0ms),640ms))}
+.route-stage .booking-footnote{animation:quietFade 1.12s ease-out 1.3s both}
+.route-stage:is(.is-covering,.intro-waiting) :is(.booking-eyebrow,.booking-emblem,.booking-hero h1,.booking-hero-label,.booking-hero-verse,.booking-legend,.booking-profile,.booking-footnote){animation-play-state:paused}
 /* Match the unhurried entrance of the other public pages.
    Pause the directory while the route curtain covers it; otherwise slow
    Supabase loads can finish the animations before visitors see the page. */

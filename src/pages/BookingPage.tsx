@@ -140,7 +140,7 @@ export default function BookingPage(){
      const busyUntil=statusByStaff.get(person.id)
      const busy=isStaffBusy(busyUntil,now)
      return <article className={'booking-profile effect-'+person.effect+(person.thumbnailUrl.includes('-crop.webp')?' has-manual-crop':'')} key={person.id}
-      style={{'--accent':person.themeColor||'#c4ac83','--booking-delay':Math.min(index,8)*95+'ms'} as CSSProperties}>
+      style={{'--accent':person.themeColor||'#c4ac83','--booking-delay':Math.min(index,8)*80+'ms'} as CSSProperties}>
       <button className="booking-profile-action" type="button"
        onClick={()=>openBooking(person)} disabled={busy}
        aria-label={person.name+(busy?'指名中，暫不開放預約':plans.length?'空閒中，點選預約':'空閒中，方案籌備中，點選查看預約資訊')}>

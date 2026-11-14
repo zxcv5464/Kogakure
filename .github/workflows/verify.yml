@@ -58,3 +58,5 @@ jobs:
         run: node scripts/qa-booking-role-layout.mjs
       - name: Verify full-bleed booking portraits and details-only inner frame
         run: node scripts/qa-booking-card-presentation.mjs
+      - name: Verify booking entrance matches staff directory pacing
+        run: node scripts/qa-booking-fade.mjs
