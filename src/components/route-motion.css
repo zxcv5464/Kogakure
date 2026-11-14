@@ -110,9 +110,13 @@
 .route-stage .booking-hero-label{animation:quietRise 1.18s var(--public-reveal-ease) .54s both}
 .route-stage .booking-hero-verse{animation:quietRise 1.28s var(--public-reveal-ease) .72s both}
 .route-stage .booking-legend{animation:quietRise 1.22s var(--public-reveal-ease) .9s both}
+/* Empty-state and offline/error notices use the same gentle entrance as
+   other public pages; multiple notices are staggered rather than flashing. */
+.route-stage .booking-notice{animation:quietRise 1.28s var(--public-reveal-ease) 1.16s both}
+.route-stage .booking-notice+.booking-notice{animation-delay:1.34s}
 .route-stage .booking-profile{animation:staffReveal 1.34s var(--public-reveal-ease) both;animation-delay:calc(1.2s + min(var(--booking-delay,0ms),640ms))}
-.route-stage .booking-footnote{animation:quietFade 1.12s ease-out 1.3s both}
-.route-stage:is(.is-covering,.intro-waiting) :is(.booking-eyebrow,.booking-emblem,.booking-hero h1,.booking-hero-label,.booking-hero-verse,.booking-legend,.booking-profile,.booking-footnote){animation-play-state:paused}
+.route-stage .booking-footnote{animation:quietFade 1.12s ease-out 1.45s both}
+.route-stage:is(.is-covering,.intro-waiting) :is(.booking-eyebrow,.booking-emblem,.booking-hero h1,.booking-hero-label,.booking-hero-verse,.booking-legend,.booking-notice,.booking-profile,.booking-footnote){animation-play-state:paused}
 /* Match the unhurried entrance of the other public pages.
    Pause the directory while the route curtain covers it; otherwise slow
    Supabase loads can finish the animations before visitors see the page. */

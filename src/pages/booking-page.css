@@ -1,5 +1,11 @@
-/* 狐隱・預約頁：沿用御守名帖，搭配清晰且可辨識的接待狀態。 */
-.booking-page{position:relative;min-width:0;background:linear-gradient(180deg,rgba(12,12,21,.86),rgba(17,15,26,.96));color:#ede0ce;padding-bottom:76px}
+/* 預約頁沒有開放指名人員時，仍須由內容區撐滿頁首與頁尾之間。
+   只對預約路由使用 flex，不改動其他頁面與後台。
+   PageTransition 的 route-stage 為 display:contents，booking-page 可直接撐開 main。 */
+.site:has(.booking-page){display:flex;flex-direction:column;min-height:100vh;min-height:100dvh}
+.site:has(.booking-page)>main{display:flex;flex-direction:column;flex:1;min-height:0}
+.site:has(.booking-page) .booking-page{flex:1}
+/* 狐隱・預約頁：延續全版深紫色背景，短內容也不露出下層場景照片。 */
+.booking-page{position:relative;min-width:0;background:linear-gradient(180deg,rgba(12,12,21,.9),rgba(17,15,26,.98));color:#ede0ce;padding-bottom:76px}
 .booking-hero{text-align:center;padding:clamp(53px,7vw,88px) 22px 30px;background:radial-gradient(ellipse at 50% 0,rgba(111,74,95,.3),transparent 68%)}
 .booking-eyebrow{margin:0;color:#c9b18b;font-family:'Noto Serif TC',serif;font-size:.75rem;letter-spacing:.24em}
 .booking-emblem{display:block;color:#c9a578;margin:18px auto 10px}
