@@ -217,7 +217,7 @@ export default function ServiceManagement(){
   <header className="service-admin-head">
    <div><p className="eyebrow">KOGAKURE · RITUAL EDITOR</p>
     <h1>服務內容管理</h1>
-    <p>新增隱世服務、調整介紹與圖片、排序及公開狀態。所有改動以儲存後的資料為準。</p></div>
+    <p>新增隱世服務、上傳多張形象照片、調整輪播順序、介紹及公開狀態。所有改動以儲存後的資料為準。</p></div>
    <div className="service-admin-top-actions">
     <Link to="/services" target="_blank" rel="noopener noreferrer"><ExternalLink size={16}/>查看服務頁</Link>
     <button type="button" disabled={busy||loading} onClick={()=>void retry()}><RefreshCw size={16}/>更新清單</button>
