@@ -82,8 +82,8 @@ export default function BookingManagement(){
   finally{busyRef.current=false;setBusy(false)}
  }
  async function onManualCreated(id:string){
-  await refresh()
   setCreatingBooking(false)
+  await refresh()
   setIncoming(null)
   setTab('requests')
   setFilter('all')
