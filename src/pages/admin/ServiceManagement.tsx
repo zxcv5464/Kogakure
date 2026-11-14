@@ -142,10 +142,17 @@ export default function ServiceManagement(){
    setPhotoFile(null)
    setNotice({kind:'success',message:'服務內容已儲存。公開項目重新載入前台即可查看；草稿不會顯示給旅人。'})
   }catch(e){
-   if(uploadedPath&&!savedToDatabase){
-    try{await removeUnusedServicePhoto(uploadedPath)}catch{ /* Keep the original error visible. */ }
+   if(savedToDatabase){
+    // Never retry an already-created UUID or remove its uploaded photo.
+    // A failed list refresh does not undo the successful database write.
+    setDraft(null);setOriginal(null);setCreating(false);setPhotoFile(null)
+    setNotice({kind:'error',message:'服務已儲存，但清單重新讀取失敗。請按「更新清單」確認後再編輯。'})
+   }else{
+    if(uploadedPath){
+     try{await removeUnusedServicePhoto(uploadedPath)}catch{ /* Keep the original error visible. */ }
+    }
+    setNotice({kind:'error',message:'儲存失敗：'+(e instanceof Error?e.message:'請檢查資料庫連線')})
    }
-   setNotice({kind:'error',message:'儲存失敗：'+(e instanceof Error?e.message:'請檢查資料庫連線')})
   }finally{busyRef.current=false;setBusy(false)}
  }
  async function remove(){
