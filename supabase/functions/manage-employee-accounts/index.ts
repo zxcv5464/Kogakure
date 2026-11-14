@@ -41,7 +41,7 @@ function validatedUsername(value:unknown){
  return /^[a-z][a-z0-9_-]{2,23}$/.test(username)?username:null
 }
 function validatedPassword(value:unknown):value is string{
- return typeof value==='string'&&value.length>=12&&value.length<=128
+ return typeof value==='string'&&value.length>=8&&value.length<=16
   &&/[a-zA-Z]/.test(value)&&/[0-9]/.test(value)
 }
 function validatedUserId(value:unknown):value is string{
@@ -81,7 +81,7 @@ Deno.serve(async(req:Request)=>{
    const displayName=validatedName(body.displayName)
    const permissions=validatedPermissions(body.permissions)
    if(!username||!displayName||!permissions||!validatedPassword(body.password))
-    return reply(req,400,{error:'請確認登入帳號、姓名、權限及密碼（12～128 字，需包含英文字母與數字）'})
+    return reply(req,400,{error:'請確認登入帳號、姓名、權限及密碼（8～16 字，需包含英文字母與數字）'})
    const {data:existing,error:lookupError}=await service.from('employee_accounts')
     .select('user_id').eq('username',username).maybeSingle()
    if(lookupError)return reply(req,500,{error:'無法確認帳號是否已存在'})
@@ -126,7 +126,7 @@ Deno.serve(async(req:Request)=>{
   if(body.action==='reset_password'){
    const id=body.userId
    if(!validatedUserId(id)||!validatedPassword(body.password))
-    return reply(req,400,{error:'新密碼需 12～128 字，包含英文字母與數字'})
+    return reply(req,400,{error:'新密碼需 8～16 字，包含英文字母與數字'})
    if(!await findEmployee(id)||await isManager(id))
     return reply(req,404,{error:'找不到可重設密碼的員工帳號'})
    const {error}=await service.auth.admin.updateUserById(id,{password:body.password})

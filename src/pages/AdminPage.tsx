@@ -228,8 +228,8 @@ function AccountSecurity(){
  const [message,setMessage]=useState('')
  async function save(event:FormEvent){
   event.preventDefault()
-  if(password.length<10||password!==confirm){
-   setMessage('請輸入至少 10 字且兩次相同的密碼');return
+  if(password.length<8||password.length>16||password!==confirm){
+   setMessage('請輸入 8～16 字且兩次相同的密碼');return
   }
   if(!supabase)return
   setBusy(true);setMessage('')
@@ -245,10 +245,10 @@ function AccountSecurity(){
   <summary>帳號安全 · 設定／更改登入密碼</summary>
   <p>僅正式管理員可在此修改自己的登入密碼；員工密碼請由管理員至「員工帳號」管理頁重設。</p>
   <form onSubmit={e=>void save(e)}>
-   <label>新密碼（至少 10 字）<input type="password" autoComplete="new-password"
-    minLength={10} required value={password} onChange={e=>setPassword(e.target.value)}/></label>
+   <label>新密碼（8～16 字）<input type="password" autoComplete="new-password"
+    minLength={8} maxLength={16} required value={password} onChange={e=>setPassword(e.target.value)}/></label>
    <label>確認新密碼<input type="password" autoComplete="new-password"
-    minLength={10} required value={confirm} onChange={e=>setConfirm(e.target.value)}/></label>
+    minLength={8} maxLength={16} required value={confirm} onChange={e=>setConfirm(e.target.value)}/></label>
    <button type="submit" className="action-button" disabled={busy}>{busy?'更新中…':'設定登入密碼'}</button>
   </form>
   {message&&<p role="status">{message}</p>}
