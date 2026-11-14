@@ -75,7 +75,7 @@ export default function EmployeeAccountsManagement(){
    setError('登入帳號需 3～24 字，英文字母開頭，只能使用英文、數字、底線或連字號');return
   }
   if(!draft.userId&&(!STAFF_PASSWORD_VALID(password)||password!==passwordConfirm)){
-   setError('初始密碼需 12～128 字，包含英文與數字，且兩次輸入必須相同');return
+   setError('初始密碼需 8～16 字，包含英文與數字，且兩次輸入必須相同');return
   }
   if(!draft.permissions.length&&!window.confirm('此帳號未分配任何後台模組，將無法使用管理功能。確定儲存嗎？'))return
   busyRef.current=true;setBusy(true);setNotice('');setError('')
@@ -103,7 +103,7 @@ export default function EmployeeAccountsManagement(){
    setError('請先為舊帳號設定 3～24 字的全新登入名稱');return
   }
   if(!STAFF_PASSWORD_VALID(resetPassword)||resetPassword!==resetConfirm){
-   setError('新密碼需 12～128 字，包含英文與數字，且兩次輸入必須相同');return
+   setError('新密碼需 8～16 字，包含英文與數字，且兩次輸入必須相同');return
   }
   if(settingsChanged){
    setError('請先儲存員工顯示名稱及功能權限，再修改登入憑證');return
@@ -193,12 +193,12 @@ export default function EmployeeAccountsManagement(){
        placeholder="例如：yueying"/>
      </label>
      {!draft.userId&&<>
-      <label>初始密碼（至少 12 字，包含英文及數字）
-       <input type="password" required minLength={12} maxLength={128} autoComplete="new-password"
+      <label>初始密碼（8～16 字，包含英文及數字）
+       <input type="password" required minLength={8} maxLength={16} autoComplete="new-password"
         value={password} disabled={busy} onChange={e=>setPassword(e.target.value)} />
       </label>
       <label>再次輸入初始密碼
-       <input type="password" required minLength={12} maxLength={128} autoComplete="new-password"
+       <input type="password" required minLength={8} maxLength={16} autoComplete="new-password"
         value={passwordConfirm} disabled={busy} onChange={e=>setPasswordConfirm(e.target.value)} />
       </label>
       <p className="employee-admin-hint">不需要電子郵件。由管理員建立帳號及密碼後，請私下安全地交付給員工；網站不會顯示已儲存的密碼。</p>
@@ -236,12 +236,12 @@ export default function EmployeeAccountsManagement(){
          onChange={e=>setLegacyUsername(e.target.value)} />
        </label>}
        <label>新登入密碼
-        <input type="password" maxLength={128} autoComplete="new-password"
-         value={resetPassword} disabled={busy} placeholder="至少 12 字，需包含英文及數字"
+        <input type="password" minLength={8} maxLength={16} autoComplete="new-password"
+         value={resetPassword} disabled={busy} placeholder="8～16 字，需包含英文及數字"
          onChange={e=>setResetPassword(e.target.value)} />
        </label>
        <label>確認新密碼
-        <input type="password" maxLength={128} autoComplete="new-password"
+        <input type="password" minLength={8} maxLength={16} autoComplete="new-password"
          value={resetConfirm} disabled={busy} onChange={e=>setResetConfirm(e.target.value)}/>
        </label>
        <button type="button" className="employee-admin-reset" disabled={busy||!resetPassword||!resetConfirm}
