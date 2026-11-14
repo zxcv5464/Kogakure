@@ -64,7 +64,6 @@ export default function BookingPage(){
  },[loading])
 
  const statusByStaff=useMemo(()=>new Map(presence.map(p=>[p.staffId,p.busyUntil])),[presence])
- const available=people.filter(p=>!isStaffBusy(statusByStaff.get(p.id),now))
  const activePlan=plans.find(p=>p.id===planId)
 
  function openBooking(person:Staff){
