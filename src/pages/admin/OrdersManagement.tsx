@@ -51,14 +51,10 @@ export default function OrdersManagement(){
  async function remove(order:TeaOrder){
   if(saving)return
   const shortId=order.id.slice(0,8)
-  const entry=window.prompt(
-   '永久刪除「'+order.guestName+'」於「'+order.guestWorld+'」的茶宴訂單？\n'+
-   '請輸入訂單編號前 8 碼「'+shortId+'」以確認：'
-  )
-  if(entry!==shortId)return
   if(!window.confirm(
-   '最後確認：永久刪除訂單 '+shortId+'，包含所有餐點明細？\n'+
-   '此操作無法復原，與「取消訂單」不同。'
+   '確定要刪除「'+order.guestName+'」的這筆茶宴訂單嗎？\n'+
+   '訂單編號：'+shortId+'\n'+
+   '訂單及其餐點明細將永久刪除，無法復原。'
   ))return
   setSaving(order.id);setNotice('');setError('')
   try{
