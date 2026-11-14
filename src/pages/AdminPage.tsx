@@ -6,7 +6,7 @@ import { supabase } from '../lib/supabase'
 import { configured } from '../lib/config'
 import { ADMIN_MODULES } from './admin/modules'
 import { useAdminEditGuard } from './admin/AdminEditGuard'
-import BookingNotification from './admin/BookingNotification'
+import BookingNotification, { usePendingBookings } from './admin/BookingNotification'
 import './admin/admin-workspace.css'
 
 const StaffManagement = lazy(() => import('./admin/StaffManagement'))
@@ -91,6 +91,7 @@ export default function AdminPage() {
 function AdminWorkspace({ busy, onLogout }: { busy: boolean; onLogout: () => void }) {
  const { pathname } = useLocation()
  const {canLeave, confirmNavigation} = useAdminEditGuard()
+ const { pendingCount, unread, failed, dismiss } = usePendingBookings()
  const active = ADMIN_MODULES.find(module => module.path && (pathname === module.path || pathname === module.path + '/'))
 
  return <div className="admin-workspace">
@@ -102,8 +103,18 @@ function AdminWorkspace({ busy, onLogout }: { busy: boolean; onLogout: () => voi
     </NavLink>
     {ADMIN_MODULES.filter(module => module.status === 'available' && module.path).map(module => {
      const Icon = module.icon
-     return <NavLink key={module.id} to={module.path!} onClick={confirmNavigation} className={({ isActive }) => 'admin-nav-link' + (isActive ? ' is-active' : '')}>
+     const bookingItem = module.id === 'booking'
+     const hasPending = bookingItem && !failed && pendingCount !== null && pendingCount > 0
+     return <NavLink key={module.id} to={module.path!} onClick={confirmNavigation}
+      aria-label={bookingItem
+       ? failed ? '預約管理，待審核數量暫時無法更新'
+        : pendingCount !== null ? '預約管理，' + pendingCount + ' 筆待審核預約'
+        : '預約管理，正在更新預約數量'
+       : undefined}
+      className={({ isActive }) => 'admin-nav-link' + (isActive ? ' is-active' : '') + (hasPending ? ' has-booking-pending' : '')}>
       <Icon size={18}/> <span>{module.title}</span>
+      {hasPending && <span className="admin-nav-booking-badge" aria-hidden="true" title={pendingCount + ' 筆待審核預約'}>{pendingCount}</span>}
+      {bookingItem && failed && <span className="admin-nav-booking-warning" aria-hidden="true" title="預約數量暫時無法更新">!</span>}
      </NavLink>
     })}
    </nav>
@@ -117,7 +128,7 @@ function AdminWorkspace({ busy, onLogout }: { busy: boolean; onLogout: () => voi
    <button type="button" disabled={busy} className="admin-nav-logout" onClick={() => {if (canLeave()) onLogout()}}> <LogOut size={17}/> 登出</button>
   </aside>
   <div className="admin-workspace-content" id="admin-workspace-content">
-   <BookingNotification />
+   <BookingNotification pendingCount={pendingCount} unread={unread} onDismiss={dismiss} />
    <Routes>
     <Route path="/admin" element={<AdminOverview/>}/>
     <Route path="/admin/staff" element={<Suspense fallback={<div className="admin-module-loading" role="status">正在開啟員工名帖管理…</div>}><StaffManagement/></Suspense>}/>
