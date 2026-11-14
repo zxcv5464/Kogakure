@@ -2,11 +2,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Bell, Check, CheckCircle2, Clock3, ExternalLink, Plus, RefreshCw, Save, Trash2, X, XCircle } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import {
- countdown, decideBooking, describeBookingError, loadAdminBookings,
+ countdown, decideBooking, deleteAdminBooking, describeBookingError, loadAdminBookings,
  loadBookingPlans, removeBookingPlan, saveBookingPlan, watchBookingChanges,
 } from '../../lib/bookings'
 import type { BookingPlan, BookingRequest, BookingStatus } from '../../lib/bookings'
 import { useAdminEditGuard } from './AdminEditGuard'
+import AdminBookingCreate from './AdminBookingCreate'
 import './booking-management.css'
 
 const statusNames:Record<BookingStatus,string>={
@@ -32,6 +33,7 @@ export default function BookingManagement(){
  const lastSeen=useRef(new Set<string>())
  const didLoad=useRef(false)
  const [incoming,setIncoming]=useState<BookingRequest|null>(null)
+ const [creatingBooking,setCreatingBooking]=useState(false)
  const {setEditing}=useAdminEditGuard()
  const dirty=Boolean(planDraft&&(planDraft.creating||JSON.stringify(planDraft.value)!==JSON.stringify(planDraft.original)))
  useEffect(()=>setEditing(dirty,busy),[dirty,busy,setEditing])
@@ -79,6 +81,33 @@ export default function BookingManagement(){
   }catch(e){setError(describeBookingError(e))}
   finally{busyRef.current=false;setBusy(false)}
  }
+ async function onManualCreated(id:string){
+  await refresh()
+  setCreatingBooking(false)
+  setIncoming(null)
+  setTab('requests')
+  setFilter('all')
+  setFocused(id)
+  setNotice('已新增待審核指名申請；請確認後按「接取」才開始計時。')
+ }
+ async function removeBooking(record:BookingRequest){
+  if(busyRef.current)return
+  const phrase=window.prompt(
+   '即將永久刪除「'+record.guestName+'」的預約資料。\n'+
+   (record.status==='accepted'?'此筆正在指名中，刪除時會同步釋放狐姬的占用狀態。\n':'')+
+   '刪除後無法復原。請輸入「刪除」確認：'
+  )
+  if(phrase!=='刪除')return
+  busyRef.current=true;setBusy(true);setError('');setNotice('')
+  try{
+   await deleteAdminBooking(record.id)
+   await refresh()
+   setFocused(null)
+   setIncoming(null)
+   setNotice('預約紀錄已永久刪除'+(record.status==='accepted'?'，對應狐姬狀態已更新。':'。'))
+  }catch(e){setError(describeBookingError(e))}
+  finally{busyRef.current=false;setBusy(false)}
+ }
  function choosePlan(plan:BookingPlan,creating=false){
   if(dirty&&!window.confirm('尚有未儲存的方案修改，確定放棄？'))return
   setPlanDraft({value:{...plan},original:{...plan},creating})
@@ -111,6 +140,7 @@ export default function BookingManagement(){
   <header className="booking-admin-header">
    <div><p className="eyebrow">KOGAKURE · RESERVATION DESK</p><h1>狐姬預約管理</h1><p>申請審核、指名狀態、同步計時及指名方案設定</p></div>
    <div className="booking-admin-top-actions">
+    <button type="button" className="booking-admin-new-button" disabled={busy||loading} onClick={()=>{setTab('requests');setCreatingBooking(true)}}><Plus size={16}/>新增預約</button>
     <button type="button" disabled={busy} onClick={()=>void refresh().catch(e=>setError(describeBookingError(e)))}><RefreshCw size={16}/>更新</button>
     <Link to="/booking" target="_blank" rel="noopener noreferrer"><ExternalLink size={16}/>查看前台</Link>
    </div>
@@ -147,6 +177,7 @@ export default function BookingManagement(){
      {r.status==='accepted'&&<p className="booking-admin-timer"><Clock3 size={16}/>{r.endsAt&&new Date(r.endsAt).getTime()<=now?'已達預定時間，請確認結束': '剩餘 '+countdown(r.endsAt,now)}（開始：{fmt(r.acceptedAt)}）</p>}
      <div className="booking-admin-request-actions">
       <button type="button" onClick={()=>setFocused(r.id)}>查看詳細</button>
+      <button type="button" className="danger" disabled={busy} onClick={()=>void removeBooking(r)}><Trash2 size={16}/>刪除</button>
       {r.status==='pending'&&<><button type="button" className="primary" disabled={busy} onClick={()=>void act(r,'accept')}><Check size={16}/>接取</button><button type="button" className="danger" disabled={busy} onClick={()=>void act(r,'reject')}><XCircle size={16}/>婉拒</button></>}
       {r.status==='accepted'&&<button type="button" className="primary" disabled={busy} onClick={()=>void act(r,'complete')}><CheckCircle2 size={16}/>結束服務</button>}
      </div>
@@ -175,6 +206,7 @@ export default function BookingManagement(){
     </div>
    </div>
   </div>}
+  {creatingBooking&&<AdminBookingCreate plans={plans} close={()=>setCreatingBooking(false)} onCreated={onManualCreated}/>}
   {selectedBooking&&<div className="booking-admin-detail-backdrop" onMouseDown={e=>{if(e.currentTarget===e.target)setFocused(null)}}>
    <div className="booking-admin-detail" role="dialog" aria-modal="true" aria-labelledby="booking-admin-detail-title">
     <button type="button" className="booking-admin-close" aria-label="關閉詳細資料" onClick={()=>setFocused(null)}><X size={20}/></button>
@@ -195,6 +227,7 @@ export default function BookingManagement(){
      {selectedBooking.completedAt&&<div><dt>實際結束（台灣）</dt><dd>{fmt(selectedBooking.completedAt)}</dd></div>}
     </dl>
     <div className="booking-admin-detail-actions">
+     <button type="button" className="danger" disabled={busy} onClick={()=>void removeBooking(selectedBooking)}><Trash2 size={16}/>永久刪除此筆</button>
      {selectedBooking.status==='pending'&&<><button type="button" className="primary" disabled={busy} onClick={()=>void act(selectedBooking,'accept')}>接取並開始計時</button><button type="button" className="danger" disabled={busy} onClick={()=>void act(selectedBooking,'reject')}>婉拒</button></>}
      {selectedBooking.status==='accepted'&&<button type="button" className="primary" disabled={busy} onClick={()=>void act(selectedBooking,'complete')}>結束服務並釋放狐姬</button>}
     </div>
