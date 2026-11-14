@@ -86,6 +86,12 @@ for(const guard of [
 }
 assert.ok(!edge.includes('inviteUserByEmail')&&!edge.includes("action==='invite'"),
  'Email invitations must be completely removed from the backend')
+assert.ok(edge.includes('value.length>=8&&value.length<=16'),
+ 'The server must enforce 8–16-character passwords for creation, reset and conversion')
+assert.ok(!edge.includes('value.length>=12&&value.length<=128'),
+ 'The obsolete password length must be removed from the server')
+assert.ok(editor.includes('minLength={8} maxLength={16}')&&editor.includes('minLength={8} maxLength={16}'),
+ 'Staff credential inputs must use the new length boundaries')
 assert.ok(edge.includes("if(body.action==='delete')")&&edge.includes("if(body.action==='reset_password')"),
  'Both delete and reset flows must be present')
 assert.ok(edge.includes("if(body.action==='convert_legacy')")&&edge.includes("!employee.username.startsWith('legacy_')"),
@@ -134,9 +140,12 @@ try{
  for(const invalid of ['a','1user','ab','a.b','evil@example.com','a b','john+1'])
   assert.equal(mod.staffLoginEmail(invalid),null,'Invalid username should be rejected: '+invalid)
  assert.equal(mod.STAFF_PASSWORD_VALID('StaffPass1234'),true)
- assert.equal(mod.STAFF_PASSWORD_VALID('short1'),false)
- assert.equal(mod.STAFF_PASSWORD_VALID('onlylettersandnone'),false)
- assert.equal(mod.STAFF_PASSWORD_VALID('123456789012'),false)
+ assert.equal(mod.STAFF_PASSWORD_VALID('Abcdefg1'),true,'8 characters should be accepted')
+ assert.equal(mod.STAFF_PASSWORD_VALID('Abcdefghijklmno1'),true,'16 characters should be accepted')
+ assert.equal(mod.STAFF_PASSWORD_VALID('Abcdef1'),false,'7 characters should be rejected')
+ assert.equal(mod.STAFF_PASSWORD_VALID('Abcdefghijklmnop1'),false,'17 characters should be rejected')
+ assert.equal(mod.STAFF_PASSWORD_VALID('LettersOnly'),false,'Letters alone should not pass')
+ assert.equal(mod.STAFF_PASSWORD_VALID('123456789012'),false,'Digits alone should not pass')
  const manager={kind:'owner',permissions:[]}
  const staff={kind:'employee',active:true,displayName:'月迎',permissions:['booking.manage']}
  assert.equal(mod.permitted(manager,'staff.manage'),true)
