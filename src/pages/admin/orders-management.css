@@ -40,3 +40,18 @@
 .tea-order-admin-footnote{font-size:.76rem;color:#a9a09a;line-height:1.7;margin:22px 0}
 @media(max-width:1050px){.tea-order-admin-list{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:520px){.tea-order-admin-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.tea-order-admin-card{padding:14px 12px}.tea-order-admin-actions button{flex:1}.tea-order-admin-header>button{width:100%;justify-content:center}}
+
+/* Destructive actions are deliberately quieter than the main order flow. */
+.tea-order-admin-actions .is-delete{
+ margin-left:auto;
+ border:1px solid rgba(228,126,127,.53);
+ background:rgba(111,39,48,.19);
+ color:#f3b9af;
+}
+.tea-order-admin-actions .is-delete:hover:not(:disabled){
+ border-color:rgba(243,158,150,.85);
+ background:rgba(143,47,59,.35);
+}
+@media(max-width:520px){
+ .tea-order-admin-actions .is-delete{flex:1 1 100%;margin-left:0}
+}
