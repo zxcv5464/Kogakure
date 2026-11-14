@@ -6,6 +6,14 @@ import {createElement} from 'react'
 import {renderToStaticMarkup} from 'react-dom/server'
 import {createServer} from 'vite'
 import {MemoryRouter} from 'react-router-dom'
+import ts from 'typescript'
+// The admin module catalog is parsed explicitly: a missing comma can block
+// the entire production deployment while the previous website stays live.
+for(const path of ['src/pages/admin/modules.ts','src/pages/AdminPage.tsx','src/pages/admin/ServiceManagement.tsx']){
+ const source=await readFile(path,'utf8')
+ const ast=ts.createSourceFile(path,source,ts.ScriptTarget.Latest,true,path.endsWith('.tsx')?ts.ScriptKind.TSX:ts.ScriptKind.TS)
+ assert.equal(ast.parseDiagnostics.length,0,'Invalid TypeScript syntax in '+path+': '+ast.parseDiagnostics.map(d=>ts.flattenDiagnosticMessageText(d.messageText,' ')).join('; '))
+}
 const paths=[
  'src/pages/ServicesPage.tsx','src/lib/service-content.ts',
  'src/pages/admin/ServiceManagement.tsx','src/pages/AdminPage.tsx',
