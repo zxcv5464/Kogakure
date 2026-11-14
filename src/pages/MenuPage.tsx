@@ -18,7 +18,8 @@ export default function MenuPage() {
  const [guestWorld,setGuestWorld] = useState('')
  const [sending,setSending] = useState(false)
  const [orderError,setOrderError] = useState('')
- const [receipt,setReceipt] = useState<{id:string;name:string;world:string;items:string[];total:number}|null>(null)
+ const [receipt,setReceipt] = useState<{id:string;name:string;world:string;items:string[];total:number;isAddOn:boolean}|null>(null)
+ const [isAdding,setIsAdding] = useState(false)
 
  useEffect(() => {
   if (!configured) return
@@ -51,15 +52,24 @@ export default function MenuPage() {
  const count = selected.reduce((sum,item) => sum + (quantities[item.id] || 0), 0)
 
  function changeQuantity(id:string,delta:number) {
+  if(receipt)return // A submitted order remains closed until the guest explicitly opens a new add-on order.
   setQuantities(prev => ({ ...prev, [id]: Math.min(99,Math.max(0,(prev[id] || 0)+delta)) }))
-  setReceipt(null)
   setOrderError('')
+ }
+
+ function startAddOn(){
+  setReceipt(null)
+  setIsAdding(true)
+  setQuantities({})
+  setOrderError('')
+  // Return to the dishes while retaining the game character and world for the next, independent order.
+  window.requestAnimationFrame(()=>document.querySelector('.tea-menu-section')?.scrollIntoView({behavior:'smooth',block:'start'}))
  }
 
  async function sendOrder(e:FormEvent){
   e.preventDefault()
   if(sending)return
-  setOrderError('');setReceipt(null)
+  setOrderError('')
   if(mode!=='live'){setOrderError('目前為展示菜單，尚未開放送出訂單');return}
   if(!count){setOrderError('請先選擇至少一份茶宴餐點');return}
   if(selected.length>20||count>100){setOrderError('單次最多 20 種品項、100 份餐點');return}
@@ -68,7 +78,8 @@ export default function MenuPage() {
   const name=guestName.trim(),world=guestWorld.trim()
   try{
    const id=await submitTeaOrder(name,world,selected.map(x=>({id:x.id,quantity:quantities[x.id]})))
-   setReceipt({id,name,world,items:snapshot,total})
+   setReceipt({id,name,world,items:snapshot,total,isAddOn:isAdding})
+   setIsAdding(false)
    setQuantities({})
   }catch(error){setOrderError(error instanceof Error?error.message:'訂單未能送出，請稍後重試')}
   finally{setSending(false)}
@@ -110,9 +121,9 @@ export default function MenuPage() {
        </div>
        <p className="tea-menu-item-desc">{item.description}</p>
        {!item.available ? <span className="tea-menu-unavailable">暫停供應</span> : <div className="tea-menu-qty" aria-label={item.name+'選擇數量'}>
-        <button type="button" aria-label={'減少'+item.name} disabled={!(quantities[item.id] > 0)} onClick={()=>changeQuantity(item.id,-1)}><Minus size={15}/></button>
+        <button type="button" aria-label={'減少'+item.name} disabled={!!receipt||!(quantities[item.id] > 0)} onClick={()=>changeQuantity(item.id,-1)}><Minus size={15}/></button>
         <output aria-label="數量">{quantities[item.id] || 0}</output>
-        <button type="button" aria-label={'增加'+item.name} disabled={quantities[item.id]>=99} onClick={()=>changeQuantity(item.id,1)}><Plus size={15}/></button>
+        <button type="button" aria-label={'增加'+item.name} disabled={!!receipt||quantities[item.id]>=99} onClick={()=>changeQuantity(item.id,1)}><Plus size={15}/></button>
        </div>}
       </article>)}
      </div> : <p className="tea-menu-empty">這一卷御品尚在準備中。</p>}
@@ -121,25 +132,28 @@ export default function MenuPage() {
    <aside className="tea-menu-summary" aria-label="點單清單"> 
     {receipt&&<div className="tea-menu-order-success" role="status">
      <CircleCheck size={23}/>
-     <div><h3>茶宴點單已送出，等待館方確認</h3>
+     <div><h3>{receipt.isAddOn?'茶宴加點已送出，等待館方確認':'茶宴點單已送出，等待館方確認'}</h3>
       <p>旅人：{receipt.name} · {receipt.world}</p>
       <p>訂單編號：<code>{receipt.id}</code></p>
       <ul>{receipt.items.map((line,i)=><li key={i}>{line}</li>)}</ul>
       <strong>合計 {receipt.total.toLocaleString('en-US')} Gil</strong>
+      <p>{receipt.isAddOn?'本次加點已建立獨立新訂單，原訂單內容與金額不變。':'這筆訂單已送出，若需追加餐點，請另開一筆加點訂單。'}</p>
+      <button className="tea-menu-add-on" type="button" onClick={startAddOn}><Plus size={16}/>加點 · 建立新訂單</button>
      </div>
     </div>}
+    {!receipt&&<>
     <div className="tea-menu-summary-heading">
-     <ClipboardList size={19}/><h2>旅人點單</h2><span>{count} 份</span>
+     <ClipboardList size={19}/><h2>{isAdding?'加點選單 · 新訂單':'旅人點單'}</h2><span>{count} 份</span>
      {selected.length>0&&<button type="button" className="tea-menu-clear"
-      onClick={()=>{setQuantities({});setOrderError('');setReceipt(null)}}
+      onClick={()=>{setQuantities({});setOrderError('')}}
       disabled={sending}><RefreshCcw size={14}/>清空選擇</button>}
     </div>
     {selected.length ? <>
      <ul>{selected.map(item=><li key={item.id}><span>{item.name} × {quantities[item.id]}</span><strong>{(item.priceGil * quantities[item.id]).toLocaleString('en-US')} Gil</strong></li>)}</ul>
      <div className="tea-menu-total"><span>合計</span><strong>{total.toLocaleString('en-US')} Gil</strong></div>
      <form id="tea-order-submit" className="tea-menu-order-form" onSubmit={e=>void sendOrder(e)}>
-      <h3>送出茶宴點單</h3>
-      <p>請填寫《FINAL FANTASY XIV》角色姓名與所在伺服器，館方才能辨識您的訂單。</p>
+      <h3>{isAdding?'送出加點訂單':'送出茶宴點單'}</h3>
+      <p>{isAdding?'此次加點會產生全新訂單編號，與原訂單分開處理。已沿用上次填寫的旅人姓名與伺服器，可自行修改。':'請填寫《FINAL FANTASY XIV》角色姓名與所在伺服器，館方才能辨識您的訂單。'}</p>
       <div className="tea-menu-order-fields">
        <label>旅人角色姓名 <span>必填</span>
         <input required minLength={2} maxLength={48} autoComplete="off"
@@ -154,12 +168,13 @@ export default function MenuPage() {
       </div>
       {orderError&&<p className="tea-menu-order-error" role="alert">{orderError}</p>}
       <button className="tea-menu-send" type="submit" disabled={sending||mode!=='live'}>
-       <Send size={17}/>{sending?'正在送出點單…':'確認送出訂單'}
+       <Send size={17}/>{sending?'正在送出點單…':isAdding?'確認送出加點訂單':'確認送出訂單'}
       </button>
       {mode!=='live'&&<p className="tea-menu-order-error">展示菜單無法送出訂單；待正式菜單連線後開放。</p>}
      </form>
     </> : <p className="tea-menu-cart-empty">點選御品旁的 ＋，將喜愛的茶點收入清單。</p>}
-    <p className="tea-menu-summary-note">送出後由館方接單確認。餐點及 Gil 金額以送出時資料庫價格為準；送出不代表完成付款，請依館內人員指示結算。</p>
+    <p className="tea-menu-summary-note">送出後由館方接單確認。餐點及 Gil 金額以送出時資料庫價格為準；送出不代表完成付款，請依館內人員指示結算。加點將另立新單；同名同伺服器 15 秒內不可重複提交。</p>
+    </>}
    </aside>
    <footer className="tea-menu-ending">
     <span aria-hidden="true">◇</span>
