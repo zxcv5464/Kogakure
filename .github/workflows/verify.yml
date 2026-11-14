@@ -44,3 +44,7 @@ jobs:
         env:
           VITE_OFFLINE_PREVIEW: 'true'
         run: node scripts/qa-bookings.mjs
+      - name: Verify manual staff photo selection and uncropped full-size images
+        env:
+          VITE_OFFLINE_PREVIEW: 'true'
+        run: node scripts/qa-staff-crop.mjs
