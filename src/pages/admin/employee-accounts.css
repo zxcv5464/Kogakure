@@ -53,3 +53,16 @@
 .employee-admin-success{display:flex;align-items:center;gap:9px;border-color:rgba(115,192,133,.45);color:#b7e3bb;background:rgba(68,118,79,.14)}
 @media(max-width:850px){.employee-admin-layout{grid-template-columns:minmax(0,1fr)}.employee-admin-list{display:block}.employee-admin-heading-actions{width:100%}.employee-admin-heading-actions button{flex:1}}
 @media(max-width:500px){.employee-admin-list,.employee-admin-editor{padding:12px}.employee-admin-person{flex-wrap:wrap}.employee-admin-editor-buttons button{flex:1}}
+
+/* Credential creation and removal are visually distinct from profile editing. */
+.employee-admin-security,.employee-admin-delete{display:grid;gap:11px;margin-top:11px;padding:17px 15px;border:1px solid rgba(220,185,135,.25);border-radius:7px;background:rgba(13,16,27,.33)}
+.employee-admin-security h3,.employee-admin-delete h3{display:flex;gap:8px;align-items:center;color:#eacfaa;font-size:.96rem;margin:0}
+.employee-admin-security p,.employee-admin-delete p{margin:0;color:#bdad9c;font-size:.78rem;line-height:1.8}
+.employee-admin-security label{display:grid;gap:7px;color:#e8d5b7;font-size:.82rem}
+.employee-admin-security input{width:100%;min-height:42px;padding:10px;border:1px solid rgba(210,172,131,.35);background:#151723;border-radius:5px;color:#f5dec1}
+.employee-admin-security button.employee-admin-reset{display:inline-flex;align-items:center;gap:8px;justify-content:center;justify-self:start;min-height:41px;padding:8px 14px;background:#3a3341;border:1px solid rgba(220,185,135,.5);color:#eddbbf;border-radius:5px}
+.employee-admin-delete{border-color:rgba(203,103,95,.37);background:rgba(84,30,36,.15)}
+.employee-admin-delete h3{color:#efb0a7}
+.employee-admin-delete-button{display:inline-flex;align-items:center;justify-content:center;gap:7px;justify-self:start;min-height:42px;padding:8px 14px;border:1px solid rgba(244,132,125,.6);border-radius:6px;background:rgba(126,42,49,.23);color:#ffc6ba;font-size:.83rem}
+.employee-admin-delete-button:hover:not(:disabled){background:rgba(161,52,59,.38)}
+@media(max-width:500px){.employee-admin-security,.employee-admin-delete{padding:14px 11px}.employee-admin-security button.employee-admin-reset,.employee-admin-delete-button{width:100%}}
