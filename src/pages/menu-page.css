@@ -54,3 +54,27 @@
 .tea-menu-ending small{display:block;color:#c4a98a;margin-top:21px;letter-spacing:.17em}
 @media(max-width:720px){.tea-menu-content{width:calc(100% - 25px)}.tea-menu-grid{grid-template-columns:minmax(0,1fr)}.tea-menu-section{padding:22px 17px}.tea-menu-section-title{gap:14px}.tea-menu-item{padding:20px 17px}.tea-menu-hero{padding:47px 15px 32px}.tea-menu-verse{font-size:.9rem}.tea-menu-section-intro{font-size:.86rem}.tea-menu-qty button{width:41px;height:41px}}
 @media(max-width:360px){.tea-menu-item-head{display:block}.tea-menu-price{display:block;margin-top:6px}.tea-menu-section-title h2{font-size:1.25rem}}
+
+/* Tea banquet checkout: same muted gold and purple as the rest of KOGAKURE. */
+.tea-menu-order-form{display:grid;gap:13px;padding:22px 0 18px;margin:19px 0;border-top:1px solid rgba(213,174,122,.22);border-bottom:1px solid rgba(213,174,122,.22)}
+.tea-menu-order-form h3{margin:0;font:600 1.06rem 'Noto Serif TC',serif;color:#f1dbb7;letter-spacing:.08em}
+.tea-menu-order-form>p{margin:0;color:#c7b9a8;font-size:.81rem;line-height:1.85}
+.tea-menu-order-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.tea-menu-order-fields label{display:grid;gap:7px;min-width:0;font-size:.83rem;color:#e9d1b0}
+.tea-menu-order-fields label span{font-size:.69rem;color:#bb9c76}
+.tea-menu-order-fields input{width:100%;min-width:0;min-height:45px;padding:11px 13px;border:1px solid rgba(214,179,134,.38);border-radius:5px;background:rgba(12,14,24,.7);color:#f7e4cb;font:inherit;font-size:.86rem;outline-offset:3px}
+.tea-menu-order-fields input::placeholder{color:#978d87}
+.tea-menu-order-form button.tea-menu-send{display:inline-flex;align-items:center;justify-content:center;gap:10px;justify-self:start;min-height:46px;padding:12px 22px;border:1px solid #dec094;border-radius:5px;background:#d6b486;color:#221a26;font-size:.89rem;font-weight:700}
+.tea-menu-send:hover:not(:disabled){background:#ebcda0}
+.tea-menu-send:disabled{opacity:.52;cursor:not-allowed}
+.tea-menu-order-form .tea-menu-order-error{margin:0;color:#f3b3ae;line-height:1.65;font-size:.82rem;overflow-wrap:anywhere}
+.tea-menu-order-success{display:flex;gap:12px;align-items:flex-start;border:1px solid rgba(138,209,160,.38);border-radius:7px;padding:16px 17px;background:rgba(38,87,68,.19);color:#e4f2d9}
+.tea-menu-order-success>svg{flex:none;color:#aedcc0}
+.tea-menu-order-success>div{min-width:0}
+.tea-menu-order-success h3{margin:0 0 9px;font:600 1rem 'Noto Serif TC',serif;color:#b9ebcf}
+.tea-menu-order-success p{margin:5px 0;font-size:.79rem;line-height:1.8;overflow-wrap:anywhere}
+.tea-menu-order-success code{font-family:ui-monospace,monospace;font-size:.74rem;color:#e7d5b4;overflow-wrap:anywhere}
+.tea-menu-order-success ul{margin:9px 0;padding-left:18px;list-style:disc}
+.tea-menu-order-success li{border:0;padding:2px 0;color:#e4e8d8;font-size:.79rem}
+.tea-menu-order-success strong{font-size:.81rem;color:#ead8a6}
+@media(max-width:600px){.tea-menu-order-fields{grid-template-columns:minmax(0,1fr)}.tea-menu-order-form button.tea-menu-send{width:100%}.tea-menu-order-success{padding:14px 12px}}
