@@ -109,3 +109,14 @@
  .booking-card-cta{font-size:.69rem}
 }
 @media(prefers-reduced-motion:reduce){.booking-profile{animation:none}}
+
+/* All nominated staff must remain visible across form review and success.
+   Reuse the exact same list so names never vanish after RPC submission. */
+.booking-nominee-summary{display:grid;gap:11px;width:100%;min-width:0;padding:15px 16px;border:1px solid rgba(217,180,124,.37);border-radius:7px;background:rgba(220,182,132,.07);text-align:left}
+.booking-nominee-summary>strong{color:#e9d0a9;font-size:.85rem;font-family:'Noto Serif TC',serif;line-height:1.5}
+.booking-nominee-summary ul{display:grid;gap:8px;list-style:none;margin:0;padding:0}
+.booking-nominee-summary li{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;min-width:0;line-height:1.65}
+.booking-nominee-kind{flex:0 0 auto;border:1px solid rgba(226,182,119,.36);border-radius:30px;padding:2px 9px;color:#e0ba87;font-size:.7rem}
+.booking-nominee-name{min-width:0;color:#f2e2cd;font-size:.86rem;overflow-wrap:anywhere}
+.booking-success .booking-nominee-summary{max-width:470px;margin:2px auto;text-align:left}
+@media(max-width:440px){.booking-nominee-summary{padding:13px 12px}.booking-nominee-summary li{gap:6px 8px}}
