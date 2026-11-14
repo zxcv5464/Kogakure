@@ -1,6 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
-import { getBackofficeAccess, permitted } from '../lib/employee-accounts'
+import { getBackofficeAccess, permitted, staffLoginEmail } from '../lib/employee-accounts'
 import type { BackofficeAccess } from '../lib/employee-accounts'
 import { Link, Navigate, NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import { ArrowRight, LayoutDashboard, LogOut, ShieldCheck } from 'lucide-react'
@@ -58,7 +58,10 @@ export default function AdminPage() {
   if (!client) return
   setBusy(true); setMessage('')
   try {
-   const { data, error } = await client.auth.signInWithPassword({ email, password })
+   const loginInput=email.trim()
+   const loginEmail=loginInput.includes('@')?loginInput:staffLoginEmail(loginInput)
+   if(!loginEmail){setMessage('登入帳號格式不正確，請確認管理員 Email 或員工帳號');return}
+   const { data, error } = await client.auth.signInWithPassword({ email:loginEmail, password })
    setPassword('')
    if (error) { setMessage('登入失敗：' + error.message); return }
    if (data.user) await verify(data.user.id)
@@ -89,10 +92,10 @@ export default function AdminPage() {
    : state === 'forbidden'
     ? <><p>此帳號目前未被授權使用狐隱後台，或員工帳號已停用。請聯繫館方管理者檢查授權設定。</p><button className="action-button" type="button" disabled={busy} onClick={() => void logout()}>登出</button></>
     : <form onSubmit={login} className="login-form">
-      <label>管理者／員工 Email<input type="email" autoComplete="username" value={email} onChange={e => setEmail(e.target.value)} required/></label>
+      <label>管理員 Email／員工登入帳號<input type="text" autoComplete="username" value={email} onChange={e => setEmail(e.target.value)} required placeholder="管理員 Email 或員工帳號"/></label>
       <label>密碼<input type="password" autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} required/></label>
       <button className="action-button" disabled={busy} type="submit">{busy ? '登入中…' : '登入狐隱後台'}</button>
-      <button className="admin-password-help" type="button" disabled={busy||!email.trim()} onClick={async()=>{
+      <button className="admin-password-help" type="button" disabled={busy||!email.includes('@')} onClick={async()=>{
        if(!client)return
        setBusy(true)
        try{
@@ -102,7 +105,8 @@ export default function AdminPage() {
         setMessage(error?'無法發送重設郵件，請聯繫館方管理者。':'若此 Email 已註冊，將收到重設密碼郵件。')
        }catch{setMessage('無法發送重設郵件，請稍後重試')}
        finally{setBusy(false)}
-      }}>忘記密碼／重設登入密碼</button>
+      }}>管理員忘記密碼（Email）</button>
+      <p className="admin-login-hint">員工忘記密碼，請聯繫館方管理員在「員工帳號」重設，不需寄送郵件。</p>
      </form>}
   {message && <p className="admin-message" role="alert">{message}</p>}
  </section>
@@ -211,7 +215,7 @@ function AdminOverview({access}:{access:BackofficeAccess}) {
    })}
   </div>
   <p className="admin-overview-note">尚未開發的功能僅顯示規劃方向，不會操作資料庫或產生額外請求。</p></>}
-  <AccountSecurity />
+  {access.kind==='owner'&&<AccountSecurity />}
  </section>
 }
 
@@ -237,7 +241,7 @@ function AccountSecurity(){
  }
  return <details className="admin-security-settings">
   <summary>帳號安全 · 設定／更改登入密碼</summary>
-  <p>首次接受館方邀請登入的員工，請在這裡設定專屬密碼。管理員與其他員工無法查看你的密碼。</p>
+  <p>僅正式管理員可在此修改自己的登入密碼；員工密碼請由管理員至「員工帳號」管理頁重設。</p>
   <form onSubmit={e=>void save(e)}>
    <label>新密碼（至少 10 字）<input type="password" autoComplete="new-password"
     minLength={10} required value={password} onChange={e=>setPassword(e.target.value)}/></label>
