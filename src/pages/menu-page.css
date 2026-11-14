@@ -77,6 +77,9 @@
 .tea-menu-order-success ul{margin:9px 0;padding-left:18px;list-style:disc}
 .tea-menu-order-success li{border:0;padding:2px 0;color:#e4e8d8;font-size:.79rem}
 .tea-menu-order-success strong{font-size:.81rem;color:#ead8a6}
+.tea-menu-order-success .tea-menu-add-on{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;margin-top:14px;padding:10px 18px;border:1px solid #dec094;border-radius:5px;background:#d6b486;color:#221a26;font-size:.85rem;font-weight:700;cursor:pointer}
+.tea-menu-order-success .tea-menu-add-on:hover{background:#ebcda0}
+.tea-menu-order-success .tea-menu-add-on:focus-visible{outline:2px solid #e9d3ad;outline-offset:3px}
 @media(max-width:600px){.tea-menu-order-fields{grid-template-columns:minmax(0,1fr)}.tea-menu-order-form button.tea-menu-send{width:100%}.tea-menu-order-success{padding:14px 12px}}
 
 /* Narrow screens: show the clear option on a second aligned row, not squeezed beside the total. */
