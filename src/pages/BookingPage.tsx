@@ -16,7 +16,7 @@ import type { BookingPlan, StaffPresence } from '../lib/bookings'
 import type { Staff } from '../types'
 import './booking-page.css'
 
-const maximumStaff = 4
+const maximumStaff = 2
 
 function NomineeSummary({nominees}: {nominees: BookingNominee[]}) {
  return <div className="booking-nominee-summary" aria-label="完整指名名單">
@@ -126,7 +126,7 @@ export default function BookingPage(){
   if(ids.length!==1+(withOthers?others.length:0)){
    setFormError('部分追加指名的人員已更新，請重新確認指名名單');return
   }
-  if(ids.length>maximumStaff){setFormError('一次最多指名四位館員');return}
+  if(ids.length>maximumStaff){setFormError('每筆預約最多主要指名 1 位及追加指名 1 位');return}
   if(ids.some(id=>isStaffBusy(statusByStaff.get(id),Date.now()))){setFormError('有受指名人員已進入指名中，請重新選擇');return}
   if(name.trim().length<2||world.trim().length<2||!planId){setFormError('請填寫遊戲角色姓名、伺服器並選擇方案');return}
   setSending(true);setFormError('')
@@ -208,14 +208,14 @@ export default function BookingPage(){
      {activePlan&&<p className="booking-plan-note"><Clock3 size={16}/>{activePlan.description||'體驗內容以館方確認為準'} · {activePlan.priceGil===null?'費用請洽館方':'費用 '+activePlan.priceGil.toLocaleString('en-US')+' Gil'}</p>}
      <label className="booking-choice"><input type="checkbox" checked={withOthers} onChange={e=>{setWithOthers(e.target.checked);setOthers([])}}/>是否同時指名其他館員？</label>
      {withOthers&&<fieldset className="booking-additional">
-      <legend>加選館員（含原指名最多 {maximumStaff} 位）</legend>
+      <legend>追加指名（最多再選 1 位館員）</legend>
       {people.filter(p=>p.id!==selected.id).map(person=>{
        const busy=isStaffBusy(statusByStaff.get(person.id),now)
-       return <label key={person.id}><input type="checkbox" checked={others.includes(person.id)} disabled={busy||(!others.includes(person.id)&&others.length>=maximumStaff-1)}
-        onChange={e=>setOthers(prev=>e.target.checked?[...prev,person.id]:prev.filter(id=>id!==person.id))}/>
+       return <label key={person.id}><input type="checkbox" checked={others.includes(person.id)} disabled={busy}
+        onChange={e=>setOthers(e.target.checked?[person.id]:[])}/>
         <span>{person.name}</span><small>{busy?'指名中':'空閒中'}</small></label>
       })}
-      <p>所有選取館員會隨同一預約方案開始計時，實際接取以館方確認為準。</p>
+      <p>僅可追加 1 位館員；改選另一人時會自動替換。兩位館員共用同一預約方案與計時。</p>
      </fieldset>}
      <NomineeSummary nominees={nominees}/>
      <label>補充說明（選填） <textarea rows={3} maxLength={240} value={note} onChange={e=>setNote(e.target.value)} placeholder="給館方的簡短備註，請勿填寫現實個人資料"/></label>
