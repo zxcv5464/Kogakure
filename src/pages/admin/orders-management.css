@@ -1,0 +1,42 @@
+.tea-order-admin{min-width:0;color:#e9ddcd;padding-bottom:75px}
+.tea-order-admin-header{display:flex;align-items:start;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.tea-order-admin-header .eyebrow{font-size:.72rem;color:#c3a47d;letter-spacing:.13em;margin:0 0 8px}
+.tea-order-admin-header h1{font:600 clamp(1.4rem,2.7vw,1.85rem) 'Noto Serif TC',serif;color:#f2dab8;margin:0 0 8px}
+.tea-order-admin-header p:last-child{margin:0;color:#bdada0;font-size:.83rem;line-height:1.8}
+.tea-order-admin-header>button{display:flex;align-items:center;gap:7px;min-height:42px;padding:9px 14px;background:#302d39;color:#ead6b7;border:1px solid rgba(216,176,122,.37);border-radius:6px}
+.tea-order-admin-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:23px 0}
+.tea-order-admin-stats>div{display:grid;gap:5px;border:1px solid rgba(214,178,128,.22);border-radius:7px;background:#272530;padding:15px}
+.tea-order-admin-stats strong{font:600 1.5rem Georgia,serif;color:#f2d3a5}
+.tea-order-admin-stats span{font-size:.75rem;color:#bba99b}
+.tea-order-admin-filters{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 19px}
+.tea-order-admin-filters button{border:1px solid rgba(213,178,131,.24);padding:9px 14px;min-height:40px;border-radius:5px;background:#252430;color:#c4b2a2;font-size:.8rem}
+.tea-order-admin-filters button.is-active{color:#251c23;background:#d7b789;border-color:#d7b789;font-weight:650}
+.tea-order-admin-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start}
+.tea-order-admin-card{min-width:0;display:grid;gap:15px;border:1px solid rgba(220,179,128,.31);border-radius:8px;padding:19px;background:linear-gradient(155deg,#2d2935,#20222d)}
+.tea-order-admin-card-heading{display:flex;justify-content:space-between;gap:12px}
+.tea-order-admin-date{display:flex;align-items:center;gap:6px;font-size:.76rem;color:#bcb0a4}
+.tea-order-admin-card-heading h2{font:600 1.16rem 'Noto Serif TC',serif;color:#f6e0be;margin:8px 0 5px;overflow-wrap:anywhere}
+.tea-order-admin-card-heading p{font-size:.76rem;color:#bca99b;margin:0;line-height:1.6;overflow-wrap:anywhere}
+.tea-order-admin-status{flex:0 0 auto;align-self:start;padding:5px 9px;border-radius:100px;border:1px solid rgba(224,187,139,.33);font-size:.72rem;color:#ead4b9}
+.tea-order-admin-status.is-pending{color:#f1caa5;border-color:rgba(224,159,114,.48)}
+.tea-order-admin-status.is-preparing{color:#b7d7f0;border-color:rgba(131,186,234,.45)}
+.tea-order-admin-status.is-completed{color:#b9e1bc;border-color:rgba(134,207,146,.46)}
+.tea-order-admin-status.is-cancelled{color:#d0b7ae;border-color:rgba(174,157,146,.33)}
+.tea-order-admin-lines{list-style:none;display:grid;gap:9px;margin:0;padding:0}
+.tea-order-admin-lines li{display:flex;justify-content:space-between;gap:12px;font-size:.83rem;line-height:1.6;color:#ecdac3;overflow-wrap:anywhere}
+.tea-order-admin-lines li strong{color:#dcb989;font-weight:500;white-space:nowrap}
+.tea-order-admin-lines li small{color:#ad9e95}
+.tea-order-admin-total{display:flex;align-items:center;justify-content:space-between;gap:10px;border-top:1px solid rgba(220,181,130,.19);padding-top:13px;color:#c2b1a0;font-size:.84rem}
+.tea-order-admin-total strong{font:600 1rem Georgia,serif;color:#f3d6a6}
+.tea-order-admin-actions{display:flex;flex-wrap:wrap;gap:9px}
+.tea-order-admin-actions button{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:39px;padding:9px 14px;font-size:.79rem;border-radius:5px}
+.tea-order-admin-actions .is-accept,.tea-order-admin-actions .is-finish{background:#d7b486;border:1px solid #d7b486;color:#241e26;font-weight:700}
+.tea-order-admin-actions .is-cancel{background:transparent;border:1px solid rgba(222,139,123,.41);color:#ebb6aa}
+.tea-order-admin-actions button:disabled{opacity:.45;cursor:not-allowed}
+.tea-order-admin-closed{font-size:.76rem;color:#aaa6a1}
+.tea-order-admin-empty{border:1px dashed rgba(220,181,130,.27);padding:36px;text-align:center;color:#d6bea0;border-radius:6px;font-size:.85rem}
+.tea-order-admin-error,.tea-order-admin-notice{display:flex;align-items:flex-start;gap:8px;margin:12px 0;padding:12px;border-radius:6px;border:1px solid rgba(233,146,127,.43);color:#ffd1c3;background:rgba(118,46,48,.21);font-size:.81rem;line-height:1.7;overflow-wrap:anywhere}
+.tea-order-admin-notice{color:#c1e7c4;border-color:rgba(143,215,154,.43);background:rgba(57,114,68,.19)}
+.tea-order-admin-footnote{font-size:.76rem;color:#a9a09a;line-height:1.7;margin:22px 0}
+@media(max-width:1050px){.tea-order-admin-list{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:520px){.tea-order-admin-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.tea-order-admin-card{padding:14px 12px}.tea-order-admin-actions button{flex:1}.tea-order-admin-header>button{width:100%;justify-content:center}}
