@@ -46,7 +46,7 @@ export default function EmployeeAccountsManagement(){
   if(busyRef.current)return
   if(changed&&!window.confirm('尚有未儲存的權限修改，確定放棄？'))return
   const next=record?toDraft(record):blank()
-  setDraft(next);setInitial(record?{...next,permissions:[...next.permissions]}:null)
+  setDraft(next);setInitial({...next,permissions:[...next.permissions]})
   setError('');setNotice('')
  }
  function toggle(permission:EmployeePermission,enabled:boolean){
