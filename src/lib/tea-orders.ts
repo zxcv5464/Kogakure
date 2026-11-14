@@ -53,6 +53,12 @@ export async function advanceTeaOrder(id:string,status:'preparing'|'completed'|'
  const {error}=await client().rpc('advance_tea_order',{p_order_id:id,p_next_status:status})
  if(error)throw new Error(error.message||'無法更新訂單狀態')
 }
+/** Permanently removes exactly one order and its line items, after backend role validation. */
+export async function deleteTeaOrder(id:string):Promise<void>{
+ const {error}=await client().rpc('delete_tea_order',{p_order_id:id})
+ if(error)throw new Error(error.message||'無法刪除這筆訂單')
+}
+
 export async function countPendingTeaOrders():Promise<number>{
  const {count,error}=await client().from('tea_orders')
   .select('id',{count:'exact',head:true}).eq('status','pending')

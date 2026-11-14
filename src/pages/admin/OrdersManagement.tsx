@@ -1,6 +1,6 @@
 import {useCallback,useEffect,useMemo,useState} from 'react'
-import {Check,Clock3,RefreshCw,ShoppingBag,Timer,TriangleAlert,X} from 'lucide-react'
-import {advanceTeaOrder,fetchTeaOrders,formatGil,watchTeaOrders} from '../../lib/tea-orders'
+import {Check,Clock3,RefreshCw,ShoppingBag,Timer,Trash2,TriangleAlert,X} from 'lucide-react'
+import {advanceTeaOrder,deleteTeaOrder,fetchTeaOrders,formatGil,watchTeaOrders} from '../../lib/tea-orders'
 import type {TeaOrder,TeaOrderStatus} from '../../lib/tea-orders'
 import './orders-management.css'
 
@@ -48,6 +48,23 @@ export default function OrdersManagement(){
   }catch(e){setError(errText(e))}
   finally{setSaving(null)}
  }
+ async function remove(order:TeaOrder){
+  if(saving)return
+  const shortId=order.id.slice(0,8)
+  if(!window.confirm(
+   '確定要刪除「'+order.guestName+'」的這筆茶宴訂單嗎？\n'+
+   '訂單編號：'+shortId+'\n'+
+   '訂單及其餐點明細將永久刪除，無法復原。'
+  ))return
+  setSaving(order.id);setNotice('');setError('')
+  try{
+   await deleteTeaOrder(order.id)
+   await refresh()
+   setNotice('訂單 '+shortId+' 已永久刪除，相關餐點明細也已清除。')
+  }catch(e){setError(errText(e))}
+  finally{setSaving(null)}
+ }
+
  const stats=useMemo(()=>({
   pending:orders.filter(x=>x.status==='pending').length,
   preparing:orders.filter(x=>x.status==='preparing').length,
@@ -122,9 +139,14 @@ export default function OrdersManagement(){
       {(order.status==='completed'||order.status==='cancelled')&&<span className="tea-order-admin-closed">
        {order.status==='completed'?'已結束製作':'訂單已取消'}
       </span>}
+      <button type="button" className="is-delete" disabled={saving!==null}
+       aria-label={'永久刪除 '+order.guestName+' 的訂單 '+order.id.slice(0,8)}
+       onClick={()=>void remove(order)}>
+       <Trash2 size={15}/>{saving===order.id?'處理中…':'刪除訂單'}
+      </button>
      </div>
     </article>)}
    </div>}
-  <p className="tea-order-admin-footnote">顯示最新 200 筆訂單。旅人提供的姓名與伺服器僅供館內確認與服務；網站送單不會自動扣除 Gil。</p>
+  <p className="tea-order-admin-footnote">顯示最新 200 筆訂單。刪除會永久清除整筆訂單與餐點明細，無法復原；若只想停止處理，請使用「取消訂單」。網站送單不會自動扣除 Gil。</p>
  </section>
 }

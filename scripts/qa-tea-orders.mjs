@@ -12,8 +12,10 @@ const files=[
  'supabase/functions/manage-employee-accounts/index.ts',
  'supabase/migrations/20261115_05_tea_orders.sql',
  'scripts/prepare-pages.mjs',
+ 'supabase/migrations/20261115_06_tea_order_delete.sql',
+ 'src/pages/admin/orders-management.css',
 ]
-const [menu,css,orders,admin,notification,adminShell,modules,permissions,edge,sql,pages]=
+const [menu,css,orders,admin,notification,adminShell,modules,permissions,edge,sql,pages,deleteSql,adminCss]=
  await Promise.all(files.map(x=>readFile(x,'utf8')))
 
 for(const part of [
@@ -26,7 +28,15 @@ for(const part of [
  if(part==='menu_page_fake_check_not_present')continue
  assert.ok(menu.includes(part),'Guest order checkout missing: '+part)
 }
-assert.ok(menu.includes('複製點單'),'Original copy-order feature must remain')
+assert.ok(!menu.includes('複製點單')&&!menu.includes('copyOrder')&&!menu.includes('navigator.clipboard'),'Removed copy-order action must not remain')
+assert.ok(menu.includes('清空選擇')&&menu.includes('setQuantities({})'),'Clearing cart selections must remain available')
+const cartHeading=menu.indexOf('className="tea-menu-summary-heading"')
+const cartList=menu.indexOf('<ul>{selected.map(',cartHeading)
+const cartTotal=menu.indexOf('className="tea-menu-total"',cartList)
+const guestFields=menu.indexOf('className="tea-menu-order-fields"',cartTotal)
+const submitButton=menu.indexOf('className="tea-menu-send"',guestFields)
+assert.ok(cartHeading>=0&&cartHeading<cartList&&cartList<cartTotal&&cartTotal<guestFields&&guestFields<submitButton,
+ 'Checkout must be ordered as cart -> total -> guest name/world -> submit')
 assert.ok(menu.includes('tea-menu-clear'),'Original clear-selection feature must remain')
 assert.ok(css.includes('.tea-menu-order-fields')&&css.includes('@media(max-width:600px)'),
  'Guest order checkout must support mobile layout')
@@ -41,6 +51,35 @@ for(const token of [
 assert.ok(orders.includes(".limit(200)"),'Admin should cap fetched history')
 assert.ok(admin.includes('接單 · 開始製作')&&admin.includes('完成訂單')&&admin.includes('取消訂單'),
  'Admin must support pending, preparing, completed, cancelled actions')
+assert.ok(!admin.includes('window.prompt(')
+ &&admin.includes('if(!window.confirm(')
+ &&admin.includes("order.id.slice(0,8)"),
+ 'Permanent delete must require only one yes/no confirmation, never typed order ID')
+assert.ok(admin.includes('await deleteTeaOrder(order.id)')&&admin.includes('刪除訂單'),
+ 'All order statuses must provide authenticated delete action')
+assert.ok(adminCss.includes('.tea-order-admin-actions .is-delete'),
+ 'Danger action must be visually differentiated')
+assert.ok(orders.includes("rpc('delete_tea_order'")&&orders.includes('p_order_id:id'),
+ 'Delete must call protected database RPC rather than direct table DELETE')
+assert.ok(!orders.includes(".from('tea_orders').delete()"),
+ 'Direct table order DELETE is forbidden')
+for(const fragment of [
+ 'create or replace function private.delete_tea_order(p_order_id uuid)',
+ 'create or replace function public.delete_tea_order(p_order_id uuid)',
+ "exists(select 1 from public.admin_users a",
+ "and 'orders.manage'=any(e.permissions)",
+ 'and e.active=true',
+ 'delete from public.tea_orders',
+ 'returning id into v_deleted',
+ 'revoke all on function public.delete_tea_order(uuid) from public,anon',
+ 'grant execute on function public.delete_tea_order(uuid) to authenticated',
+ 'language plpgsql security definer set search_path=\'\'',
+ 'language sql security invoker set search_path=\'\'',
+]){
+ assert.ok(deleteSql.includes(fragment),'Secure tea-order deletion SQL missing: '+fragment)
+}
+assert.ok(!deleteSql.includes('grant delete on public.tea_orders')&&!deleteSql.includes('delete from public.booking_requests'),
+ 'Delete RPC must not grant direct table access or affect bookings')
 assert.ok(admin.includes('guestWorld')&&admin.includes('order.lines.map'),
  'Admin must show world, each item and receipt details')
 assert.ok(notification.includes('usePendingTeaOrders(enabled:boolean)')&&notification.includes('9000'),
@@ -102,7 +141,8 @@ try{
  const html=renderToStaticMarkup(createElement(MenuPage))
  assert.match(html,/旅人點單/)
  assert.match(html,/展示菜單/)
- assert.match(html,/複製點單|點選御品旁的/)
+ assert.match(html,/點選御品旁的/)
+ assert.ok(!html.includes('複製點單'),'Read-only preview must not show removed copy button')
  assert.ok(!html.includes('送出訂單成功'),'SSR preview must never claim an order was placed')
  const {default:OrdersManagement}=await vite.ssrLoadModule('/src/pages/admin/OrdersManagement.tsx')
  assert.equal(typeof OrdersManagement,'function')
@@ -111,5 +151,5 @@ try{
  assert.equal(permitted({kind:'employee',active:true,permissions:['menu.manage']},'orders.manage'),false)
  assert.equal(permitted({kind:'employee',active:true,permissions:['orders.manage']},'orders.manage'),true)
  assert.equal(permitted({kind:'owner',permissions:[]},'orders.manage'),true)
- console.log('PASS: guest tea-order checkout, secured server-side totals, scoped order admin, exact badge and responsive UI')
+ console.log('PASS: reordered checkout without copy button, protected permanent delete, scoped order admin and exact badge')
 }finally{await vite.close()}
