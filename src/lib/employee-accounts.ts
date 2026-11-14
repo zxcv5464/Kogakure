@@ -6,6 +6,7 @@ export const EMPLOYEE_PERMISSIONS = [
  { id:'staff.manage',label:'員工名帖',description:'建立／編輯名帖、照片、排序與公開狀態' },
  { id:'menu.manage',label:'茶宴菜單',description:'編輯餐點分類、品項與 Gil 售價' },
  { id:'booking.manage',label:'預約管理',description:'查看旅人預約、接取／婉拒與管理方案' },
+ { id:'orders.manage',label:'訂單管理',description:'查看茶宴旅人點單、接單、完成或取消訂單' },
 ] as const
 
 export type EmployeePermission = typeof EMPLOYEE_PERMISSIONS[number]['id']
