@@ -51,9 +51,10 @@ for(const token of [
 assert.ok(orders.includes(".limit(200)"),'Admin should cap fetched history')
 assert.ok(admin.includes('接單 · 開始製作')&&admin.includes('完成訂單')&&admin.includes('取消訂單'),
  'Admin must support pending, preparing, completed, cancelled actions')
-assert.ok(admin.includes('window.prompt(')&&admin.includes('window.confirm(')
- &&admin.includes('entry!==shortId')&&admin.includes("order.id.slice(0,8)"),
- 'Permanent delete must require typed order ID plus second confirmation')
+assert.ok(!admin.includes('window.prompt(')
+ &&admin.includes('if(!window.confirm(')
+ &&admin.includes("order.id.slice(0,8)"),
+ 'Permanent delete must require only one yes/no confirmation, never typed order ID')
 assert.ok(admin.includes('await deleteTeaOrder(order.id)')&&admin.includes('刪除訂單'),
  'All order statuses must provide authenticated delete action')
 assert.ok(adminCss.includes('.tea-order-admin-actions .is-delete'),
