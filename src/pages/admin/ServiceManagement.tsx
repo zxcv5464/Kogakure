@@ -153,19 +153,23 @@ export default function ServiceManagement(){
   if(!Number.isInteger(draft.sortOrder)||draft.sortOrder<0||draft.sortOrder>1000000){
    setNotice({kind:'error',message:'排序請填入 0～1,000,000 的整數'});return
   }
-  if(draft.imageUrl&&!/^https:\/\/\S+$/.test(draft.imageUrl)){
+  if(photoSlots.some(photo=>!photo.file&&!/^https:\/\/\S+$/.test(photo.url))){
    setNotice({kind:'error',message:'照片網址必須使用 HTTPS'});return
   }
   busyRef.current=true;setBusy(true);setNotice(null)
-  let uploadedPath:string|null=null
+  const uploadedPaths:string[]=[]
   let savedToDatabase=false
   try{
-   let record={...draft,paragraphs,details}
-   if(photoFile){
-    const upload=await uploadServicePhoto(photoFile,draft.id)
-    uploadedPath=upload.path
-    record={...record,imageUrl:upload.url}
+   const imageUrls:string[]=[]
+   // Upload new files in the exact order chosen by the manager.
+   for(const photo of photoSlots){
+    if(photo.file){
+     const upload=await uploadServicePhoto(photo.file,draft.id)
+     uploadedPaths.push(upload.path)
+     imageUrls.push(upload.url)
+    }else imageUrls.push(photo.url)
    }
+   const record={...draft,paragraphs,details,imageUrls,imageUrl:imageUrls[0]||null}
    await saveServiceContent(record,creating)
    savedToDatabase=true
    const updated=await refresh()
@@ -173,18 +177,18 @@ export default function ServiceManagement(){
    if(saved){
     setDraft({...saved});setOriginal({...saved});setCreating(false)
     setParagraphText(saved.paragraphs.join('\n\n'));setDetailsText(saved.details.join('\n'))
-   }else{setDraft(null);setOriginal(null)}
-   setPhotoFile(null)
+    resetPhotos(saved)
+   }else{setDraft(null);setOriginal(null);resetPhotos(null)}
    setNotice({kind:'success',message:'服務內容已儲存。公開項目重新載入前台即可查看；草稿不會顯示給旅人。'})
   }catch(e){
    if(savedToDatabase){
     // Never retry an already-created UUID or remove its uploaded photo.
     // A failed list refresh does not undo the successful database write.
-    setDraft(null);setOriginal(null);setCreating(false);setPhotoFile(null)
+    setDraft(null);setOriginal(null);setCreating(false);resetPhotos(null)
     setNotice({kind:'error',message:'服務已儲存，但清單重新讀取失敗。請按「更新清單」確認後再編輯。'})
    }else{
-    if(uploadedPath){
-     try{await removeUnusedServicePhoto(uploadedPath)}catch{ /* Keep the original error visible. */ }
+    for(const path of uploadedPaths){
+     try{await removeUnusedServicePhoto(path)}catch{ /* Keep the original error visible. */ }
     }
     setNotice({kind:'error',message:'儲存失敗：'+(e instanceof Error?e.message:'請檢查資料庫連線')})
    }
@@ -197,7 +201,7 @@ export default function ServiceManagement(){
   try{
    await deleteServiceContent(draft)
    await refresh()
-   setDraft(null);setOriginal(null);setPhotoFile(null)
+   setDraft(null);setOriginal(null);resetPhotos(null)
    setNotice({kind:'success',message:'服務已刪除，其他服務與訂單資料均不受影響。'})
   }catch(e){setNotice({kind:'error',message:e instanceof Error?e.message:'刪除服務失敗'})}
   finally{busyRef.current=false;setBusy(false)}
@@ -249,7 +253,7 @@ export default function ServiceManagement(){
       <div><p className="eyebrow">{creating?'NEW RITUAL':'EDIT RITUAL'}</p>
        <h2>{creating?'新增服務':'編輯服務內容'}</h2>
       </div>
-      <button type="button" aria-label="關閉編輯" disabled={busy} onClick={()=>{if(mayDiscard()){setDraft(null);setOriginal(null);setPhotoFile(null)}}}><X size={19}/></button>
+      <button type="button" aria-label="關閉編輯" disabled={busy} onClick={()=>{if(mayDiscard()){setDraft(null);setOriginal(null);resetPhotos(null)}}}><X size={19}/></button>
      </div>
      <div className="service-admin-fields two">
       <label>服務分類 <span>必填</span><input required maxLength={60} value={draft.category} onChange={e=>patch('category',e.target.value)} placeholder="例：留影之儀" disabled={busy}/></label>
