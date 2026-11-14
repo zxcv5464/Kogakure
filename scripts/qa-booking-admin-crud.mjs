@@ -25,6 +25,15 @@ assert.ok(bookingCss.includes('object-fit:cover'), 'Portrait must fill its entir
 assert.ok(bookingCss.includes('.booking-profile.has-manual-crop .booking-portrait img'), 'Selected portrait must use the full-bleed panel rule')
 for(const phrase of ['新增預約','永久刪除','removeBooking','setCreatingBooking(true)','<AdminBookingCreate'])
  assert.ok(admin.includes(phrase),'Admin booking action missing '+phrase)
+assert.ok(!admin.includes('window.prompt('),
+ 'Booking deletion must not require typing any confirmation phrase')
+assert.ok(admin.includes("if(!window.confirm(") && admin.includes("async function removeBooking(record:BookingRequest)"),
+ 'Booking deletion should use one yes/no confirmation')
+assert.ok(admin.includes("record.status==='accepted'?") && admin.includes('相關館員的占用狀態'),
+ 'Deleting an accepted booking must warn that the assigned people will be released')
+assert.ok(admin.includes('await deleteAdminBooking(record.id)'),
+ 'After confirmation the existing privileged booking deletion RPC must still be called')
+
 for(const phrase of ['預約者遊戲角色姓名','伺服器','選擇可指名館員','新增待審核申請','createAdminBooking'])
  assert.ok(manual.includes(phrase),'Manual form missing '+phrase)
 assert.ok(api.includes("rpc('admin_create_booking_request'"))
