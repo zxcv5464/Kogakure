@@ -15,6 +15,7 @@ const AdminPage = lazy(() => import('./pages/AdminPage'))
 const StaffPage = lazy(() => import('./pages/StaffPage'))
 const MenuPage = lazy(() => import('./pages/MenuPage'))
 const BookingPage = lazy(() => import('./pages/BookingPage'))
+const ShiftsPage = lazy(() => import('./pages/ShiftsPage'))
 
 // The administration route is deliberately separate from the public shell.
 // This keeps its interface and loading state independent of public animations.
@@ -42,6 +43,7 @@ function PublicApp() {
        <Route path="/staff" element={<StaffPage />} />
        <Route path="/menu" element={<MenuPage />} />
        <Route path="/booking" element={<BookingPage />} />
+       <Route path="/shifts" element={<ShiftsPage />} />
        <Route path="*" element={<OtherPage />} />
       </Routes>
      </Suspense>
