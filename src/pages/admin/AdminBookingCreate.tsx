@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
-import { Check, Plus, X } from 'lucide-react'
+import { Plus, X } from 'lucide-react'
 import { getStaff } from '../../lib/staff'
 import { createAdminBooking, describeBookingError } from '../../lib/bookings'
 import type { BookingPlan } from '../../lib/bookings'
