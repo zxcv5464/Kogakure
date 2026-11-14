@@ -1,6 +1,6 @@
 import {useCallback,useEffect,useMemo,useRef,useState} from 'react'
 import {Link} from 'react-router-dom'
-import {AlertCircle,CheckCircle2,ExternalLink,ImagePlus,Plus,RefreshCw,Save,Search,Trash2,X} from 'lucide-react'
+import {AlertCircle,ArrowDown,ArrowUp,CheckCircle2,ExternalLink,ImagePlus,Plus,RefreshCw,Save,Search,Trash2,X} from 'lucide-react'
 import {
  deleteServiceContent,fetchServiceContents,removeUnusedServicePhoto,
  saveServiceContent,uploadServicePhoto,validateServicePhoto,
@@ -10,10 +10,12 @@ import {useAdminEditGuard} from './AdminEditGuard'
 import './service-management.css'
 
 type Notice={kind:'success'|'error';message:string}
+type PhotoSlot={id:string;url:string;file?:File}
+const maxServicePhotos=12
 const blank=(sortOrder:number):ServiceEntry=>({
  id:crypto.randomUUID(),slug:'service-'+crypto.randomUUID(),category:'',
  english:'',title:'',quote:'',paragraphs:[],details:[],photoLabel:'服務形象照片',
- imageUrl:null,sortOrder,published:false,updatedAt:'',
+ imageUrl:null,imageUrls:[],sortOrder,published:false,updatedAt:'',
 })
 const paragraphsOf=(value:string)=>value.split(/\n\s*\n/).map(x=>x.trim()).filter(Boolean)
 const detailsOf=(value:string)=>value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean)
@@ -31,21 +33,23 @@ export default function ServiceManagement(){
  const [creating,setCreating]=useState(false)
  const [paragraphText,setParagraphText]=useState('')
  const [detailsText,setDetailsText]=useState('')
- const [photoFile,setPhotoFile]=useState<File|null>(null)
- const [previewUrl,setPreviewUrl]=useState('')
+ const [photoSlots,setPhotoSlots]=useState<PhotoSlot[]>([])
+ const stagedUrls=useRef<string[]>([])
  const editor=useRef<HTMLDivElement>(null)
  const {setEditing}=useAdminEditGuard()
 
- useEffect(()=>{
-  if(!photoFile){setPreviewUrl('');return}
-  const url=URL.createObjectURL(photoFile)
-  setPreviewUrl(url)
-  return()=>URL.revokeObjectURL(url)
- },[photoFile])
- const dirty=Boolean(draft&&(creating||photoFile||
+ useEffect(()=>()=>{stagedUrls.current.forEach(url=>URL.revokeObjectURL(url))},[])
+ function resetPhotos(record:ServiceEntry|null){
+  stagedUrls.current.forEach(url=>URL.revokeObjectURL(url))
+  stagedUrls.current=[]
+  const urls=record?(record.imageUrls.length?record.imageUrls:(record.imageUrl?[record.imageUrl]:[])):[]
+  setPhotoSlots(urls.map(url=>({id:crypto.randomUUID(),url})))
+ }
+ const dirty=Boolean(draft&&(creating||
   JSON.stringify(draft)!==JSON.stringify(original)||
   paragraphText!==original?.paragraphs.join('\n\n')||
-  detailsText!==original?.details.join('\n')))
+  detailsText!==original?.details.join('\n')||
+  JSON.stringify(photoSlots.map(photo=>photo.file?photo.id:photo.url))!==JSON.stringify(original?.imageUrls||[])))
  useEffect(()=>setEditing(dirty,busy),[dirty,busy,setEditing])
  useEffect(()=>()=>setEditing(false,false),[setEditing])
 
@@ -81,7 +85,7 @@ export default function ServiceManagement(){
   setDraft(snapshot);setOriginal(snapshot);setCreating(false)
   setParagraphText(row.paragraphs.join('\n\n'))
   setDetailsText(row.details.join('\n'))
-  setPhotoFile(null);setNotice(null)
+  resetPhotos(row);setNotice(null)
   focusEditor()
  }
  function createNew(){
@@ -89,17 +93,48 @@ export default function ServiceManagement(){
   const row=blank(Math.max(0,...rows.map(x=>x.sortOrder))+10)
   setDraft(row);setOriginal(row);setCreating(true)
   setParagraphText('');setDetailsText('')
-  setPhotoFile(null);setNotice(null)
+  resetPhotos(null);setNotice(null)
   focusEditor()
  }
  function patch<K extends keyof ServiceEntry>(key:K,value:ServiceEntry[K]){
   setDraft(prev=>prev?{...prev,[key]:value}:prev)
  }
- function choosePhoto(file:File|undefined){
-  if(!file)return
-  const problem=validateServicePhoto(file)
-  if(problem){setNotice({kind:'error',message:problem});return}
-  setPhotoFile(file);setNotice(null)
+ function choosePhotos(files:FileList|null){
+  const incoming=files?Array.from(files):[]
+  if(!incoming.length)return
+  if(photoSlots.length+incoming.length>maxServicePhotos){
+   setNotice({kind:'error',message:'每項服務最多 '+maxServicePhotos+' 張照片，請先移除其他照片再上傳。'});return
+  }
+  for(const file of incoming){
+   const problem=validateServicePhoto(file)
+   if(problem){setNotice({kind:'error',message:file.name+'：'+problem});return}
+  }
+  const added=incoming.map(file=>{
+   const url=URL.createObjectURL(file)
+   stagedUrls.current.push(url)
+   return {id:crypto.randomUUID(),url,file}
+  })
+  setPhotoSlots(prev=>[...prev,...added])
+  setNotice(null)
+ }
+ function movePhoto(index:number,delta:number){
+  setPhotoSlots(prev=>{
+   const target=index+delta
+   if(index<0||target<0||target>=prev.length)return prev
+   const next=[...prev]
+   ;[next[index],next[target]]=[next[target],next[index]]
+   return next
+  })
+ }
+ function removePhoto(id:string){
+  const photo=photoSlots.find(item=>item.id===id)
+  if(!photo)return
+  if(photo.file){
+   URL.revokeObjectURL(photo.url)
+   stagedUrls.current=stagedUrls.current.filter(url=>url!==photo.url)
+  }
+  setPhotoSlots(prev=>prev.filter(item=>item.id!==id))
+  setNotice(null)
  }
  async function save(){
   if(!draft||busyRef.current)return
