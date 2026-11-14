@@ -20,7 +20,7 @@ const [menu,css,orders,admin,notification,adminShell,modules,permissions,edge,sq
 
 for(const part of [
  '旅人角色姓名', '所在伺服器', '請輸入角色姓名',
- '送出茶宴點單', 'setReceipt({id,name,world,items:snapshot,total})',
+ '送出茶宴點單', 'setReceipt({id,name,world,items:snapshot,total,isAddOn:isAdding})',
  'await submitTeaOrder(name,world,selected.map',
  'if(mode!==\'live\')', '訂單編號：', '等待館方確認',
  'menu_page_fake_check_not_present',
@@ -38,6 +38,32 @@ const submitButton=menu.indexOf('className="tea-menu-send"',guestFields)
 assert.ok(cartHeading>=0&&cartHeading<cartList&&cartList<cartTotal&&cartTotal<guestFields&&guestFields<submitButton,
  'Checkout must be ordered as cart -> total -> guest name/world -> submit')
 assert.ok(menu.includes('tea-menu-clear'),'Original clear-selection feature must remain')
+// Submission closes the cart; the only action under the receipt creates an entirely new order.
+const successPanel=menu.indexOf('{receipt&&<div className="tea-menu-order-success"')
+const hiddenCart=menu.indexOf('{!receipt&&<>',successPanel)
+const checkoutTitle=menu.indexOf('className="tea-menu-summary-heading"',hiddenCart)
+assert.ok(successPanel>=0&&successPanel<hiddenCart&&hiddenCart<checkoutTitle,
+ 'After successful checkout, cart heading, inputs and checkout note must be hidden')
+for(const snippet of [
+ 'function startAddOn(){',
+ 'setReceipt(null)',
+ 'setIsAdding(true)',
+ 'setQuantities({})',
+ '加點 · 建立新訂單',
+ '加點選單 · 新訂單',
+ '此次加點會產生全新訂單編號',
+ 'setLastSubmittedAt(Date.now())',
+ 'addOnWaitSeconds>0',
+ '同名同伺服器 15 秒內不可重複提交',
+]){
+ assert.ok(menu.includes(snippet),'Separate add-on order regression: '+snippet)
+}
+assert.ok(menu.includes('const id=await submitTeaOrder(name,world,selected.map'),
+ 'Add-on must use the existing secure RPC to create a new standalone order')
+assert.ok(menu.includes("if(receipt)return"), 'Do not reopen the cart when pressing quantity controls after submission')
+assert.ok(!menu.includes('appendTeaOrder')&&!menu.includes('updateTeaOrder'),
+ 'Add-on must not modify or merge the previously submitted order')
+assert.ok(css.includes('.tea-menu-order-success .tea-menu-add-on'), 'Add-on action requires accessible button styling')
 assert.ok(css.includes('.tea-menu-order-fields')&&css.includes('@media(max-width:600px)'),
  'Guest order checkout must support mobile layout')
 for(const token of [
