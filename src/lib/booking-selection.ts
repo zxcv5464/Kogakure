@@ -21,6 +21,8 @@ export function resolveBookingNominees(
   if (!person) continue
   nominees.push({ id, name: person.name, primary: false })
   seen.add(id)
+  // Never produce more than primary + one additional person.
+  break
  }
  return nominees
 }
