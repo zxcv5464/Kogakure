@@ -231,18 +231,17 @@ export default function EmployeeAccountsManagement(){
         ? '此員工是舊版登入帳號。請設定新的登入名稱與密碼，原有權限將保留，不會寄送郵件。'
         : '需要更換密碼時，由管理員直接設定新密碼，不寄送電子郵件。'}</p>
        {draft.username.startsWith('legacy_')&&<label>新的員工登入帳號
-        <input required type="text" minLength={3} maxLength={24}
-         pattern="[a-zA-Z][a-zA-Z0-9_-]{2,23}" autoComplete="off"
+        <input type="text" maxLength={24} autoComplete="off"
          placeholder="例如：yueying" value={legacyUsername} disabled={busy}
          onChange={e=>setLegacyUsername(e.target.value)} />
        </label>}
        <label>新登入密碼
-        <input type="password" minLength={12} maxLength={128} autoComplete="new-password"
+        <input type="password" maxLength={128} autoComplete="new-password"
          value={resetPassword} disabled={busy} placeholder="至少 12 字，需包含英文及數字"
          onChange={e=>setResetPassword(e.target.value)} />
        </label>
        <label>確認新密碼
-        <input type="password" minLength={12} maxLength={128} autoComplete="new-password"
+        <input type="password" maxLength={128} autoComplete="new-password"
          value={resetConfirm} disabled={busy} onChange={e=>setResetConfirm(e.target.value)}/>
        </label>
        <button type="button" className="employee-admin-reset" disabled={busy||!resetPassword||!resetConfirm}
