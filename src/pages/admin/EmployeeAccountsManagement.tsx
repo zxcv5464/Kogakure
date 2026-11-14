@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { CheckCircle2, KeyRound, Plus, RefreshCw, Save, Shield, Trash2, UserRound, XCircle } from 'lucide-react'
 import {
  EMPLOYEE_PERMISSIONS, STAFF_LOGIN_PATTERN, STAFF_PASSWORD_VALID,
- createEmployee, deleteEmployee, listEmployeeAccounts, resetEmployeePassword, updateEmployee,
+ convertLegacyEmployee, createEmployee, deleteEmployee, listEmployeeAccounts, resetEmployeePassword, updateEmployee,
 } from '../../lib/employee-accounts'
 import type { EmployeeAccount, EmployeePermission } from '../../lib/employee-accounts'
 import { useAdminEditGuard } from './AdminEditGuard'
@@ -28,13 +28,14 @@ export default function EmployeeAccountsManagement(){
  const [passwordConfirm,setPasswordConfirm]=useState('')
  const [resetPassword,setResetPassword]=useState('')
  const [resetConfirm,setResetConfirm]=useState('')
+ const [legacyUsername,setLegacyUsername]=useState('')
  const busyRef=useRef(false)
  const {setEditing}=useAdminEditGuard()
  const settingsChanged=useMemo(()=>draft!==null&&(
   !initial||JSON.stringify({...draft,permissions:[...draft.permissions].sort()})
    !==JSON.stringify({...initial,permissions:[...initial.permissions].sort()})
  ),[draft,initial])
- const changed=settingsChanged||!!password||!!passwordConfirm||!!resetPassword||!!resetConfirm
+ const changed=settingsChanged||!!password||!!passwordConfirm||!!resetPassword||!!resetConfirm||!!legacyUsername
  useEffect(()=>setEditing(changed,busy),[changed,busy,setEditing])
  useEffect(()=>()=>setEditing(false,false),[setEditing])
 
@@ -49,7 +50,7 @@ export default function EmployeeAccountsManagement(){
   return()=>{alive=false}
  },[refresh])
  function resetInputs(){
-  setPassword('');setPasswordConfirm('');setResetPassword('');setResetConfirm('')
+  setPassword('');setPasswordConfirm('');setResetPassword('');setResetConfirm('');setLegacyUsername('')
  }
  function choose(record:EmployeeAccount|null){
   if(busyRef.current)return
@@ -96,14 +97,30 @@ export default function EmployeeAccountsManagement(){
  }
  async function changePassword(){
   if(!draft?.userId||busyRef.current)return
+  const legacy=draft.username.startsWith('legacy_')
+  const nextUsername=legacyUsername.trim().toLowerCase()
+  if(legacy&&!STAFF_LOGIN_PATTERN.test(nextUsername)){
+   setError('請先為舊帳號設定 3～24 字的全新登入名稱');return
+  }
   if(!STAFF_PASSWORD_VALID(resetPassword)||resetPassword!==resetConfirm){
    setError('新密碼需 12～128 字，包含英文與數字，且兩次輸入必須相同');return
   }
-  if(!window.confirm('確定重設「'+draft.username+'」的登入密碼嗎？原密碼將無法再用於新的登入。'))return
+  if(settingsChanged){
+   setError('請先儲存員工顯示名稱及功能權限，再修改登入憑證');return
+  }
+  if(!window.confirm(legacy?'確定轉換舊員工帳號為「'+nextUsername+'」並設定新密碼嗎？原 Email 登入方式將停止使用。':'確定重設「'+draft.username+'」的登入密碼嗎？原密碼將無法再用於新的登入。'))return
   busyRef.current=true;setBusy(true);setError('');setNotice('')
   try{
-   const message=await resetEmployeePassword(draft.userId,resetPassword)
-   resetInputs();setNotice(message)
+   const message=legacy
+    ? await convertLegacyEmployee(draft.userId,nextUsername,resetPassword)
+    : await resetEmployeePassword(draft.userId,resetPassword)
+   resetInputs()
+   if(legacy){
+    await refresh()
+    const next={...draft,username:nextUsername}
+    setDraft(next);setInitial({...next,permissions:[...next.permissions]})
+   }
+   setNotice(message)
   }catch(e){setError(pretty(e))}
   finally{busyRef.current=false;setBusy(false)}
  }
@@ -150,7 +167,7 @@ export default function EmployeeAccountsManagement(){
       disabled={busy} onClick={()=>choose(account)}>
       <span className="employee-admin-avatar"><UserRound size={19}/></span>
       <span className="employee-admin-person-content"><strong>{account.displayName}</strong>
-       <small>登入帳號：{account.username}</small>
+       <small>{account.username.startsWith('legacy_')?'舊版員工帳號 · 請設定新登入名稱':'登入帳號：'+account.username}</small>
        <em>{account.permissions.map(p=>EMPLOYEE_PERMISSIONS.find(x=>x.id===p)?.label).filter(Boolean).join('、')||'尚未分配模組'}</em>
       </span>
       <span className={'employee-admin-status'+(account.active?' is-active':' is-disabled')}>
@@ -209,8 +226,16 @@ export default function EmployeeAccountsManagement(){
      </div>
      {draft.userId&&<>
       <div className="employee-admin-security">
-       <h3><KeyRound size={18}/>管理員重設密碼</h3>
-       <p>需要更換密碼時，由管理員直接設定新密碼，不寄送電子郵件。</p>
+       <h3><KeyRound size={18}/>{draft.username.startsWith('legacy_')?'舊版帳號轉換':'管理員重設密碼'}</h3>
+       <p>{draft.username.startsWith('legacy_')
+        ? '此員工是舊版登入帳號。請設定新的登入名稱與密碼，原有權限將保留，不會寄送郵件。'
+        : '需要更換密碼時，由管理員直接設定新密碼，不寄送電子郵件。'}</p>
+       {draft.username.startsWith('legacy_')&&<label>新的員工登入帳號
+        <input required type="text" minLength={3} maxLength={24}
+         pattern="[a-zA-Z][a-zA-Z0-9_-]{2,23}" autoComplete="off"
+         placeholder="例如：yueying" value={legacyUsername} disabled={busy}
+         onChange={e=>setLegacyUsername(e.target.value)} />
+       </label>}
        <label>新登入密碼
         <input type="password" minLength={12} maxLength={128} autoComplete="new-password"
          value={resetPassword} disabled={busy} placeholder="至少 12 字，需包含英文及數字"
@@ -221,7 +246,7 @@ export default function EmployeeAccountsManagement(){
          value={resetConfirm} disabled={busy} onChange={e=>setResetConfirm(e.target.value)}/>
        </label>
        <button type="button" className="employee-admin-reset" disabled={busy||!resetPassword||!resetConfirm}
-        onClick={()=>void changePassword()}><KeyRound size={16}/>確認重設密碼</button>
+        onClick={()=>void changePassword()}><KeyRound size={16}/>{draft.username.startsWith('legacy_')?'轉換帳號並設定密碼':'確認重設密碼'}</button>
       </div>
       <div className="employee-admin-delete">
        <h3>刪除登入帳號</h3>
