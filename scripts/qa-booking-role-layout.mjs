@@ -14,6 +14,9 @@ for(const path of ['p.published&&p.bookingVisible','person.role||\'館員\'']){
  assert.ok(page.includes(path),'Booking page visibility or original job title missing: '+path)
 }
 assert.ok(admin.includes('p.published&&p.bookingVisible'),'Admin form must use the same visibility filter')
+assert.ok(page.includes('onClick={()=>openBooking(person)} disabled={busy}'),'Cards must be inspectable even before plans are enabled')
+assert.ok(page.includes('booking-plan-unavailable'),'Guests should understand when plans remain unpublished')
+assert.ok(page.includes('disabled={sending||!plans.length}'),'Never submit a booking without a published plan')
 assert.ok(!page.includes("role.includes('狐姬')")&&!admin.includes("role.includes('狐姬')"),'No job title gating is allowed')
 assert.ok(editor.includes('須先公開名帖，不限職稱。'),'Editor must clearly explain non-role-limited bookings')
 for(const part of [
