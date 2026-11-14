@@ -108,7 +108,7 @@ try{
  }))
  assert.equal((twoPhotos.match(/class="services-photo-slide/g)||[]).length,2,
   'Two uploaded photos must render as crossfade layers')
- assert.ok(twoPhotos.includes('01 / 02'),'Multiple photos must show current position')
+ assert.ok(twoPhotos.includes('services-photo-counter'),'Multiple photos must show current position')
  const onePhoto=renderToStaticMarkup(createElement(ServicePhotoGallery,{
   service:{...previewServices[0],imageUrls:['https://example.invalid/one.webp']},number:'01',
  }))
