@@ -34,6 +34,10 @@ jobs:
         env:
           VITE_OFFLINE_PREVIEW: 'true'
         run: node scripts/qa-tea-orders.mjs
+      - name: Verify rolling four-week opening dates and employee duty roster
+        env:
+          VITE_OFFLINE_PREVIEW: 'true'
+        run: node scripts/qa-shift-roster.mjs
       - name: Verify editable services, polaroid keepsake, guarded admin CRUD and storage policy
         env:
           VITE_OFFLINE_PREVIEW: 'true'
