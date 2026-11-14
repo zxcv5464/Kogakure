@@ -92,8 +92,10 @@ export default function BookingManagement(){
  }
  async function removeBooking(record:BookingRequest){
   if(busyRef.current)return
+  const shortId=record.id.slice(0,8)
   if(!window.confirm(
    '確定要刪除「'+record.guestName+'」的這筆預約嗎？\n'+
+   '預約編號：'+shortId+'\n'+
    (record.status==='accepted'?'這筆預約正在指名中，刪除後將釋放相關館員的占用狀態。\n':'')+
    '預約及指名紀錄將永久刪除，無法復原。'
   ))return
@@ -178,7 +180,7 @@ export default function BookingManagement(){
      {r.status==='accepted'&&<p className="booking-admin-timer"><Clock3 size={16}/>{r.endsAt&&new Date(r.endsAt).getTime()<=now?'已達預定時間，請確認結束': '剩餘 '+countdown(r.endsAt,now)}（開始：{fmt(r.acceptedAt)}）</p>}
      <div className="booking-admin-request-actions">
       <button type="button" onClick={()=>setFocused(r.id)}>查看詳細</button>
-      <button type="button" className="danger" disabled={busy} onClick={()=>void removeBooking(r)}><Trash2 size={16}/>刪除</button>
+      <button type="button" className="danger" disabled={busy} aria-label={'永久刪除 '+r.guestName+' 的預約 '+r.id.slice(0,8)} onClick={()=>void removeBooking(r)}><Trash2 size={16}/>刪除預約</button>
       {r.status==='pending'&&<><button type="button" className="primary" disabled={busy} onClick={()=>void act(r,'accept')}><Check size={16}/>接取</button><button type="button" className="danger" disabled={busy} onClick={()=>void act(r,'reject')}><XCircle size={16}/>婉拒</button></>}
       {r.status==='accepted'&&<button type="button" className="primary" disabled={busy} onClick={()=>void act(r,'complete')}><CheckCircle2 size={16}/>結束服務</button>}
      </div>
