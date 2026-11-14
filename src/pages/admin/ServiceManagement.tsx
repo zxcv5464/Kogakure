@@ -123,6 +123,7 @@ export default function ServiceManagement(){
   }
   busyRef.current=true;setBusy(true);setNotice(null)
   let uploadedPath:string|null=null
+  let savedToDatabase=false
   try{
    let record={...draft,paragraphs,details}
    if(photoFile){
@@ -131,6 +132,7 @@ export default function ServiceManagement(){
     record={...record,imageUrl:upload.url}
    }
    await saveServiceContent(record,creating)
+   savedToDatabase=true
    const updated=await refresh()
    const saved=updated.find(x=>x.id===draft.id)
    if(saved){
@@ -140,7 +142,7 @@ export default function ServiceManagement(){
    setPhotoFile(null)
    setNotice({kind:'success',message:'服務內容已儲存。公開項目重新載入前台即可查看；草稿不會顯示給旅人。'})
   }catch(e){
-   if(uploadedPath){
+   if(uploadedPath&&!savedToDatabase){
     try{await removeUnusedServicePhoto(uploadedPath)}catch{ /* Keep the original error visible. */ }
    }
    setNotice({kind:'error',message:'儲存失敗：'+(e instanceof Error?e.message:'請檢查資料庫連線')})
