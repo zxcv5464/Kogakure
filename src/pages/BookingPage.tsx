@@ -76,7 +76,7 @@ export default function BookingPage(){
  const activePlan=plans.find(p=>p.id===planId)
 
  function openBooking(person:Staff){
-  if(isStaffBusy(statusByStaff.get(person.id),Date.now())||!plans.length)return
+  if(isStaffBusy(statusByStaff.get(person.id),Date.now()))return
   returnFocus.current=document.activeElement as HTMLElement
   setSelected(person);setOthers([]);setWithOthers(false);setResult('');setFormError('')
  }
@@ -142,8 +142,8 @@ export default function BookingPage(){
      return <article className={'booking-profile effect-'+person.effect+(person.thumbnailUrl.includes('-crop.webp')?' has-manual-crop':'')} key={person.id}
       style={{'--accent':person.themeColor||'#c4ac83','--booking-delay':Math.min(index,8)*95+'ms'} as CSSProperties}>
       <button className="booking-profile-action" type="button"
-       onClick={()=>openBooking(person)} disabled={busy||!plans.length}
-       aria-label={person.name+(busy?'指名中，暫不開放預約':'空閒中，點選預約')}>
+       onClick={()=>openBooking(person)} disabled={busy}
+       aria-label={person.name+(busy?'指名中，暫不開放預約':plans.length?'空閒中，點選預約':'空閒中，方案籌備中，點選查看預約資訊')}>
        <span className="booking-portrait">
         {person.thumbnailUrl||person.imageUrl
          ? <img src={person.thumbnailUrl||person.imageUrl} alt={person.name+'的角色照片'} loading={index>2?'lazy':'eager'} decoding="async"/>
@@ -158,7 +158,7 @@ export default function BookingPage(){
         <span className="booking-card-ornament" aria-hidden="true"/>
         <span className="booking-card-description">{person.tagline||'山間狐火，靜候有緣旅人。'}</span>
         {person.services.length>0&&<span className="booking-card-services">{person.services.slice(0,2).map(service=><span key={service}>{service}</span>)}</span>}
-        <span className="booking-card-cta">{busy?'此刻正在接待，暫不開放指名':plans.length?'點選名片 · 提出指名申請':'等待館方開放方案'} <Sparkles size={15}/></span>
+        <span className="booking-card-cta">{busy?'此刻正在接待，暫不開放指名':plans.length?'點選名片 · 提出指名申請':'點選名片 · 方案籌備中'} <Sparkles size={15}/></span>
        </span>
       </button>
      </article>
@@ -179,6 +179,7 @@ export default function BookingPage(){
      <button className="booking-primary" type="button" onClick={close}>返回狐隱</button>
     </div> : <form onSubmit={e=>void submit(e)} className="booking-form">
      <div className="booking-selected-person"><img src={selected.thumbnailUrl||selected.imageUrl} alt=""/><span><small>本次指名</small><strong>{selected.name}</strong></span></div>
+     {!plans.length&&<p role="status" className="booking-plan-unavailable">目前尚未開放可提交的指名方案。您可先查看指名資訊，待館方設定方案後再送出申請。</p>}
      <label>預約者遊戲角色姓名 <input required minLength={2} maxLength={48} value={name} onChange={e=>setName(e.target.value)} placeholder="請輸入遊戲中的角色姓名" autoComplete="off"/></label>
      <label>所在伺服器 <input required minLength={2} maxLength={48} value={world} onChange={e=>setWorld(e.target.value)} placeholder="例如：利維坦 / Leviathan" autoComplete="off"/></label>
      <label>指名方案 <select required value={planId} onChange={e=>setPlanId(e.target.value)}>
