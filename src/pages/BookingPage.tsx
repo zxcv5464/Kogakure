@@ -5,6 +5,7 @@ import { configured } from '../lib/config'
 import { BOOKING_PAGE_READY_EVENT } from '../lib/route-events'
 import BookingLoading from '../components/BookingLoading'
 import { loadPublicStaff } from '../lib/public-staff'
+import { getStaff } from '../lib/staff'
 import {
  describeBookingError, isStaffBusy, loadBookingPlans, loadStaffPresence,
  submitNomination, watchBookingChanges,
@@ -56,6 +57,7 @@ export default function BookingPage(){
   const refresh=()=>{
    void loadStaffPresence().then(p=>{if(live)setPresence(p)}).catch(()=>{})
    // Plans are editable in the admin console; refresh while this page is open.
+   void getStaff().then(rows=>{if(live)setPeople(rows.filter(p=>p.published&&p.bookingVisible&&p.role.includes('狐姬')))}).catch(()=>{})
    void loadBookingPlans().then(updated=>{
     if(!live)return
     setPlans(updated)
