@@ -20,5 +20,5 @@ export const ADMIN_MODULES: AdminModule[] = [
  { id: 'services', title: '服務內容管理', summary: '新增服務、上傳多張照片、調整輪播順序與公開狀態（管理員）', icon: ScrollText, path: '/admin/services', status: 'available' },
  { id: 'orders', title: '訂單管理', summary: '查看旅人茶宴點單、接單、完成與取消訂單', icon: ShoppingBag, path: '/admin/orders', status: 'available' },
  { id: 'booking', title: '預約管理', summary: '狐姬指名申請、審核、方案設定與即時計時', icon: ClipboardList, path: '/admin/booking', status: 'available' },
- { id: 'shifts', title: '值班排班', summary: '接待人員排班及值班資訊', icon: CalendarDays, status: 'planned' },
+ { id: 'shifts', title: '值班排班', summary: '管理員設定營業日期，館員登記出勤；四週自動滾動', icon: CalendarDays, path: '/admin/shifts', status: 'available' },
 ]
