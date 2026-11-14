@@ -1,0 +1,6 @@
+.admin-booking-notify{display:flex;align-items:center;gap:13px;flex-wrap:wrap;margin:12px 0 18px;border:1px solid rgba(219,174,114,.51);border-radius:8px;padding:13px 16px;background:linear-gradient(110deg,#382c2c,#272630);color:#f0d5a4}
+.admin-booking-notify>svg{flex:none}.admin-booking-notify span{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
+.admin-booking-notify strong{font-size:.85rem}.admin-booking-notify small{color:#d3bd9e;line-height:1.6;font-size:.75rem}
+.admin-booking-notify a{display:inline-flex;padding:8px 12px;border:1px solid rgba(225,190,142,.55);border-radius:5px;white-space:nowrap;font-size:.76rem}
+.admin-booking-notify>button{width:30px;height:30px;border:0;background:transparent;color:#e6d1b3;font-size:1.5rem}
+@media(max-width:550px){.admin-booking-notify{gap:9px}.admin-booking-notify a{margin-left:29px}}
