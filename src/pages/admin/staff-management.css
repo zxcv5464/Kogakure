@@ -372,3 +372,13 @@
  .staff-roster-grip { flex-basis: 20px; }
  .staff-roster-list.is-ordering .roster-item { padding: 8px 2px; }
 }
+
+.staff-admin-editor .staff-crop-applied {
+ display: inline-block;
+ padding: 7px 11px;
+ border: 1px solid rgba(117,200,144,.35);
+ border-radius: 6px;
+ background: rgba(42,91,64,.19);
+ color: #c4e4c9;
+ line-height: 1.65;
+}

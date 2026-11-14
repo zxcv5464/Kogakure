@@ -15,7 +15,7 @@ export default function StaffCard({staff,onOpen,index}:Props){
   setStyle({'--rx':String((.5-y)*4)+'deg','--ry':String((x-.5)*5)+'deg','--glow-x':String(x*100)+'%','--glow-y':String(y*100)+'%'} as CSSProperties)
  }
  function leave(){setStyle({'--rx':'0deg','--ry':'0deg'} as CSSProperties)}
- return <article className={'staff-entry effect-'+staff.effect} style={{'--accent':accent,'--delay':String(index*80)+'ms',...style} as CSSProperties}>
+ return <article className={'staff-entry effect-'+staff.effect+(staff.thumbnailUrl.includes('-crop.webp')?' has-manual-crop':'')} style={{'--accent':accent,'--delay':String(index*80)+'ms',...style} as CSSProperties}>
   <button ref={ref as React.RefObject<HTMLButtonElement>} type="button" className="omamori-card" onPointerMove={move} onPointerLeave={leave} onClick={()=>onOpen(staff)} aria-label={'查看 '+staff.name+' 的個人介紹'}>
    <span className="omamori-body">
     <span className="omamori-border" aria-hidden="true"/>

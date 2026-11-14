@@ -8,7 +8,9 @@ import { deleteStaff, getStaff, saveStaff, saveStaffSortChanges } from '../../li
 import { planStaffReorder } from '../../lib/staff-order'
 import { invalidatePublicStaffCache } from '../../lib/public-staff'
 import { safeExternalUrl } from '../../lib/url'
-import { removeUploadedStaffImages, uploadStaffImage, validateStaffImage } from '../../lib/upload'
+import { removeUploadedStaffImages, uploadStaffCrop, uploadStaffImage, validateStaffImage } from '../../lib/upload'
+import StaffPhotoCrop from '../../components/StaffPhotoCrop'
+import type { StaffCrop } from '../../lib/staff-crop'
 import { useAdminEditGuard } from './AdminEditGuard'
 import './staff-management.css'
 
@@ -50,6 +52,8 @@ export default function StaffManagement() {
  const [draggingId, setDraggingId] = useState<string | null>(null)
  const [dropTargetId, setDropTargetId] = useState<string | null>(null)
  const [photoFile, setPhotoFile] = useState<File | null>(null)
+ const [confirmedCrop, setConfirmedCrop] = useState<StaffCrop | null>(null)
+ const [cropEditing, setCropEditing] = useState(false)
  const [previewUrl, setPreviewUrl] = useState('')
  const editorRef = useRef<HTMLDivElement>(null)
  const { setEditing } = useAdminEditGuard()
@@ -57,8 +61,8 @@ export default function StaffManagement() {
  const dirty = useMemo(() => Boolean(selected && baseline && (
   JSON.stringify(selected) !== JSON.stringify(baseline)
   || servicesText !== baseline.services.join('、')
-  || photoFile
- )), [selected, baseline, servicesText, photoFile])
+  || photoFile || confirmedCrop || cropEditing
+ )), [selected, baseline, servicesText, photoFile, confirmedCrop, cropEditing])
 
  useEffect(() => { setEditing(dirty, busy) }, [dirty, busy, setEditing])
  useEffect(() => () => setEditing(false, false), [setEditing])
@@ -103,6 +107,8 @@ export default function StaffManagement() {
   setIsNew(creating)
   setServicesText(draft.services.join('、'))
   setPhotoFile(null)
+  setConfirmedCrop(null)
+  setCropEditing(false)
   setNotice(null)
   setOrdering(false)
   if (window.matchMedia('(max-width: 850px)').matches) {
@@ -115,6 +121,8 @@ export default function StaffManagement() {
   setBaseline(null)
   setIsNew(false)
   setPhotoFile(null)
+  setConfirmedCrop(null)
+  setCropEditing(false)
   setNotice(null)
  }
  function patch<K extends keyof Staff>(field: K, value: Staff[K]) {
@@ -127,7 +135,9 @@ export default function StaffManagement() {
   try {
    validateStaffImage(file)
    setPhotoFile(file)
-   setNotice({ kind:'info', text:'已選取新照片。請按「儲存名帖」，確認後才會上傳至 Supabase。' })
+   setConfirmedCrop(null)
+   setCropEditing(true)
+   setNotice({ kind:'info', text:'請先拖曳圈選要顯示的照片範圍，套用後再儲存。' })
   } catch (error) {
    setNotice({ kind:'error', text:describeError(error) })
   }
@@ -135,6 +145,9 @@ export default function StaffManagement() {
 
  async function save() {
   if (!selected || busyRef.current || !dirty) return
+  if (cropEditing || (photoFile && !confirmedCrop)) {
+   setNotice({ kind:'error', text:'請先在照片圈選工具按「套用這個範圍」，再儲存名帖。' }); return
+  }
   const name = selected.name.trim()
   if (!name) { setNotice({ kind:'error', text:'請填寫員工名稱' }); return }
   const color = selected.themeColor.trim()
@@ -149,13 +162,18 @@ export default function StaffManagement() {
   }
   busyRef.current = true
   setBusy(true)
-  setNotice({ kind:'info', text:photoFile ? '正在最佳化照片、上傳並儲存名帖…' : '正在儲存名帖…' })
-  let uploaded: Awaited<ReturnType<typeof uploadStaffImage>> | undefined
+  setNotice({ kind:'info', text:photoFile ? '正在上傳原圖與手動圈選縮圖…' : confirmedCrop ? '正在儲存新的圈選縮圖…' : '正在儲存名帖…' })
+  let uploaded: { paths: string[] } | undefined
   try {
    let saving = sanitized
-   if (photoFile) {
-    uploaded = await uploadStaffImage(photoFile, sanitized.id)
-    saving = { ...sanitized, imageUrl: uploaded.full, thumbnailUrl: uploaded.thumb }
+   if (photoFile && confirmedCrop) {
+    const photos = await uploadStaffImage(photoFile, sanitized.id, confirmedCrop)
+    uploaded = photos
+    saving = { ...sanitized, imageUrl: photos.full, thumbnailUrl: photos.thumb }
+   } else if (confirmedCrop) {
+    const photo = await uploadStaffCrop(sanitized.imageUrl || sanitized.thumbnailUrl, sanitized.id, confirmedCrop)
+    uploaded = photo
+    saving = { ...sanitized, thumbnailUrl: photo.thumb }
    }
    await saveStaff(saving, isNew)
    invalidatePublicStaffCache()
@@ -166,6 +184,8 @@ export default function StaffManagement() {
    setIsNew(false)
    setServicesText(saving.services.join('、'))
    setPhotoFile(null)
+   setConfirmedCrop(null)
+   setCropEditing(false)
    setNotice({ kind:'success', text:saving.published ? '名帖已儲存並公開。' : '名帖已儲存為草稿。' })
    try {
     await refresh()
@@ -202,6 +222,8 @@ export default function StaffManagement() {
    setSelected(null)
    setBaseline(null)
    setPhotoFile(null)
+   setConfirmedCrop(null)
+   setCropEditing(false)
    setNotice({ kind:'success', text:'名帖已刪除。已上傳的圖片暫時保留在 Storage，避免誤刪其他資料。' })
   } catch (error) {
    setNotice({ kind:'error', text:'刪除失敗：' + (describeError(error)) })
@@ -221,6 +243,8 @@ export default function StaffManagement() {
    setSelected(null)
    setBaseline(null)
    setPhotoFile(null)
+   setConfirmedCrop(null)
+   setCropEditing(false)
    setNotice({ kind:'info', text:'清單已更新，共 ' + next.length + ' 位員工。' })
   } catch (error) {
    setNotice({ kind:'error', text:'重新整理失敗：' + (describeError(error)) })
@@ -373,18 +397,26 @@ export default function StaffManagement() {
        <label>特效主題 <select value={selected.effect} onChange={event => patch('effect', event.target.value as Effect)}>{Object.entries(EFFECTS).map(([key, label]) => <option value={key} key={key}>{label}</option>)}</select></label>
        <label>主題色 <div className="color-field"><input type="color" value={/^#[0-9a-fA-F]{6}$/.test(selected.themeColor) ? selected.themeColor : '#82c8bc'} onChange={event => patch('themeColor', event.target.value)} aria-label="選擇主題色"/><input aria-label="主題色 HEX 色碼" value={selected.themeColor} onChange={event => patch('themeColor', event.target.value)} maxLength={7}/></div></label>
       </div>
-      <div className="staff-editor-section-title"><h3>角色照片</h3><small>選取照片後，按儲存才上傳</small></div>
+      <div className="staff-editor-section-title"><h3>角色照片</h3><small>自行圈選名冊範圍，原圖會保留</small></div>
       <div className="staff-editor-photo">
        <div className="staff-editor-photo-preview">
         {previewUrl || selected.thumbnailUrl || selected.imageUrl ? <img src={previewUrl || selected.thumbnailUrl || selected.imageUrl} alt="員工照片預覽"/> : <ImagePlus size={36}/>}
        </div>
        <div className="staff-editor-photo-actions">
         <p>{photoFile ? '已選取：' + photoFile.name : selected.imageUrl ? '目前使用的員工照片' : '尚未設定照片'}</p>
-        <small>{photoFile ? '尚未上傳。取消編輯不會消耗 Supabase Storage。' : '上傳時將自動產生 WebP 大圖及列表縮圖。'}</small>
+        <small>{photoFile ? '新照片尚未上傳。請先套用名冊顯示範圍，儲存才會上傳。' : '原始照片完整保留；可重新圈選名冊卡片範圍，不影響詳情大圖。'}</small>
         <label className="upload-control"><ImagePlus size={19}/> {photoFile ? '重新選擇照片' : '選擇照片'}<input type="file" accept="image/png,image/jpeg,image/webp,image/avif" onChange={stagePhoto}/></label>
-        {photoFile && <button className="staff-admin-secondary" type="button" onClick={() => setPhotoFile(null)}>取消這次照片變更</button>}
+        {photoFile && <button className="staff-admin-secondary" type="button" onClick={() => {setPhotoFile(null);setConfirmedCrop(null);setCropEditing(false)}}>取消這次照片變更</button>}
+        {!photoFile && (selected.imageUrl || selected.thumbnailUrl) && <button className="staff-admin-secondary" type="button" onClick={() => {setConfirmedCrop(null);setCropEditing(true)}}>重新圈選名冊照片範圍</button>}
+        {confirmedCrop && !cropEditing && <small className="staff-crop-applied" role="status">✓ 已套用自訂範圍，儲存後前台立即使用此構圖</small>}
        </div>
       </div>
+      {cropEditing && (previewUrl || selected.imageUrl || selected.thumbnailUrl) && <StaffPhotoCrop
+       key={(previewUrl || selected.imageUrl || selected.thumbnailUrl) + selected.id}
+       source={previewUrl || selected.imageUrl || selected.thumbnailUrl}
+       onConfirm={crop => {setConfirmedCrop(crop);setCropEditing(false);setNotice({kind:'info',text:'名冊構圖已選定；請按「儲存名帖」將自訂縮圖同步到前台。'})}}
+       onCancel={() => {setCropEditing(false);if(photoFile){setPhotoFile(null);setConfirmedCrop(null)}}}
+      />}
       <div className="editor-block staff-editor-social"><div className="editor-block-header"><h3>社群連結</h3><button type="button" className="text-button" onClick={() => patch('socials', [...selected.socials, { id:crypto.randomUUID(), label:'Threads', url:'' }])}><Plus size={17}/> 新增社群</button></div><p>支援 Threads、X、Instagram 或個人網站，網址須包含 https://。</p>
        {selected.socials.length === 0 && <p className="staff-field-note">目前沒有社群連結。</p>}
        {selected.socials.map((social, index) => <div className="social-edit-row" key={social.id}>

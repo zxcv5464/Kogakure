@@ -259,7 +259,14 @@ try {
   input.files=transfer.files;input.dispatchEvent(new Event('change',{bubbles:true}))
  })()`)
  await until('document.querySelector(".staff-editor-photo-actions .staff-admin-secondary")!==null')
+ await until('!!document.querySelector(".staff-crop-selection")')
  if(await run('window.__qa.uploads.length')!==0) throw Error('Selected photo uploaded before Save')
+ // An unconfirmed crop must never upload (nor silently use object-fit:cover).
+ await run('document.querySelector(".staff-editor-footer button[type=submit]").click()')
+ await until('!!document.querySelector(".staff-admin-notice.is-error")')
+ if(await run('window.__qa.uploads.length')!==0) throw Error('Unconfirmed photo was uploaded')
+ await run('document.querySelector(".staff-crop-confirm").click()')
+ await until('!!document.querySelector(".staff-crop-applied")')
  await run('document.querySelector(".staff-editor-footer button[type=submit]").click()')
  await until('!!document.querySelector(".staff-admin-notice.is-success")')
  const photoSave=await run(`({
