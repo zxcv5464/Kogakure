@@ -88,8 +88,6 @@ export default function BookingPage(){
  const statusByStaff=useMemo(()=>new Map(presence.map(p=>[p.staffId,p.busyUntil])),[presence])
  const activePlan=plans.find(p=>p.id===planId)
  const nominees=resolveBookingNominees(selected,people,others,withOthers)
- // After submission, preserve the exact names confirmed by the traveller.
- const headerNominees=result?submittedNominees:nominees
 
  function openBooking(person:Staff){
   if(isStaffBusy(statusByStaff.get(person.id),Date.now()))return
@@ -192,7 +190,7 @@ export default function BookingPage(){
   {selected&&<div className="booking-modal-shade" onMouseDown={e=>{if(e.target===e.currentTarget)close()}}>
    <div className="booking-modal" role="dialog" aria-modal="true" aria-labelledby="booking-form-title" tabIndex={-1} ref={dialog}>
     <div className="booking-modal-header">
-     <div><p className="booking-eyebrow">KOGAKURE · NOMINATION</p><h2 id="booking-form-title">指名預約 · {headerNominees.map(person=>person.name).join(" ＋ ")}</h2></div>
+     <div><p className="booking-eyebrow">KOGAKURE · NOMINATION</p><h2 id="booking-form-title">指名預約</h2></div>
      <button type="button" className="booking-modal-close" disabled={sending} onClick={close} aria-label="關閉預約視窗"><X size={21}/></button>
     </div>
     {result ? <div className="booking-success" role="status">
