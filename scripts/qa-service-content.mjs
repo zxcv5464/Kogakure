@@ -34,7 +34,7 @@ for(const term of ['saveServiceContent','deleteServiceContent','uploadServicePho
 ]){
  assert.ok(admin.includes(term),'Management flow missing: '+term)
 }
-assert.ok(admin.includes('if(uploadedPath&&!savedToDatabase)'),
+assert.ok(admin.includes('if(savedToDatabase){')&&admin.includes('if(uploadedPath){'),
  'A failed refresh must never delete a photo already saved in the database')
 assert.ok(lib.includes(".eq('updated_at',service.updatedAt)"),
  'Service writes must detect stale edits')
