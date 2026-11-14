@@ -1,36 +1,36 @@
 # 狐隱 KOGAKURE｜服務內容與留影之儀
 
 ## 公開頁面
-- 路徑：\`/services/\`；原本湯浴、占卜介紹保留，新增「留影之儀」拍立得合照。
+- 路徑：`/services/`；原本湯浴、占卜介紹保留，新增「留影之儀」拍立得合照。
 - 文案：「一瞬狐影，留住今宵」。以 FFXIV 遊戲內合照製作拍立得風格的紀念留影；實際拍攝、交付方式與 Gil 費用由館方說明。
 - 每個項目沿用原本霧金＋深墨配色、左右交錯照片與文案、動畫及響應式排版。
 - 未上傳照片時顯示「等待上傳」預留區。已上傳時直接顯示照片。
-- 前台從 \`public.service_contents\` 讀取 **is_published=true** 的項目，按 \`sort_order\` 排序。新增服務不必再改前台程式；下架或刪除時在刷新後消失。
-- Supabase 尚未配置的離線展示版使用 \`previewServices\`，並標示「展示版」。正式資料庫讀取失敗時顯示錯誤，不假裝使用舊資料。
+- 前台從 `public.service_contents` 讀取 **is_published=true** 的項目，按 `sort_order` 排序。新增服務不必再改前台程式；下架或刪除時在刷新後消失。
+- Supabase 尚未配置的離線展示版使用 `previewServices`，並標示「展示版」。正式資料庫讀取失敗時顯示錯誤，不假裝使用舊資料。
 
 ## 後台使用
-- 管理員登入 \`/admin/services/\`，在「服務內容管理」選擇原有項目或點「新增服務」。
+- 管理員登入 `/admin/services/`，在「服務內容管理」選擇原有項目或點「新增服務」。
 - 編輯服務分類、英文副標、主標題、引言、段落（用空白行分隔）、特色標籤（每行一個）、照片預留文字，以及排序。
 - 勾選「對訪客公開服務」後儲存，前台重新載入後才顯示；取消勾選可留存草稿。
-- 點「選擇／替換照片」：支援 JPG / PNG / WebP，小於等於 6 MB。照片只在按儲存時上傳至專用 \`service-media\` bucket；「移除目前照片」只會讓前台恢復預留框。
+- 點「選擇／替換照片」：支援 JPG / PNG / WebP，小於等於 6 MB。照片只在按儲存時上傳至專用 `service-media` bucket；「移除目前照片」只會讓前台恢復預留框。
 - 刪除需一次「確定／取消」確認。**永久刪除不可回復**，與湯浴／占卜、茶宴訂單、預約、名帖完全獨立。因避免意外遺失，替換或刪除服務並不自動移除已上傳的舊照片物件；需要時可由管理員在 Supabase Storage 清理。
-- 編輯未儲存時切換項目／離開後台會提醒；資料更新帶 \`updated_at\` 條件，避免覆蓋其他管理員剛剛完成的修改。
+- 編輯未儲存時切換項目／離開後台會提醒；資料更新帶 `updated_at` 條件，避免覆蓋其他管理員剛剛完成的修改。
 
 ## 權限
 - **目前只有正式網站管理員**可以進入後台服務編輯及上傳照片；員工帳號縱有其他模組的管理權限，仍不能更改服務內容。
-- RLS：訪客只能 SELECT 已公開服務；INSERT、UPDATE、DELETE 全部需要登入且 \`is_site_admin()\` 為 true；正式管理員才能查看草稿。
-- Storage：\`service-media\` 為公開顯示圖片的 bucket，但 SELECT／INSERT／DELETE 物件清單權限只提供已授權的管理員；瀏覽器訪客只能以公開圖片網址讀取檔案。
+- RLS：訪客只能 SELECT 已公開服務；INSERT、UPDATE、DELETE 全部需要登入且 `is_site_admin()` 為 true；正式管理員才能查看草稿。
+- Storage：`service-media` 為公開顯示圖片的 bucket，但 SELECT／INSERT／DELETE 物件清單權限只提供已授權的管理員；瀏覽器訪客只能以公開圖片網址讀取檔案。
 - 不更動現有員工權限、帳號 Edge Function、茶宴／預約／名帖的資料結構。
 
 ## 部署
-- 程式：\`src/pages/ServicesPage.tsx\`、\`src/lib/service-content.ts\`、\`src/pages/admin/ServiceManagement.tsx\`，並在 \`AdminPage\`、\`modules.ts\` 加入權限保護和側邊欄連結。
-- SQL：\`supabase/migrations/20261115_07_service_content_management.sql\`（已套用到 kogakure 專案）。初始三項服務以 \`slug\` 去重，重複套用不會覆寫已修改的介紹。
-- \`scripts/prepare-pages.mjs\` 已包含 \`admin/services\` 直接載入網址。
-- \`scripts/qa-service-content.mjs\` 供離線回歸測試；PR Verify 與 GitHub Pages 部署工作流程均已加入此檢查。
+- 程式：`src/pages/ServicesPage.tsx`、`src/lib/service-content.ts`、`src/pages/admin/ServiceManagement.tsx`，並在 `AdminPage`、`modules.ts` 加入權限保護和側邊欄連結。
+- SQL：`supabase/migrations/20261115_07_service_content_management.sql`（已套用到 kogakure 專案）。初始三項服務以 `slug` 去重，重複套用不會覆寫已修改的介紹。
+- `scripts/prepare-pages.mjs` 已包含 `admin/services` 直接載入網址。
+- `scripts/qa-service-content.mjs` 供離線回歸測試；PR Verify 與 GitHub Pages 部署工作流程均已加入此檢查。
 
 ## 人工驗收
-1. 到 \`/services/\` 確認湯浴、占卜、留影之儀三項順序、文案及照片預留區正常。
-2. 管理員進入 \`/admin/services/\`，修改「留影之儀」一段文字並儲存，刷新前台確認正確；再改回原文。
+1. 到 `/services/` 確認湯浴、占卜、留影之儀三項順序、文案及照片預留區正常。
+2. 管理員進入 `/admin/services/`，修改「留影之儀」一段文字並儲存，刷新前台確認正確；再改回原文。
 3. 新增測試項目、先存為草稿：前台不顯示。勾選公開後顯示；變更排序時顯示位置改變。
 4. 選擇照片時尚未儲存不應上傳；儲存後前台顯示照片。移除照片後恢復「等待上傳」。
 5. 測試非管理員無法讀取未公開服務、建立／修改／刪除服務，或上傳服務照片；其餘菜單與預約照常運作。
