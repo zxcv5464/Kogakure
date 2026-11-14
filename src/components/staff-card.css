@@ -157,3 +157,14 @@
  .staff-entry .card-tagline { font-size: .68rem; }
  .staff-entry .card-cta { font-size: .7rem; margin-top: 8px; }
 }
+
+/* Images with a manually confirmed card crop are already exactly 0.655.
+   Do not zoom them or let object-fit:cover recrop the admin selection. */
+.staff-entry.has-manual-crop .omamori-art img,
+.staff-entry.has-manual-crop .omamori-card:hover .omamori-art img {
+ object-fit: fill;
+ object-position: center;
+ transform: none;
+ transform-origin: center;
+ transition: none;
+}
