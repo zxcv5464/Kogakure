@@ -51,8 +51,9 @@ assert.ok(editor.includes('STAFF_PASSWORD_VALID(password)')&&editor.includes('pa
  'Initial password must be validated twice')
 assert.ok(editor.includes('STAFF_PASSWORD_VALID(resetPassword)')&&editor.includes('resetPassword!==resetConfirm'),
  'Reset password must be validated twice')
-assert.ok(!editor.includes('type="email"')&&!editor.includes('邀請郵件'),
- 'Employees should not need an email address or invitation')
+assert.ok(!editor.includes('type="email"')&&!editor.includes('inviteEmployee(')
+ &&!editor.includes('建立並寄送邀請'),
+ 'Employee form must use admin-set credentials and must not submit an email invitation')
 for(const perm of ['staff.manage','menu.manage','booking.manage']){
  assert.ok(api.includes(perm)&&sql.includes("has_backoffice_permission('"+perm+"')"),
   'Module permission missing: '+perm)
