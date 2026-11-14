@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import type { Location } from 'react-router-dom'
 import SceneBackdrop from './SceneBackdrop'
-import { STAFF_PAGE_READY_EVENT, MENU_PAGE_READY_EVENT } from '../lib/route-events'
+import { STAFF_PAGE_READY_EVENT, MENU_PAGE_READY_EVENT, BOOKING_PAGE_READY_EVENT } from '../lib/route-events'
 import './page-transition.css'
 import './route-motion.css'
 
@@ -56,7 +56,8 @@ export default function PageTransition({
   // In particular, the tea menu should never reveal its lazy fallback and
   // immediately replace it with a Supabase loading screen or live items.
   const readyEvent = location.pathname === '/staff' ? STAFF_PAGE_READY_EVENT
-   : location.pathname === '/menu' ? MENU_PAGE_READY_EVENT : null
+   : location.pathname === '/menu' ? MENU_PAGE_READY_EVENT
+   : location.pathname === '/booking' ? BOOKING_PAGE_READY_EVENT : null
   const readyTimeout = location.pathname === '/menu' ? MENU_READY_TIMEOUT_MS : STAFF_READY_TIMEOUT_MS
   let swapped = false
   let ready = readyEvent === null
