@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import type { PointerEvent, CSSProperties } from 'react'
+import type { PointerEvent, CSSProperties, SyntheticEvent } from 'react'
 import { Check, RotateCcw, X } from 'lucide-react'
 import {
  STAFF_CARD_RATIO, cropScale, defaultStaffCrop, moveStaffCrop, resizeStaffCrop,
@@ -16,7 +16,7 @@ export default function StaffPhotoCrop({source,onConfirm,onCancel}:Props){
  const drag=useRef<{x:number;y:number;crop:StaffCrop}|null>(null)
  useEffect(()=>{setSize(null);setCrop(null);setFailure('');drag.current=null},[source])
 
- function ready(event:React.SyntheticEvent<HTMLImageElement>){
+ function ready(event:SyntheticEvent<HTMLImageElement>){
   const el=event.currentTarget
   if(!el.naturalWidth||!el.naturalHeight){setFailure('圖片尺寸無效，請重新選擇');return}
   setSize({width:el.naturalWidth,height:el.naturalHeight})
