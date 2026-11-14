@@ -182,7 +182,10 @@ export default function BookingPage(){
      </article>
     })}
    </div>}
-   {!loading&&!error&&<p className="booking-footnote">當館方接取申請後，相關館員將同步顯示為「指名中」。倒數結束後狀態會恢復空閒；館方亦可提前結束服務。</p>}
+   {!loading&&!error&&<p className="booking-footnote">
+    <span>當館方接取申請後，相關館員將同步顯示為「指名中」。</span>
+    <span>倒數結束後狀態會恢復空閒；館方亦可提前結束服務。</span>
+   </p>}
   </div>
   {selected&&<div className="booking-modal-shade" onMouseDown={e=>{if(e.target===e.currentTarget)close()}}>
    <div className="booking-modal" role="dialog" aria-modal="true" aria-labelledby="booking-form-title" tabIndex={-1} ref={dialog}>
