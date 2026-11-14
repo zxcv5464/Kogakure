@@ -1,95 +1,139 @@
-// Regression and security checks for employee-scoped backend access.
-// No network, credentials or real users are created by this test.
+// Protect manager-created employee credentials and server-side access control.
+// No production accounts, passwords or Auth sessions are created in this test.
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { createServer } from 'vite'
+
 const files=[
- 'src/pages/AdminPage.tsx','src/pages/admin/EmployeeAccountsManagement.tsx',
- 'src/lib/employee-accounts.ts','src/lib/supabase.ts',
+ 'src/pages/AdminPage.tsx',
+ 'src/pages/admin/EmployeeAccountsManagement.tsx',
+ 'src/lib/employee-accounts.ts',
+ 'src/lib/supabase.ts',
  'src/pages/admin/BookingNotification.tsx',
- 'src/pages/admin/modules.ts','scripts/prepare-pages.mjs',
+ 'src/pages/admin/modules.ts',
+ 'scripts/prepare-pages.mjs',
  'supabase/migrations/20261115_01_employee_accounts_permissions.sql',
  'supabase/functions/manage-employee-accounts/index.ts',
  'supabase/migrations/20261115_02_employee_permission_invoker.sql',
  'supabase/migrations/20261115_03_booking_operator_staff_read.sql',
+ 'supabase/migrations/20261115_04_employee_usernames.sql',
+ 'docs/STAFF_ACCOUNTS.md',
 ]
-const [page,editor,api,auth,notice,modules,routes,sql,edge,invoker,bookingStaffRead]=await Promise.all(files.map(x=>readFile(x,'utf8')))
+const [page,editor,api,auth,notice,modules,routes,sql,edge,invoker,bookingRead,usernames,docs]
+ = await Promise.all(files.map(path=>readFile(path,'utf8')))
+
 for(const required of [
- "getBackofficeAccess(id)", "ProtectedModule", "allowed(access,module.id)",
- 'module="accounts"', 'module="staff"', 'module="menu"', 'module="booking"',
+ 'getBackofficeAccess(id)', 'ProtectedModule', 'allowed(access,module.id)',
+ 'module="accounts"','module="staff"','module="menu"','module="booking"',
  "usePendingBookings(allowed(access,'booking'))",
- "access.kind==='owner'", "getBackofficeAccess", "signInWithPassword",
- "resetPasswordForEmail", "auth.updateUser({password})",
+ "access.kind==='owner'",'signInWithPassword',
+ 'staffLoginEmail(loginInput)', '管理員 Email／員工登入帳號',
+ '員工忘記密碼，請聯繫館方管理員',
+ "{access.kind==='owner'&&<AccountSecurity />}",
 ]){
- assert.ok(page.includes(required),'Authenticated admin shell missing '+required)
+ assert.ok(page.includes(required),'Employee login or protected admin UI missing: '+required)
 }
-assert.ok(page.includes("admin/accounts"),'Owner-only account management route missing')
-assert.ok(modules.includes("id: 'accounts'"),'Accounts must be a real module')
-assert.ok(routes.includes("'admin/accounts'"),'GitHub Pages must support account deep links')
-assert.ok(auth.includes('detectSessionInUrl:true'),'Invited staff must be able to accept Supabase Auth redirect')
-for(const text of ['邀請員工','員工顯示名稱','登入 Email','後台功能權限','允許此員工登入後台','建立並寄送邀請']){
- assert.ok(editor.includes(text),'Staff account UI missing '+text)
-}
-for(const permission of ['staff.manage','menu.manage','booking.manage']){
- assert.ok(api.includes(permission),'Missing permission '+permission)
- assert.ok(sql.includes("has_backoffice_permission('"+permission+"')"),'RLS missing permission '+permission)
- assert.ok(edge.includes("'"+permission+"'"),'Edge whitelist missing '+permission)
-}
-assert.ok(api.includes("from('employee_accounts')"),'Authorized membership must come from a database table')
-assert.ok(api.includes("functions.invoke('manage-employee-accounts'"),'Invites must be server-side')
-assert.ok(!api.includes('SERVICE_ROLE_KEY')&&!page.includes('SERVICE_ROLE_KEY'),'Never expose service role in frontend')
-for(const rule of [
- 'references auth.users(id) on delete cascade',
- 'alter table public.employee_accounts enable row level security',
- 'revoke all on public.employee_accounts from public,anon,authenticated',
- 'grant select on public.employee_accounts to authenticated',
- 'user_id=(select auth.uid())',
- 'site admins list employee accounts',
- 'security definer set search_path',
- 'and a.active=true',
- 'permissions <@ array',
- 'booking.manage',
- 'permitted employee reads bookings',
- 'permitted employee edits staff',
- 'permitted employee updates menu_items',
- 'permitted employee upload staff media',
+assert.ok(modules.includes("id: 'accounts'"),'Owner-only account module missing')
+assert.ok(routes.includes("'admin/accounts'"),'GitHub Pages account deep link missing')
+assert.ok(auth.includes('detectSessionInUrl:true'),'Existing authenticated callback support missing')
+for(const label of [
+ '新增員工帳號','員工登入帳號','初始密碼','再次輸入初始密碼',
+ '後台功能權限','允許此員工登入後台','建立員工帳號',
+ '管理員重設密碼','永久刪除','重設密碼',
 ]){
- assert.ok(sql.includes(rule),'Employee RLS safety check missing '+rule)
+ assert.ok(editor.includes(label),'Account form is missing: '+label)
 }
-assert.ok(!sql.includes('create policy "employees update'), 'Employees may never change their own privileges')
-assert.ok(invoker.includes('alter function public.has_backoffice_permission(text) security invoker'), 'Employee authorization helper must execute with caller RLS')
-assert.ok(bookingStaffRead.includes('for select to authenticated')&&bookingStaffRead.includes("has_backoffice_permission('booking.manage')"),'Booking employees need READ access to hidden staff for acceptance validation')
-assert.ok(!bookingStaffRead.includes('for update'),'Booking staff lookup must not permit editing')
-assert.ok(!sql.includes('insert into public.admin_users'), 'Invited staff must never become managers')
-assert.ok(sql.includes("if not public.has_backoffice_permission('booking.manage')"),'Booking RPCs must honor assigned module access')
-assert.equal((sql.match(/if not public.has_backoffice_permission\('booking.manage'\)/g)||[]).length,3,'All three booking admin RPCs must enforce role scopes')
-assert.ok(sql.includes('grant execute on function public.decide_booking_request(uuid,text) to authenticated'))
-assert.ok(sql.includes('grant execute on function public.admin_delete_booking_request(uuid) to authenticated'))
+assert.ok(editor.includes('window.prompt(')&&editor.includes('window.confirm('),
+ 'Deleting an account must require typed username and second confirmation')
+assert.ok(editor.includes('resetPassword')&&editor.includes('resetConfirm'),
+ 'Manager password reset needs two password entries')
+assert.ok(editor.includes('STAFF_PASSWORD_VALID(password)')&&editor.includes('password!==passwordConfirm'),
+ 'Initial password must be validated twice')
+assert.ok(editor.includes('STAFF_PASSWORD_VALID(resetPassword)')&&editor.includes('resetPassword!==resetConfirm'),
+ 'Reset password must be validated twice')
+assert.ok(!editor.includes('type="email"')&&!editor.includes('邀請郵件'),
+ 'Employees should not need an email address or invitation')
+for(const perm of ['staff.manage','menu.manage','booking.manage']){
+ assert.ok(api.includes(perm)&&sql.includes("has_backoffice_permission('"+perm+"')"),
+  'Module permission missing: '+perm)
+}
+assert.ok(api.includes("from('employee_accounts')")&&api.includes('staffLoginEmail'),
+ 'Login credentials must be linked to employee RLS account records')
+for(const action of ["action:'create'","action:'reset_password'","action:'delete'","action:'update'"])
+ assert.ok(api.includes(action),'Frontend account manager action missing: '+action)
+assert.ok(!api.includes('SERVICE_ROLE_KEY')&&!page.includes('SERVICE_ROLE_KEY'),
+ 'Service-role credentials must never appear in the browser')
 for(const guard of [
- "service.auth.getUser(token)",
+ 'service.auth.getUser(token)',
  "service.from('admin_users')",
- "if(managerError||!manager)",
- "service.auth.admin.inviteUserByEmail",
+ 'if(!await isManager(user.id))',
+ 'service.auth.admin.createUser',
+ 'service.auth.admin.updateUserById',
+ 'service.auth.admin.deleteUser',
  "service.from('employee_accounts').insert",
- "service.from('employee_accounts')",
- "createClient(supabaseUrl, secretKey",
- "validate", // checked via actual field validation
+ 'await findEmployee(id)',
+ 'await isManager(id)',
+ 'email_confirm:true',
+ 'validatedUsername(body.username)',
+ 'validatedPassword(body.password)',
+ 'validatedPassword(body.password)',
+ 'username+\'@\'+internalDomain',
+ 'createClient(supabaseUrl, secretKey',
+ 'auth.admin.deleteUser(created.user.id)',
 ]){
- if(guard==='validate')continue
- assert.ok(edge.includes(guard),'Edge invite/update authentication check missing '+guard)
+ assert.ok(edge.includes(guard),'Owner-only server guard missing: '+guard)
 }
-assert.ok(edge.includes("action==='update'")&&edge.includes("action==='invite'"))
-assert.ok(!edge.includes('insert into admin_users'),'Edge must not promote employees')
-assert.ok(notice.includes('usePendingBookings(enabled = true)'),'Booking polling must be disabled for other roles')
+assert.ok(!edge.includes('inviteUserByEmail')&&!edge.includes("action==='invite'"),
+ 'Email invitations must be completely removed from the backend')
+assert.ok(edge.includes("if(body.action==='delete')")&&edge.includes("if(body.action==='reset_password')"),
+ 'Both delete and reset flows must be present')
+assert.ok(edge.includes("if(!await findEmployee(id)||await isManager(id))"),
+ 'Owner account must never be a valid delete or password-reset target')
+assert.ok(edge.includes("service.auth.admin.deleteUser(id)"),
+ 'Delete must remove the actual Supabase Auth credential')
+assert.ok(usernames.includes('add column if not exists username text'),
+ 'Migration must create employee usernames')
+assert.ok(usernames.includes('employee_accounts_username_unique'),
+ 'Employee username must be unique in the database')
+assert.ok(usernames.includes('employee_accounts_username_format'),
+ 'Username format must be validated server-side')
+assert.ok(usernames.includes('alter column username set not null'),
+ 'Every employee must have a username after migration')
+assert.ok(sql.includes('references auth.users(id) on delete cascade'),
+ 'Deleting an employee Auth user must clear its permission row')
+assert.ok(sql.includes('alter table public.employee_accounts enable row level security'),
+ 'Employee account records require RLS')
+assert.ok(sql.includes('revoke all on public.employee_accounts from public,anon,authenticated'),
+ 'Clients must not modify user permissions')
+assert.ok(!sql.includes('insert into public.admin_users'),
+ 'Do not grant owner status to new employees')
+assert.ok(invoker.includes('alter function public.has_backoffice_permission(text) security invoker'),
+ 'Permission helper must respect caller RLS')
+assert.ok(bookingRead.includes("has_backoffice_permission('booking.manage')"),
+ 'Booking operators need read-only access for booking validation')
+assert.ok(notice.includes('usePendingBookings(enabled = true)'),'Booking notifications remain scoped')
+assert.ok(!docs.includes('inviteUserByEmail')&&!docs.includes('Email 邀請')&&!docs.includes('建立並寄送邀請'),
+ 'Documentation must not describe the retired email invitation flow')
+
 const vite=await createServer({server:{middlewareMode:true,hmr:false},appType:'custom'})
 try{
- const {permitted,EMPLOYEE_PERMISSIONS}=await vite.ssrLoadModule('/src/lib/employee-accounts.ts')
- assert.deepEqual(EMPLOYEE_PERMISSIONS.map(x=>x.id),['staff.manage','menu.manage','booking.manage'])
- const owner={kind:'owner',permissions:[]}
- const booking={kind:'employee',active:true,displayName:'月迎',permissions:['booking.manage']}
- for(const name of EMPLOYEE_PERMISSIONS.map(x=>x.id))assert.equal(permitted(owner,name),true)
- assert.equal(permitted(booking,'booking.manage'),true)
- assert.equal(permitted(booking,'staff.manage'),false)
- assert.equal(permitted({...booking,active:false},'booking.manage'),false)
- console.log('PASS: role-aware admin navigation, manager-only employee accounts, RLS guards and server-side invitations')
-}finally{await vite.close()}
+ const mod=await vite.ssrLoadModule('/src/lib/employee-accounts.ts')
+ assert.deepEqual(mod.EMPLOYEE_PERMISSIONS.map(x=>x.id),['staff.manage','menu.manage','booking.manage'])
+ assert.equal(mod.staffLoginEmail('Fox_01'),'fox_01@staff.kogakure.invalid')
+ assert.equal(mod.staffLoginEmail(' yueying '),'yueying@staff.kogakure.invalid')
+ for(const invalid of ['a','1user','ab','a.b','evil@example.com','a b','john+1'])
+  assert.equal(mod.staffLoginEmail(invalid),null,'Invalid username should be rejected: '+invalid)
+ assert.equal(mod.STAFF_PASSWORD_VALID('StaffPass1234'),true)
+ assert.equal(mod.STAFF_PASSWORD_VALID('short1'),false)
+ assert.equal(mod.STAFF_PASSWORD_VALID('onlylettersandnone'),false)
+ assert.equal(mod.STAFF_PASSWORD_VALID('123456789012'),false)
+ const manager={kind:'owner',permissions:[]}
+ const staff={kind:'employee',active:true,displayName:'月迎',permissions:['booking.manage']}
+ assert.equal(mod.permitted(manager,'staff.manage'),true)
+ assert.equal(mod.permitted(manager,'menu.manage'),true)
+ assert.equal(mod.permitted(manager,'booking.manage'),true)
+ assert.equal(mod.permitted(staff,'booking.manage'),true)
+ assert.equal(mod.permitted(staff,'staff.manage'),false)
+ assert.equal(mod.permitted({...staff,active:false},'booking.manage'),false)
+ console.log('PASS: manager-created staff credentials, no invitations, protected delete/reset and scoped module RLS')
+} finally {await vite.close()}
