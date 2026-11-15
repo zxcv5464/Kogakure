@@ -6,13 +6,16 @@ export function rowToStaff(s: StaffRow): Staff {
  imageUrl:s.image_url || '',thumbnailUrl:s.thumbnail_url || s.image_url || '',
  themeColor:s.theme_color,effect:s.effect,
  socials:Array.isArray(s.socials) ? s.socials : [],
- services:Array.isArray(s.services) ? s.services : [],published:s.is_published,bookingVisible:s.is_booking_visible!==false,sortOrder:s.sort_order}
+ services:Array.isArray(s.services) ? s.services : [],published:s.is_published,bookingVisible:s.is_booking_visible!==false,
+ bookingAllowedPlanIds:Array.isArray(s.booking_allowed_plan_ids)?s.booking_allowed_plan_ids:null,
+ bookingAllowJoint:s.booking_allow_joint!==false,sortOrder:s.sort_order}
 }
 export function staffToRow(s: Staff): StaffRow {
  return {id:s.id,display_name:s.name,role:s.role,tagline:s.tagline,bio:s.bio,
  image_url:s.imageUrl || null,thumbnail_url:s.thumbnailUrl || null,
  theme_color:s.themeColor,effect:s.effect,socials:s.socials,services:s.services,
- is_published:s.published,is_booking_visible:s.bookingVisible,sort_order:s.sortOrder}
+ is_published:s.published,is_booking_visible:s.bookingVisible,
+ booking_allowed_plan_ids:s.bookingAllowedPlanIds,booking_allow_joint:s.bookingAllowJoint,sort_order:s.sortOrder}
 }
 export async function getStaff(includeUnpublished=false):Promise<Staff[]> {
  if (!supabase) throw new Error('尚未設定 Supabase')
@@ -27,8 +30,9 @@ export async function saveStaff(staff: Staff, creating: boolean):Promise<void> {
  const row=staffToRow(staff)
  // Nomination availability is owned by BookingManagement. A stale staff
  // editor must never overwrite a recently changed booking setting.
- const {is_booking_visible:_bookingVisible,...profileRow}=row
- void _bookingVisible
+ const {is_booking_visible:_bookingVisible,booking_allowed_plan_ids:_allowedPlans,
+  booking_allow_joint:_allowJoint,...profileRow}=row
+ void _bookingVisible;void _allowedPlans;void _allowJoint
  // An update must never silently recreate a profile that another admin deleted.
  const query = creating
   ? supabase.from('staff').insert(row).select('id')

@@ -104,6 +104,7 @@ jobs:
           VITE_OFFLINE_PREVIEW: 'true'
         run: |
           node scripts/qa-booking-admin-crud.mjs
+          node scripts/qa-booking-staff-rules.mjs
           node scripts/qa-booking-role-layout.mjs
       - name: Verify services page fast loading and bounded photo gallery
         env:

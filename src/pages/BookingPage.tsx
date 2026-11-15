@@ -10,7 +10,7 @@ import { getCachedPublicStaff,loadPublicStaff } from '../lib/public-staff'
 import {loadPublicBookingPlans,loadPublicStaffPresence,peekPublicBookingPlans,peekPublicStaffPresence} from '../lib/public-booking-data'
 import { getStaff } from '../lib/staff'
 import {
- describeBookingError, isStaffBusy,
+ describeBookingError, isStaffBusy,staffAcceptsPlan,staffCanJoinBooking,
  submitNomination, watchBookingChanges,
 } from '../lib/bookings'
 import type { BookingPlan, StaffPresence } from '../lib/bookings'
@@ -95,13 +95,20 @@ export default function BookingPage(){
  },[loading])
 
  const statusByStaff=useMemo(()=>new Map(presence.map(p=>[p.staffId,p.busyUntil])),[presence])
- const activePlan=plans.find(p=>p.id===planId)
+ const extraPerson=withOthers?people.find(p=>p.id===others[0]):null
+ const applicablePlans=plans.filter(p=>selected&&staffAcceptsPlan(selected,p.id)&&
+  (!extraPerson||staffCanJoinBooking(selected,extraPerson,p.id)))
+ const chosenPlanId=applicablePlans.some(p=>p.id===planId)?planId:applicablePlans[0]?.id||''
+ const activePlan=applicablePlans.find(p=>p.id===chosenPlanId)
  const nominees=resolveBookingNominees(selected,people,others,withOthers)
+ const canAddOthers=Boolean(selected?.bookingAllowJoint&&chosenPlanId&&
+  people.some(p=>p.id!==selected?.id&&staffCanJoinBooking(selected!,p,chosenPlanId)))
 
  function openBooking(person:Staff){
   if(isStaffBusy(statusByStaff.get(person.id),Date.now()))return
   returnFocus.current=document.activeElement as HTMLElement
-  setSelected(person);setOthers([]);setWithOthers(false);setResult('');setFormError('');setSubmittedNominees([])
+  setSelected(person);setPlanId(plans.find(p=>staffAcceptsPlan(person,p.id))?.id||'')
+  setOthers([]);setWithOthers(false);setResult('');setFormError('');setSubmittedNominees([])
  }
  function close(){
   if(sending)return
@@ -136,11 +143,19 @@ export default function BookingPage(){
    setFormError('部分追加指名的人員已更新，請重新確認指名名單');return
   }
   if(ids.length>maximumStaff){setFormError('每筆預約最多主要指名 1 位及追加指名 1 位');return}
+  if(!chosenPlanId||chosen.some(person=>{
+   const staff=people.find(p=>p.id===person.id)
+   return !staff||!staffAcceptsPlan(staff,chosenPlanId)
+  })){setFormError('所選狐姬無法接受這個預約方案，請重新選擇');return}
+  if(ids.length>1&&(!selected.bookingAllowJoint||
+   !chosen.every(person=>people.find(p=>p.id===person.id)?.bookingAllowJoint))){
+   setFormError('所選狐姬未開放同時指名，請改為單人預約');return
+  }
   if(ids.some(id=>isStaffBusy(statusByStaff.get(id),Date.now()))){setFormError('有受指名人員已進入指名中，請重新選擇');return}
-  if(name.trim().length<2||world.trim().length<2||!planId){setFormError('請填寫遊戲角色姓名、伺服器並選擇方案');return}
+  if(name.trim().length<2||world.trim().length<2||!chosenPlanId){setFormError('請填寫遊戲角色姓名、伺服器並選擇方案');return}
   setSending(true);setFormError('')
   try{
-   const bookingId=await submitNomination({name,world,planId,staffIds:ids,note})
+   const bookingId=await submitNomination({name,world,planId:chosenPlanId,staffIds:ids,note})
    setSubmittedNominees(chosen)
    setResult(bookingId)
   }catch(e){setFormError(describeBookingError(e))}
@@ -165,11 +180,12 @@ export default function BookingPage(){
     {people.map((person,index)=>{
      const busyUntil=statusByStaff.get(person.id)
      const busy=isStaffBusy(busyUntil,now)
+     const acceptsAnyPlan=plans.some(plan=>staffAcceptsPlan(person,plan.id))
      return <article className={'booking-profile effect-'+person.effect+(person.thumbnailUrl.includes('-crop.webp')?' has-manual-crop':'')} key={person.id}
       style={{'--accent':person.themeColor||'#c4ac83','--booking-delay':Math.min(index,8)*80+'ms'} as CSSProperties}>
       <button className="booking-profile-action" type="button"
-       onClick={()=>openBooking(person)} disabled={busy}
-       aria-label={person.name+(busy?'指名中，暫不開放預約':plans.length?'空閒中，點選預約':'空閒中，方案籌備中，點選查看預約資訊')}>
+       onClick={()=>openBooking(person)} disabled={busy||!acceptsAnyPlan}
+       aria-label={person.name+(busy?'指名中，暫不開放預約':acceptsAnyPlan?'空閒中，點選預約':'目前沒有可接受的指名方案')}>
        <span className="booking-portrait">
         {person.thumbnailUrl||person.imageUrl
          ? <img src={person.thumbnailUrl||person.imageUrl} alt={person.name+'的角色照片'} loading={index>2?'lazy':'eager'} decoding="async"/>
@@ -184,7 +200,7 @@ export default function BookingPage(){
         <span className="booking-card-ornament" aria-hidden="true"/>
         <span className="booking-card-description">{person.tagline||'山間狐火，靜候有緣旅人。'}</span>
         {person.services.length>0&&<span className="booking-card-services">{person.services.slice(0,2).map(service=><span key={service}>{service}</span>)}</span>}
-        <span className="booking-card-cta">{busy?'此刻正在接待，暫不開放指名':plans.length?'點選名片 · 提出指名申請':'點選名片 · 方案籌備中'} <Sparkles size={15}/></span>
+        <span className="booking-card-cta">{busy?'此刻正在接待，暫不開放指名':acceptsAnyPlan?'點選名片 · 提出指名申請':'目前沒有可接受的指名方案'} <Sparkles size={15}/></span>
        </span>
       </button>
      </article>
@@ -209,18 +225,21 @@ export default function BookingPage(){
      <button className="booking-primary" type="button" onClick={close}>返回狐隱</button>
     </div> : <form onSubmit={e=>void submit(e)} className="booking-form">
      <div className="booking-selected-person"><img src={selected.thumbnailUrl||selected.imageUrl} alt=""/><span><small>本次指名</small><strong>{selected.name}</strong></span></div>
-     {!plans.length&&<p role="status" className="booking-plan-unavailable">目前尚未開放可提交的指名方案。您可先查看指名資訊，待館方設定方案後再送出申請。</p>}
+     {!applicablePlans.length&&<p role="status" className="booking-plan-unavailable">這位狐姬目前沒有可接受的方案，或雙人指名的方案不一致；請重新選擇。</p>}
      <label>預約者遊戲角色姓名 <input required minLength={2} maxLength={48} value={name} onChange={e=>setName(e.target.value)} placeholder="請輸入遊戲中的角色姓名" autoComplete="off"/></label>
      <label>所在伺服器 <input required minLength={2} maxLength={48} value={world} onChange={e=>setWorld(e.target.value)} placeholder="例如：利維坦 / Leviathan" autoComplete="off"/></label>
-     <label>指名方案 <select required value={planId} onChange={e=>setPlanId(e.target.value)}>
+     <label>指名方案 <select required value={chosenPlanId} onChange={e=>{setPlanId(e.target.value);setOthers([])}}>
       <option value="">請選擇方案</option>
-      {plans.map(p=><option value={p.id} key={p.id}>{p.name} · {p.durationMinutes} 分鐘{p.priceGil===null?'': ' · '+p.priceGil.toLocaleString('en-US')+' Gil'}</option>)}
+      {applicablePlans.map(p=><option value={p.id} key={p.id}>{p.name} · {p.durationMinutes} 分鐘{p.priceGil===null?'': ' · '+p.priceGil.toLocaleString('en-US')+' Gil'}</option>)}
      </select></label>
      {activePlan&&<p className="booking-plan-note"><Clock3 size={16}/>{activePlan.description||'體驗內容以館方確認為準'} · {activePlan.priceGil===null?'費用請洽館方':'費用 '+activePlan.priceGil.toLocaleString('en-US')+' Gil'}</p>}
-     <label className="booking-choice"><input type="checkbox" checked={withOthers} onChange={e=>{setWithOthers(e.target.checked);setOthers([])}}/>是否同時指名其他館員？</label>
-     {withOthers&&<fieldset className="booking-additional">
+     {selected.bookingAllowJoint?<label className="booking-choice"><input type="checkbox"
+      checked={withOthers} disabled={!canAddOthers&&!withOthers}
+      onChange={e=>{setWithOthers(e.target.checked);setOthers([])}}/>是否同時指名其他館員？</label>:
+      <p className="booking-plan-note">這位狐姬僅接受單獨指名。</p>}
+     {selected.bookingAllowJoint&&withOthers&&<fieldset className="booking-additional">
       <legend>追加指名（最多再選 1 位館員）</legend>
-      {people.filter(p=>p.id!==selected.id).map(person=>{
+      {people.filter(p=>p.id!==selected.id&&chosenPlanId&&staffCanJoinBooking(selected,p,chosenPlanId)).map(person=>{
        const busy=isStaffBusy(statusByStaff.get(person.id),now)
        return <label key={person.id}><input type="checkbox" checked={others.includes(person.id)} disabled={busy}
         onChange={e=>setOthers(e.target.checked?[person.id]:[])}/>
@@ -231,7 +250,7 @@ export default function BookingPage(){
      <NomineeSummary nominees={nominees}/>
      <label>補充說明（選填） <textarea rows={3} maxLength={240} value={note} onChange={e=>setNote(e.target.value)} placeholder="給館方的簡短備註，請勿填寫現實個人資料"/></label>
      {formError&&<p className="booking-form-error" role="alert">{formError}</p>}
-     <button className="booking-primary" type="submit" disabled={sending||!plans.length}>
+     <button className="booking-primary" type="submit" disabled={sending||!applicablePlans.length}>
       <Send size={17}/>{sending?'正在提交…':'送出預約申請'}
      </button>
      <p className="booking-disclaimer">本表單僅供 FFXIV RP 預約，非真實商業交易。送出後須待館方接取，並非自動確認。</p>

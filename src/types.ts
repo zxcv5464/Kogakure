@@ -14,6 +14,8 @@ export type Staff = {
  services: string[]
  published: boolean
  bookingVisible: boolean
+ bookingAllowedPlanIds: string[]|null
+ bookingAllowJoint: boolean
  sortOrder: number
 }
 export type StaffRow = {
@@ -30,6 +32,8 @@ export type StaffRow = {
  services: string[]
  is_published: boolean
  is_booking_visible: boolean
+ booking_allowed_plan_ids: string[]|null
+ booking_allow_joint: boolean
  sort_order: number
 }
 export const EFFECTS: Record<Effect, string> = {

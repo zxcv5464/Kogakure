@@ -1,5 +1,6 @@
 import { configured } from './config'
 import { supabase } from './supabase'
+import type {Staff} from '../types'
 
 export type BookingPlan = {
  id:string; name:string; description:string; durationMinutes:number;
@@ -50,6 +51,26 @@ export async function setBookingNomineeVisibility(staffId:string,visible:boolean
  })
  if(error)throw error
  if(data!==true)throw new Error('指名開放狀態未成功儲存，請重新整理')
+}
+/** null means all plans, including any plans added later. [] means none. */
+export function staffAcceptsPlan(staff:Pick<Staff,'bookingAllowedPlanIds'>,planId:string):boolean{
+ return staff.bookingAllowedPlanIds===null||staff.bookingAllowedPlanIds.includes(planId)
+}
+export function staffCanJoinBooking(
+ primary:Pick<Staff,'bookingAllowJoint'|'bookingAllowedPlanIds'>,
+ second:Pick<Staff,'bookingAllowJoint'|'bookingAllowedPlanIds'>,
+ planId:string
+):boolean{
+ return primary.bookingAllowJoint&&second.bookingAllowJoint&&
+  staffAcceptsPlan(primary,planId)&&staffAcceptsPlan(second,planId)
+}
+/** Save only booking-specific settings without requiring staff.manage. */
+export async function setStaffBookingRules(staffId:string,allowedPlanIds:string[]|null,allowJoint:boolean):Promise<void>{
+ const {data,error}=await client().rpc('set_staff_booking_rules',{
+  p_staff_id:staffId,p_allowed_plan_ids:allowedPlanIds,p_allow_joint:allowJoint,
+ })
+ if(error)throw error
+ if(data!==true)throw new Error('狐姬預約方案設定未成功儲存，請重新整理')
 }
 export async function loadStaffPresence():Promise<StaffPresence[]>{
  const {data,error}=await client().from('staff_booking_presence').select('staff_id,busy_until')

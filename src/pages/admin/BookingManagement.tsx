@@ -3,7 +3,7 @@ import { Bell, Check, CheckCircle2, Clock3, ExternalLink, Plus, RefreshCw, Save,
 import { Link } from 'react-router-dom'
 import {
  countdown, decideBooking, deleteAdminBooking, describeBookingError, loadAdminBookings,
- loadBookingPlans, removeBookingPlan, saveBookingPlan, setBookingNomineeVisibility, watchBookingChanges,
+ loadBookingPlans, removeBookingPlan, saveBookingPlan, setBookingNomineeVisibility, setStaffBookingRules, watchBookingChanges,
 } from '../../lib/bookings'
 import type { BookingPlan, BookingRequest, BookingStatus } from '../../lib/bookings'
 import type { Staff } from '../../types'
@@ -20,6 +20,12 @@ const fmt=(date:string|null)=>date ? new Date(date).toLocaleString('zh-TW',{time
 const gil=(n:number|null)=>n===null?'未設定費用':n.toLocaleString('en-US')+' Gil'
 const initialPlan=():BookingPlan=>({id:crypto.randomUUID(),name:'',description:'',durationMinutes:30,priceGil:null,sortOrder:100,active:false,updatedAt:''})
 type SelectedPlan={value:BookingPlan;original:BookingPlan;creating:boolean}
+type NomineeRules={allowedPlanIds:string[]|null;allowJoint:boolean}
+const currentRules=(person:Staff):NomineeRules=>({allowedPlanIds:person.bookingAllowedPlanIds,allowJoint:person.bookingAllowJoint})
+const rulesEqual=(a:NomineeRules,b:NomineeRules)=>a.allowJoint===b.allowJoint&&
+ (a.allowedPlanIds===null&&b.allowedPlanIds===null||
+  a.allowedPlanIds!==null&&b.allowedPlanIds!==null&&
+  a.allowedPlanIds.length===b.allowedPlanIds.length&&a.allowedPlanIds.every(id=>b.allowedPlanIds?.includes(id)))
 export default function BookingManagement(){
  const [bookings,setBookings]=useState<BookingRequest[]>([])
  const [plans,setPlans]=useState<BookingPlan[]>([])
@@ -33,13 +39,15 @@ export default function BookingManagement(){
  const busyRef=useRef(false)
  const [focused,setFocused]=useState<string|null>(null)
  const [planDraft,setPlanDraft]=useState<SelectedPlan|null>(null)
+ const [ruleDrafts,setRuleDrafts]=useState<Record<string,NomineeRules>>({})
  const [now,setNow]=useState(Date.now())
  const lastSeen=useRef(new Set<string>())
  const didLoad=useRef(false)
  const [incoming,setIncoming]=useState<BookingRequest|null>(null)
  const [creatingBooking,setCreatingBooking]=useState(false)
  const {setEditing}=useAdminEditGuard()
- const dirty=Boolean(planDraft&&(planDraft.creating||JSON.stringify(planDraft.value)!==JSON.stringify(planDraft.original)))
+ const dirty=Boolean(planDraft&&(planDraft.creating||JSON.stringify(planDraft.value)!==JSON.stringify(planDraft.original)))||
+  nominees.some(person=>ruleDrafts[person.id]&&!rulesEqual(ruleDrafts[person.id],currentRules(person)))
  useEffect(()=>setEditing(dirty,busy),[dirty,busy,setEditing])
  useEffect(()=>()=>setEditing(false,false),[setEditing])
 
@@ -89,6 +97,29 @@ export default function BookingManagement(){
    }
   }catch(e){setError(describeBookingError(e))}
   finally{busyRef.current=false;setBusy(false)}
+ }
+ function editNomineeRules(person:Staff,edit:(current:NomineeRules)=>NomineeRules){
+  setRuleDrafts(old=>({...old,[person.id]:edit(old[person.id]||currentRules(person))}))
+ }
+ async function saveNomineeRules(person:Staff){
+  if(busyRef.current)return
+  const setting=ruleDrafts[person.id]
+  if(!setting||rulesEqual(setting,currentRules(person)))return
+  busyRef.current=true;setBusy(true);setError('');setNotice('')
+  try{
+   await setStaffBookingRules(person.id,setting.allowedPlanIds,setting.allowJoint)
+   setNominees(old=>old.map(p=>p.id===person.id
+    ?{...p,bookingAllowedPlanIds:setting.allowedPlanIds,bookingAllowJoint:setting.allowJoint}:p))
+   setRuleDrafts(old=>{const next={...old};delete next[person.id];return next})
+   invalidatePublicStaffCache()
+   try{await refresh()}catch{/* Persisted; visible local state remains authoritative until next refresh. */}
+   setNotice(person.name+' 的接受方案與同時指名設定已儲存，新的預約會套用最新規則。')
+  }catch(e){setError(describeBookingError(e))}
+  finally{busyRef.current=false;setBusy(false)}
+ }
+ function changeTab(next:'requests'|'plans'|'nominees'){
+  if(dirty&&!window.confirm('尚有未儲存的預約設定。確定放棄修改？'))return
+  setTab(next);setPlanDraft(null);setRuleDrafts({})
  }
  async function act(booking:BookingRequest,action:'accept'|'reject'|'complete'){
   if(busyRef.current)return
@@ -182,9 +213,9 @@ export default function BookingManagement(){
   {error&&<p className="booking-admin-error" role="alert">{error}</p>}
   {notice&&<p className="booking-admin-success" role="status"><CheckCircle2 size={17}/>{notice}</p>}
   <div className="booking-admin-tabs">
-   <button className={tab==='requests'?'active':''} type="button" onClick={()=>{if(!dirty||window.confirm('放棄未儲存的方案修改？')){setTab('requests');setPlanDraft(null)}}}>預約申請</button>
-   <button className={tab==='plans'?'active':''} type="button" onClick={()=>setTab('plans')}>指名方案管理</button>
-   <button className={tab==='nominees'?'active':''} type="button" onClick={()=>{if(!dirty||window.confirm('放棄未儲存的方案修改？')){setTab('nominees');setPlanDraft(null)}}}>可指名人員設定</button>
+   <button className={tab==='requests'?'active':''} type="button" onClick={()=>changeTab('requests')}>預約申請</button>
+   <button className={tab==='plans'?'active':''} type="button" onClick={()=>changeTab('plans')}>指名方案管理</button>
+   <button className={tab==='nominees'?'active':''} type="button" onClick={()=>changeTab('nominees')}>可指名人員設定</button>
   </div>
   {loading&&<p className="booking-admin-loading" role="status">正在讀取預約清單…</p>}
   {!loading&&tab==='requests'&&<div className="booking-admin-requests">
@@ -213,13 +244,16 @@ export default function BookingManagement(){
   {!loading&&tab==='nominees'&&<section className="booking-admin-nominee-settings">
    <div className="booking-admin-nominee-settings-head">
     <div><h2>可指名人員設定</h2>
-     <p>在這裡統一決定哪些館員會出現在旅人的預約頁面並接受新指名。開關立即儲存，不必再進入「員工名帖」。</p>
+     <p>在這裡設定各位狐姬是否開放指名、可接受的預約方案及是否允許與其他狐姬同時指名。顯示開關立即儲存，個人預約規則請按下「儲存此狐姬設定」。</p>
     </div>
     <div className="booking-admin-nominee-summary"><strong>{nominees.filter(p=>p.published&&p.bookingVisible).length}</strong><span>位目前公開接受指名</span></div>
    </div>
    {!nominees.length?<p className="booking-admin-empty">目前尚無員工名帖。請先到「員工名帖」建立人員資料。</p>:
     <div className="booking-admin-nominee-grid">
-     {nominees.map(person=><article className="booking-admin-nominee-card" key={person.id}>
+     {nominees.map(person=>{
+      const rules=ruleDrafts[person.id]||currentRules(person)
+      const rulesDirty=!rulesEqual(rules,currentRules(person))
+      return <article className="booking-admin-nominee-card" key={person.id}>
       <div className="booking-admin-nominee-identity">
        <span className="booking-admin-nominee-avatar">
         {(person.thumbnailUrl||person.imageUrl)?<img src={person.thumbnailUrl||person.imageUrl} alt="" loading="lazy"/>:person.name.slice(0,1)}
@@ -238,9 +272,41 @@ export default function BookingManagement(){
          :'已關閉新指名；原有名帖和既有預約紀錄不受影響。'}</small>
        </span>
       </label>
-     </article>)}
+      <div className="booking-admin-person-rules">
+       <div className="booking-admin-person-rules-heading">
+        <strong>可接受指名方案</strong><small>設定只影響新的預約及尚未接取的申請</small>
+       </div>
+       <label className="booking-admin-rules-choice"><input type="radio" name={'booking-plan-mode-'+person.id}
+        checked={rules.allowedPlanIds===null} disabled={busy}
+        onChange={()=>editNomineeRules(person,r=>({...r,allowedPlanIds:null}))}/>
+        <span>接受所有方案（包含日後新增的方案）</span></label>
+       <label className="booking-admin-rules-choice"><input type="radio" name={'booking-plan-mode-'+person.id}
+        checked={rules.allowedPlanIds!==null} disabled={busy}
+        onChange={()=>editNomineeRules(person,r=>({...r,allowedPlanIds:r.allowedPlanIds||[]}))}/>
+        <span>僅接受指定方案</span></label>
+       {rules.allowedPlanIds!==null&&<div className="booking-admin-plan-options" role="group" aria-label={person.name+' 可接受的方案'}>
+        {!plans.length?<p>尚無方案，請先至「指名方案管理」建立方案。</p>:
+         plans.map(plan=><label key={plan.id}><input type="checkbox" disabled={busy}
+          checked={rules.allowedPlanIds?.includes(plan.id)||false}
+          onChange={e=>editNomineeRules(person,r=>({
+           ...r,allowedPlanIds:e.target.checked?[...new Set([...(r.allowedPlanIds||[]),plan.id])]:
+            (r.allowedPlanIds||[]).filter(id=>id!==plan.id),
+          }))}/>
+          <span>{plan.name}{!plan.active&&<small>（尚未對外開放）</small>}</span>
+         </label>)}
+        {!rules.allowedPlanIds.length&&<p>未選擇方案：這位狐姬暫不接受任何新方案。</p>}
+       </div>}
+       <label className="booking-admin-rules-choice">
+        <input type="checkbox" checked={rules.allowJoint} disabled={busy}
+         onChange={e=>editNomineeRules(person,r=>({...r,allowJoint:e.target.checked}))}/>
+        <span>開放與其他狐姬同時指名<small>關閉後，只能單獨指名這位狐姬。</small></span>
+       </label>
+       <button type="button" className="booking-admin-rules-save" disabled={busy||!rulesDirty}
+        onClick={()=>void saveNomineeRules(person)}><Save size={15}/>儲存此狐姬設定</button>
+      </div>
+     </article>})}
     </div>}
-   <p className="booking-admin-nominee-footnote">僅「名帖已公開」且「接受指名已開啟」的館員會顯示在前台預約頁，不限職稱。關閉指名不會取消已建立的預約。公開名帖與角色照片仍請前往「員工名帖」管理。</p>
+   <p className="booking-admin-nominee-footnote">只有名帖已公開、接受指名已開啟且擁有可預約方案的館員才能接受新指名。雙人指名必須兩位狐姬都同意、且接受相同方案。既有預約不會刪除；尚未接取的預約會於接單時驗證最新設定。</p>
   </section>}
   {!loading&&tab==='plans'&&<div className="booking-admin-plans">
    <div className="booking-admin-plan-head"><p>新開放的方案才會顯示在前台。範例方案預設未開放，請確認內容與費用後再啟用。</p><button type="button" onClick={()=>choosePlan(initialPlan(),true)}><Plus size={16}/>新增方案</button></div>

@@ -19,7 +19,7 @@ assert.ok(admin.includes('在預約頁面顯示並接受指名')&&admin.includes
  'Booking management must own the nomination visibility toggle')
 assert.ok(admin.includes("getStaff(true)")&&admin.includes("await setBookingNomineeVisibility(person.id,visible)"),
  'Booking managers must read all staff and toggle availability via the restricted RPC')
-assert.ok(staff.includes('const {is_booking_visible:_bookingVisible,...profileRow}=row')&&staff.includes('.update(profileRow)'),
+assert.ok(staff.includes('is_booking_visible:_bookingVisible')&&staff.includes('booking_allowed_plan_ids:_allowedPlans')&&staff.includes('booking_allow_joint:_allowJoint')&&staff.includes('.update(profileRow)'),
  'Staff profile saves must not overwrite an updated nomination setting')
 assert.ok(api.includes("rpc('set_staff_booking_visibility'"),
  'Eligibility changes must call the permission checked RPC')
