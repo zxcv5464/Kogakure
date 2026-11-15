@@ -6,14 +6,33 @@ const files=[
  'src/pages/BookingPage.tsx','src/pages/booking-page.css',
  'src/pages/admin/BookingManagement.tsx','src/pages/admin/AdminBookingCreate.tsx',
  'src/lib/bookings.ts','supabase/migrations/20261114_02_booking_cards_admin_crud.sql',
+ 'supabase/migrations/20261115_14_booking_nominee_visibility_admin.sql',
 ]
-const [types,staff,staffAdmin,booking,bookingCss,admin,manual,api,sql]=await Promise.all(files.map(f=>readFile(f,'utf8')))
+const [types,staff,staffAdmin,booking,bookingCss,admin,manual,api,sql,nomineeSql]=await Promise.all(files.map(f=>readFile(f,'utf8')))
 assert.ok(types.includes('bookingVisible: boolean'))
 assert.ok(types.includes('is_booking_visible: boolean'))
 assert.ok(staff.includes('bookingVisible:s.is_booking_visible!==false'), 'Old profiles must remain visible after migration')
 assert.ok(staff.includes('is_booking_visible:s.bookingVisible'), 'Staff visibility must persist to Supabase')
-assert.ok(staffAdmin.includes('在預約頁面顯示並接受指名'))
-assert.ok(staffAdmin.includes("patch('bookingVisible'"))
+assert.ok(!staffAdmin.includes('在預約頁面顯示並接受指名'), 'Staff editor must no longer own nomination availability')
+assert.ok(!staffAdmin.includes("patch('bookingVisible'"), 'Staff editor must not change booking visibility')
+assert.ok(admin.includes('在預約頁面顯示並接受指名')&&admin.includes('可指名人員設定'),
+ 'Booking management must own the nomination visibility toggle')
+assert.ok(admin.includes("getStaff(true)")&&admin.includes("await setBookingNomineeVisibility(person.id,visible)"),
+ 'Booking managers must read all staff and toggle availability via the restricted RPC')
+assert.ok(staff.includes('const {is_booking_visible:_bookingVisible,...profileRow}=row')&&staff.includes('.update(profileRow)'),
+ 'Staff profile saves must not overwrite an updated nomination setting')
+assert.ok(api.includes("rpc('set_staff_booking_visibility'"),
+ 'Eligibility changes must call the permission checked RPC')
+for(const phrase of [
+ 'create or replace function public.set_staff_booking_visibility',
+ "public.has_backoffice_permission('booking.manage')",
+ 'security definer',
+ "set is_booking_visible=p_visible",
+ 'revoke all on function public.set_staff_booking_visibility',
+ 'grant execute on function public.set_staff_booking_visibility',
+])assert.ok(nomineeSql.includes(phrase),'Missing safe booking nomination update: '+phrase)
+assert.ok(!nomineeSql.includes('grant update on public.staff'),
+ 'Booking-only users must not receive broad staff table UPDATE permission')
 assert.ok(booking.includes('p.published&&p.bookingVisible'), 'Hidden staff must not appear in public booking cards')
 assert.ok(!booking.includes("role.includes('狐姬')"), 'Front-end must not restrict booking to a job title')
 assert.ok(!manual.includes("role.includes('狐姬')"), 'Back-office booking must not restrict booking to a job title')
