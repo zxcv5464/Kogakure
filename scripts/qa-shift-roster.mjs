@@ -12,8 +12,9 @@ const sources=['src/lib/shift-calendar.ts','src/lib/shifts.ts','src/pages/Shifts
  'src/pages/admin/modules.ts','scripts/prepare-pages.mjs','src/main.tsx','src/pages/OtherPages.tsx',
  'src/pages/shifts-page.css','src/pages/admin/shift-management.css',
  'supabase/migrations/20261115_09_rolling_four_week_shifts.sql',
- 'supabase/migrations/20261115_10_owner_self_attendance.sql']
-const [calendar,lib,page,editor,app,shell,modules,routes,main,otherPages,css,adminCss,sql,ownerSql]=await Promise.all(sources.map(path=>readFile(path,'utf8')))
+ 'supabase/migrations/20261115_10_owner_self_attendance.sql',
+ 'supabase/migrations/20261115_11_employee_shift_display_name.sql']
+const [calendar,lib,page,editor,app,shell,modules,routes,main,otherPages,css,adminCss,sql,ownerSql,nameSql]=await Promise.all(sources.map(path=>readFile(path,'utf8')))
 for(const path of sources.filter(p=>p.endsWith('.ts')||p.endsWith('.tsx'))){
  const source=await readFile(path,'utf8')
  const ast=ts.createSourceFile(path,source,ts.ScriptTarget.Latest,true,path.endsWith('tsx')?ts.ScriptKind.TSX:ts.ScriptKind.TS)
@@ -56,6 +57,32 @@ assert.ok(!sql.includes('drop table')&&!sql.includes('delete from public.employe
 assert.ok(editor.includes('setShiftOpening(date,kind,hours,note)'))
 assert.ok(editor.includes('markShiftAttendance(date,person)'))
 assert.ok(editor.includes('unmarkShiftAttendance(date,person.employeeId,person.source)'), 'Cancel attendance must use owner/employee source')
+assert.ok(editor.includes('我的出勤顯示名稱')&&editor.includes('shift-employee-duty-name'),
+ 'Active employee should see a custom shift display-name input')
+assert.ok(editor.includes('onMark(date,{id:selfId,name:myDisplayName})'),
+ 'Employee self-signup must submit custom attendance name, not account display name')
+assert.ok(editor.includes('onRename(date,mine,myDisplayName)'),
+ 'Existing self-registered shifts must allow updating the name without cancelling attendance')
+assert.ok(lib.includes("export async function renameOwnShiftAttendance("),
+ 'A self-only renaming function is required')
+assert.ok(lib.includes(".eq('shift_date',date).eq(key,user.id)"),
+ 'Renaming must bind to the authenticated user and a single shift day')
+assert.ok(lib.includes("const displayName=validateShiftName(employee.name)"),
+ 'The signup API should trim and validate employee-supplied duty names')
+assert.ok(adminCss.includes('.shift-admin-rename'),
+ 'The shift renaming control needs styling')
+for(const clause of [
+ 'drop policy if exists "active employees signup on open days"',
+ 'grant update(employee_name) on public.shift_attendance to authenticated',
+ 'grant update(display_name) on public.shift_owner_attendance to authenticated',
+ 'employee_id=(select auth.uid())',
+ 'owner_id=(select auth.uid())',
+ 'e.active=true',
+ 'for update to authenticated',
+ 'with check',
+])assert.ok(nameSql.includes(clause),'Secure duty-name edit migration missing: '+clause)
+assert.ok(!nameSql.includes('grant update on public.shift_attendance to authenticated'),
+ 'Do not grant broad UPDATE rights to employee shift dates or identities')
 assert.ok(editor.includes('date>=today'))
 assert.ok(page.includes('opening?.open?members.get(date)||[]:[]'))
 assert.ok(page.includes('status===\'open\''))
@@ -118,7 +145,8 @@ try{
  const {default:ShiftManagement}=await vite.ssrLoadModule('/src/pages/admin/ShiftManagement.tsx')
  const employeeHtml=renderToStaticMarkup(createElement(MemoryRouter,null,
   createElement(ShiftManagement,{access:{kind:'employee',active:true,displayName:'試班狐姬',permissions:[]}})))
- assert.ok(employeeHtml.includes('員工')||employeeHtml.includes('出勤'))
+ assert.ok(employeeHtml.includes('我的出勤顯示名稱')&&employeeHtml.includes('shift-employee-duty-name'),
+  'Employee admin page must render the editable public shift name')
  assert.equal(typeof ShiftManagement,'function')
  console.log('PASS: Taiwan Monday rolling 4 weeks, public calendar, employee shift signup, manager opening dates, secure RLS')
 }finally{await vite.close()}
