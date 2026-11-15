@@ -1,0 +1,18 @@
+/* An always-visible but restrained music control in the shared public header.
+   No audio player or timers are remounted when visitors change pages. */
+.site-bgm{display:flex;align-items:center;flex:none;min-width:0}
+.site-bgm audio{display:none}
+.site-bgm-toggle{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px;min-width:100px;padding:6px 11px;border:1px solid rgba(218,183,137,.42);border-radius:30px;background:rgba(70,52,67,.32);color:#e5c9a2;white-space:nowrap;line-height:1.2;transition:border-color .2s ease,background .2s ease}
+.site-bgm-toggle:hover{border-color:rgba(238,202,143,.85);background:rgba(104,73,85,.43)}
+.site-bgm-toggle:focus-visible{outline:2px solid #d7c291;outline-offset:3px}
+.site-bgm-toggle.is-playing{border-color:rgba(225,193,146,.68);background:rgba(95,69,80,.46)}
+.site-bgm-toggle.is-blocked{border-style:dashed}
+.site-bgm-toggle svg{flex:none}
+.site-bgm-text{display:grid;text-align:left;gap:1px}
+.site-bgm-text strong{color:#f2d8b6;font-size:.67rem;font-family:Georgia,serif;letter-spacing:.13em}
+.site-bgm-text small{font-size:.6rem;color:#c5ae90;font-weight:400;letter-spacing:.02em}
+.site-bgm-note{width:11px;display:flex;align-items:center;color:#e4c48d}
+@media(max-width:1200px){.site-bgm-toggle{min-width:43px;padding:8px 10px;gap:5px}.site-bgm-text small{display:none}.site-bgm-note{display:none}}
+@media(max-width:850px){.site-bgm{margin-left:auto}.site-bgm-toggle{min-width:85px;padding:9px 11px}.site-bgm-text small{display:block}}
+@media(max-width:380px){.site-bgm-toggle{min-width:43px}.site-bgm-text small{display:none}}
+@media(prefers-reduced-motion:reduce){.site-bgm-toggle{transition:none}}
