@@ -52,6 +52,12 @@ jobs:
         env:
           VITE_OFFLINE_PREVIEW: 'true'
         run: node scripts/qa-shift-roster.mjs
+      - name: Verify nomination visibility moved to booking management with scoped permissions
+        env:
+          VITE_OFFLINE_PREVIEW: 'true'
+        run: |
+          node scripts/qa-booking-admin-crud.mjs
+          node scripts/qa-booking-role-layout.mjs
       - name: Verify service content and admin editor before publication
         env:
           VITE_OFFLINE_PREVIEW: 'true'
