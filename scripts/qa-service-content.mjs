@@ -81,8 +81,10 @@ for(const phrase of [
  'services-photo-slide',
  "photos.length>1",
 ])assert.ok(gallery.includes(phrase),'Timed service slideshow missing: '+phrase)
-assert.ok(css.includes('.services-photo-slide.is-visible')&&css.includes('transition:opacity 1100ms')
- &&css.includes('prefers-reduced-motion:reduce'), 'Service gallery needs slow crossfade with reduced-motion accessibility')
+assert.ok(css.includes('.services-photo-slide.is-visible')&&css.includes('transition:opacity 1500ms')
+ &&css.includes('filter:blur(8px)')&&css.includes('filter:blur(0)')
+ &&css.includes('prefers-reduced-motion:reduce')&&css.includes('transition:none;filter:none'),
+ 'Service gallery needs misty moonlight crossfade with reduced-motion accessibility')
 for(const term of ['multiple disabled={busy','function choosePhotos','function movePhoto','function removePhoto',
  'maxServicePhotos=12','for(const photo of photoSlots)','const record={...draft,paragraphs,details,imageUrls,imageUrl:imageUrls[0]||null,imageCrops:photoSlots.map(photo=>photo.crop)}','const uploadedPaths:string[]=[]']){
  assert.ok(admin.includes(term)||lib.includes(term),'Service photo editor lacks: '+term)
