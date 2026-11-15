@@ -132,7 +132,7 @@ export default function AccountingManagement(){
     <button type="button" disabled={loading||!entries.length} onClick={exportCsv}><Download size={16}/>匯出 CSV</button>
    </div>
   </header>
-  <p className="accounting-admin-tip"><Wallet size={18}/>只有正式管理員可查看帳務。茶宴「已完成」不代表已收款；請於實際收到 Gil 後登錄收入，支出也請逐筆記錄。</p>
+  <p className="accounting-admin-tip"><Wallet size={18}/>僅正式管理員及獲授「帳務管理」權限的館員可存取帳務。茶宴「已完成」不代表已收款；請於實際收到 Gil 後登錄收入，支出也請逐筆記錄。</p>
   <div className="accounting-period" aria-label="帳務日期範圍">
    <div className="accounting-period-modes">
     <button type="button" aria-pressed={mode==='day'} className={mode==='day'?'is-active':''} onClick={()=>setMode('day')}>單日</button>
