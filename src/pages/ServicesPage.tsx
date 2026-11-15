@@ -14,6 +14,19 @@ function serviceIcon(service:ServiceEntry){
  if(service.slug==='polaroid'||service.category.includes('影')||service.category.includes('照'))return Camera
  return Sparkles
 }
+/** Keep Chinese service titles in meaningful clauses. Each short clause
+ * stays on one line; on narrow screens the browser may wrap at punctuation,
+ * never leaving the final single character stranded on its own line.
+ * Long arbitrary titles remain regular text so owner edits cannot overflow. */
+export function ServiceTitle({title}:{title:string}){
+ const clauses=title.match(/[^，、；：！？。]+[，、；：！？。]?/gu)
+ if(!clauses||clauses.length<2||clauses.some(part=>[...part].length>8))
+  return <>{title}</>
+ return <>{clauses.map((clause,index)=>
+  <span className="services-title-clause" key={index}>{clause}</span>
+ )}</>
+}
+
 export default function ServicesPage(){
  // Returning visitors reuse the latest published entries immediately. A
  // stale snapshot remains visible while the next request refreshes it.
@@ -62,7 +75,7 @@ export default function ServicesPage(){
      <ServicePhotoGallery service={service} number={number}/>
      <div className="services-copy">
       <p className="services-eyebrow"><Icon size={19} strokeWidth={1.5} aria-hidden="true"/><span>{service.category}</span><span className="services-separator" aria-hidden="true">·</span><span className="services-english">{service.english}</span></p>
-      <h2 id={service.slug+'-title'}>{service.title}</h2>
+      <h2 id={service.slug+'-title'}><ServiceTitle title={service.title}/></h2>
       {service.quote&&<p className="services-quote">{service.quote}</p>}
       <span className="services-divider" aria-hidden="true"/>
       <div className="services-description">
