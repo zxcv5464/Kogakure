@@ -23,7 +23,9 @@ export default function HomeAnnouncements(){
  const [loading,setLoading]=useState(configured)
  const [error,setError]=useState(false)
  const listRef=useRef<HTMLDivElement>(null)
+ const dialogRef=useRef<HTMLElement>(null)
  const [canScrollDown,setCanScrollDown]=useState(false)
+ const [canScrollDialog,setCanScrollDialog]=useState(false)
  useEffect(()=>{
   if(!configured)return
   let alive=true
@@ -59,6 +61,25 @@ export default function HomeAnnouncements(){
   window.addEventListener('keydown',dismiss)
   return()=>window.removeEventListener('keydown',dismiss)
  },[active])
+ // The announcement detail is scrollable without a visible scrollbar.
+ // Track real overflow so its chevron disappears once fully read.
+ useEffect(()=>{
+  if(!active){setCanScrollDialog(false);return}
+  const panel=dialogRef.current
+  if(!panel)return
+  panel.scrollTop=0
+  const update=()=>setCanScrollDialog(panel.scrollHeight-panel.clientHeight-panel.scrollTop>2)
+  update()
+  const frame=window.requestAnimationFrame(update)
+  const observer=typeof ResizeObserver==='undefined'?null:new ResizeObserver(update)
+  observer?.observe(panel)
+  window.addEventListener('resize',update)
+  return()=>{
+   window.cancelAnimationFrame(frame)
+   observer?.disconnect()
+   window.removeEventListener('resize',update)
+  }
+ },[active?.id,active?.content])
  const filtered=useMemo(()=>rows.filter(row=>row.category===category),[rows,category])
  // Show the arrow only when there are actually more entries below the
  // viewport, including after live announcements refresh or resize.
@@ -78,6 +99,12 @@ export default function HomeAnnouncements(){
   if(!list)return
   const reduceMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches
   list.scrollBy({top:Math.max(40,Math.round(list.clientHeight*.85)),behavior:reduceMotion?'auto':'smooth'})
+ }
+ function scrollDialogToMore(){
+  const panel=dialogRef.current
+  if(!panel)return
+  const reduceMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  panel.scrollBy({top:Math.max(64,Math.round(panel.clientHeight*.76)),behavior:reduceMotion?'auto':'smooth'})
  }
  return <>
   <section className="home-news" aria-label="館內公告及最新消息">
@@ -120,15 +147,24 @@ export default function HomeAnnouncements(){
   </section>
   {active&&typeof document!=='undefined'&&createPortal(<div className="home-news-overlay" role="presentation"
    onMouseDown={event=>{if(event.target===event.currentTarget)setActive(null)}}>
-   <article className="home-news-dialog" role="dialog" aria-modal="true"
-    aria-label={active.title} tabIndex={-1}>
+   <div className={'home-news-dialog-shell'+(canScrollDialog?' has-more':'')}
+    role="dialog" aria-modal="true" aria-label={active.title}>
+    <article className="home-news-dialog" ref={dialogRef} tabIndex={0}
+     aria-label="公告內文，可上下捲動"
+     onScroll={event=>setCanScrollDialog(event.currentTarget.scrollHeight-event.currentTarget.clientHeight-event.currentTarget.scrollTop>2)}>
+     <p className="home-news-dialog-category">{categories[active.category]} · {publishedDate(active.publishedAt)}</p>
+     <h2>{active.title}</h2>
+     <div className="home-news-dialog-body">{active.content}</div>
+     <p className="home-news-dialog-end">狐隱 · KOGAKURE</p>
+    </article>
     <button className="home-news-close" type="button" aria-label="關閉公告"
      onClick={()=>setActive(null)}><X size={20}/></button>
-    <p className="home-news-dialog-category">{categories[active.category]} · {publishedDate(active.publishedAt)}</p>
-    <h2>{active.title}</h2>
-    <div className="home-news-dialog-body">{active.content}</div>
-    <p className="home-news-dialog-end">狐隱 · KOGAKURE</p>
-   </article>
+    {canScrollDialog&&<button className="home-news-dialog-scroll-cue" type="button"
+     aria-label="向下捲動閱讀公告其餘內容" title="向下捲動查看更多內容"
+     onClick={scrollDialogToMore}>
+     <ChevronDown size={21} strokeWidth={1.65} aria-hidden="true"/>
+    </button>}
+   </div>
   </div>,document.body)}
  </>
 }

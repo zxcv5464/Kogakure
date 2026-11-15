@@ -56,6 +56,19 @@ assert.ok(board.includes('canScrollDown')&&
  boardStyles.includes('@keyframes homeNewsArrow')&&
  boardStyles.includes('.home-news-scroll-cue svg{animation:none}'),
  'Notice board should hide its scrollbar, show a downward arrow only while overflow remains, and keep touch/keyboard scrolling')
+assert.ok(board.includes('dialogRef=useRef<HTMLElement>(null)')&&
+ board.includes('setCanScrollDialog(panel.scrollHeight-panel.clientHeight-panel.scrollTop>2)')&&
+ board.includes('onScroll={event=>setCanScrollDialog(')&&
+ board.includes('scrollDialogToMore')&&
+ board.includes('home-news-dialog-scroll-cue')&&
+ board.includes('向下捲動閱讀公告其餘內容')&&
+ board.includes("role=\"dialog\" aria-modal=\"true\"")&&
+ boardStyles.includes('.home-news-dialog::-webkit-scrollbar{display:none')&&
+ boardStyles.includes('.home-news-dialog-shell.has-more::after')&&
+ boardStyles.includes('.home-news-dialog-scroll-cue')&&
+ boardStyles.includes('.home-news-dialog-shell{max-height:83dvh}')&&
+ boardStyles.includes('.home-news-dialog-scroll-cue svg{animation:none}'),
+ 'Announcement detail should keep close button fixed, hide scrollbar and show a responsive downward chevron only while more content exists')
 assert.ok(boardStyles.includes('.home-news')&&boardStyles.includes('.home-news-dialog')&&
  boardStyles.includes('@media(max-width:570px)')&&homeStyles.includes('.home-news-list'),
  'Responsive board must be part of homepage composition')
