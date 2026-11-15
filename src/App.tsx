@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { Route, Routes, useLocation } from 'react-router-dom'
 import Layout from './components/Layout'
 import AdminLayout from './components/AdminLayout'
@@ -11,6 +11,8 @@ import ShiftsPage from './pages/ShiftsPage'
 import MenuPage from './pages/MenuPage'
 import BookingPage from './pages/BookingPage'
 import ServicesPage from './pages/ServicesPage'
+import {configured} from './lib/config'
+import {prefetchBookingPage,prefetchMenuPage} from './lib/prefetch'
 
 const AdminPage = lazy(() => import('./pages/AdminPage'))
 const StaffPage = lazy(() => import('./pages/StaffPage'))
@@ -28,9 +30,38 @@ export default function App() {
 }
 
 function PublicApp() {
+ const {pathname}=useLocation()
  const [introReady, setIntroReady] = useState(() => !shouldPlay())
  const startMusic=useRef<()=>void>(()=>{})
  const registerBgm=useCallback((start:()=>void)=>{startMusic.current=start},[])
+ // Prepare the two data-dependent visitor pages while guests read the homepage,
+ // AFTER the logo has finished. This is background work only on the initial
+ // public homepage: never compete with the logo, admin, or direct deep links.
+ useEffect(()=>{
+  if(!introReady||pathname!=='/'||!configured)return
+  const network=navigator as Navigator & {connection?:{saveData?:boolean}}
+  if(network.connection?.saveData)return
+  let cancelled=false
+  const idleJobs:number[]=[]
+  const schedule=(delay:number,fn:()=>void)=>{
+   return window.setTimeout(()=>{
+    if(cancelled||document.visibilityState!=='visible')return
+    if('requestIdleCallback' in window){
+     idleJobs.push(window.requestIdleCallback(()=>{
+      if(!cancelled&&document.visibilityState==='visible')fn()
+     },{timeout:1400}))
+    }else fn()
+   },delay)
+  }
+  const menuTimer=schedule(850,prefetchMenuPage)
+  const bookingTimer=schedule(1550,prefetchBookingPage)
+  return()=>{
+   cancelled=true
+   window.clearTimeout(menuTimer)
+   window.clearTimeout(bookingTimer)
+   if('cancelIdleCallback' in window)idleJobs.forEach(id=>window.cancelIdleCallback(id))
+  }
+ },[introReady,pathname])
  return <>
   <Layout onRegisterBgm={registerBgm}>
    <PageTransition introReady={introReady}>
