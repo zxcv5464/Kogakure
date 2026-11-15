@@ -2,7 +2,7 @@ import {supabase} from './supabase'
 export type ShiftOpenDay={date:string;open:boolean;hours:string;note:string}
 export type ShiftAttendance={date:string;employeeId:string;name:string;source:'employee'|'owner'}
 export type ShiftCalendarData={days:ShiftOpenDay[];attendance:ShiftAttendance[]}
-export type ShiftEmployee={id:string;name:string}
+export type ShiftEmployee={id:string;name:string;accountName?:string}
 
 function client(){if(!supabase)throw new Error('排班資料庫尚未連線');return supabase}
 function ensureChanged(rows:{shift_date:string}[]|null,action:string){
@@ -98,9 +98,29 @@ export async function unmarkShiftAttendance(date:string,employeeId:string,source
  if(error)throw new Error(error.message)
  ensureChanged(data,'取消出勤')
 }
+/** A manager reads this preference, while an employee can update only their
+ * own shift_display_name via a column-scoped RLS UPDATE policy. */
+export async function fetchOwnPreferredShiftName(employeeId:string):Promise<string|null>{
+ if(!employeeId)return null
+ const {data,error}=await client().from('employee_accounts')
+  .select('shift_display_name').eq('user_id',employeeId).eq('active',true).maybeSingle()
+ if(error)throw new Error('讀取常用出勤名稱失敗：'+error.message)
+ return data?.shift_display_name||null
+}
+export async function saveOwnPreferredShiftName(name:string):Promise<void>{
+ const displayName=validateShiftName(name)
+ const db=client()
+ const {data:{user},error:identityError}=await db.auth.getUser()
+ if(identityError||!user)throw new Error('登入狀態已過期，請重新登入')
+ const {data,error}=await db.from('employee_accounts')
+  .update({shift_display_name:displayName})
+  .eq('user_id',user.id).eq('active',true).select('user_id')
+ if(error)throw new Error('儲存常用出勤名稱失敗：'+error.message)
+ if(!data||data.length!==1)throw new Error('只能修改自己已啟用的員工帳號出勤名稱')
+}
 export async function listActiveShiftEmployees():Promise<ShiftEmployee[]>{
- const {data,error}=await client().from('employee_accounts').select('user_id,display_name')
+ const {data,error}=await client().from('employee_accounts').select('user_id,display_name,shift_display_name')
   .eq('active',true).order('display_name')
  if(error)throw new Error(error.message)
- return (data||[]).map(r=>({id:r.user_id,name:r.display_name}))
+ return (data||[]).map(r=>({id:r.user_id,name:r.shift_display_name||r.display_name,accountName:r.display_name}))
 }
