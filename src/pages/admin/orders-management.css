@@ -55,3 +55,18 @@
 @media(max-width:520px){
  .tea-order-admin-actions .is-delete{flex:1 1 100%;margin-left:0}
 }
+
+
+/* Taiwan business-date navigation for exact day-scoped orders. */
+.tea-order-admin-date-toolbar{margin:20px 0 5px;padding:15px 17px;display:flex;flex-wrap:wrap;gap:14px 22px;align-items:center;justify-content:space-between;border:1px solid rgba(218,181,129,.32);border-radius:8px;background:#252630}
+.tea-order-admin-date-title{display:flex;align-items:center;gap:10px;color:#e0bc89}
+.tea-order-admin-date-title div{display:grid;gap:3px}.tea-order-admin-date-title strong{font-size:.89rem}.tea-order-admin-date-title small{font-size:.72rem;color:#b8a99d}
+.tea-order-admin-date-controls{display:flex;align-items:center;flex-wrap:wrap;gap:7px}
+.tea-order-admin-date-controls button,.tea-order-admin-date-controls input{display:inline-flex;align-items:center;justify-content:center;min-height:41px;padding:8px 12px;border:1px solid rgba(216,181,131,.34);border-radius:5px;background:#1b202b;color:#e8d2b3;font:inherit;font-size:.8rem}
+.tea-order-admin-date-controls button{cursor:pointer}
+.tea-order-admin-date-controls button.is-active{background:#cba97a;color:#211b22;border-color:#cba97a;font-weight:650}
+.tea-order-admin-date-controls button:disabled{opacity:.35;cursor:not-allowed}
+.tea-order-admin-date-controls input{color-scheme:dark;max-width:155px}
+.tea-order-admin-date-summary{flex-basis:100%;display:flex;justify-content:space-between;flex-wrap:wrap;gap:5px 16px;padding-top:11px;border-top:1px solid rgba(216,181,131,.14);font-size:.8rem;color:#ddcab0}
+.tea-order-admin-date-summary span{color:#b8a79d}
+@media(max-width:680px){.tea-order-admin-date-toolbar{padding:13px 11px}.tea-order-admin-date-controls{width:100%}.tea-order-admin-date-controls input{flex:1;min-width:130px;max-width:none}}
