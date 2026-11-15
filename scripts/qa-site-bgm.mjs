@@ -17,30 +17,41 @@ const [player,css,layout,app,terms]=await Promise.all([
 
 assert.ok(player.includes('https://bgmer.net/wp-content/uploads/2025/04/456_BPM80.mp3'),
  'Use the actual short version of the selected BGMer song')
-assert.ok(player.includes("const STORAGE_KEY='kogakure-bgm-enabled-v1'"),
- 'BGM needs a stable user preference key')
-assert.ok(player.includes("window.localStorage.getItem(STORAGE_KEY)!=='off'"),
- 'BGM should be enabled by default unless visitor expressly turned it off')
-assert.ok(player.includes("setEnabled(false)")&&player.includes("storePreference(false)")&&player.includes("audioRef.current?.pause()"),
- 'Stop button must pause the audio and persist off')
-assert.ok(player.includes("storePreference(true)")&&player.includes("attemptPlay()"),
- 'Play button must reactivate BGM and persist on')
-assert.ok(player.includes("const request=audio.play()")&&player.includes("NotAllowedError"),
- 'A browser autoplay rejection must leave a manual play fallback')
-assert.ok(player.includes("document.addEventListener('click',retry)")&&player.includes("document.addEventListener('keydown',retry)"),
- 'Playing should be retried on user interaction when autoplay is forbidden')
-assert.ok(player.includes('loop preload="none"')&&player.includes('DEFAULT_VOLUME=0.24'),
- 'The music should play quietly on repeat without loading eagerly when stopped')
+assert.ok(player.includes('useState(true)')&&player.includes('useState<Playback>(\'starting\')'),
+ 'Every visit should request music by default, even if a past visit was muted')
+assert.ok(!player.includes('localStorage')&&!player.includes('sessionStorage'),
+ 'Previous stop preference must not silently mute the next visit')
+assert.ok(player.includes('function pauseMusic()')&&player.includes('audio.pause()')&&player.includes("setPlayback('off')"),
+ 'Visitors must still be able to stop music at any time')
+assert.ok(player.includes('function startMusic()')&&player.includes('attemptPlay(true)'),
+ 'User-initiated BGM requests must immediately call the player')
+assert.ok(player.includes('const request=audio.play()')&&player.includes("NotAllowedError"),
+ 'Browser autoplay rejection must be detected by the actual playback promise')
+assert.ok(player.includes('const gateVisible=introReady&&enabled&&entryRequired'),
+ 'A branded music-entry screen must appear only if autoplay is blocked or fails')
+assert.ok(player.includes("createPortal(<div className=\"site-bgm-entry-backdrop\"")&&player.includes('document.body)'),
+ 'Gate must overlay the site without being trapped under the header stacking context')
+assert.ok(player.includes('onClick={startMusic}')&&player.includes('onClick={pauseMusic}'),
+ 'Entering with music must call play inside the click; a music-free alternative must remain')
+assert.ok(player.includes('role="dialog" aria-modal="true"')&&player.includes('entryPlayRef.current?.focus()'),
+ 'Entry screen must be keyboard accessible')
+assert.ok(player.includes('onPlaying={()=>')&&player.includes('setEntryRequired(false)'),
+ 'Entry gate must close once media actually begins playing')
+assert.ok(player.includes('loop preload="auto"')&&player.includes('DEFAULT_VOLUME=0.24'),
+ 'BGM should loop softly and begin loading immediately')
+
 assert.ok(player.includes("onError={()=>setPlayback('error')}"),
  'Unavailable audio must show an understandable error state')
-assert.ok(layout.includes('<SiteBgm/>')&&layout.includes("import SiteBgm from './SiteBgm'"),
- 'Only one audio player should be mounted in persistent public Layout')
+assert.ok(layout.includes('<SiteBgm introReady={introReady}/>')&&layout.includes("import SiteBgm from './SiteBgm'"),
+ 'Only one audio player should be mounted in persistent public Layout and synchronized with brand intro')
 assert.ok(layout.includes('bgmer.net/music/456'),
  'Composer/source attribution must remain available')
 assert.ok(!app.includes('<SiteBgm')&&app.includes('return <PublicApp />'),
  'Do not duplicate audio per page or inject it into the administrative shell')
 assert.ok(css.includes('@media(max-width:850px)')&&css.includes('.site-bgm{margin-left:auto}'),
  'The BGM toggle must remain usable in the mobile top bar')
+assert.ok(css.includes('.site-bgm-entry-backdrop{')&&css.includes('.site-bgm-entry-play{'),
+ 'Blocked autoplay requires a responsive, prominent entrance action')
 assert.ok(terms.includes('<SceneBackdrop introReady={introReady} />'),
  'Shared scene animations must remain separate from the audio')
 
@@ -54,5 +65,5 @@ try{
  assert.ok(markup.includes('背景音樂')&&markup.includes('BGM'),'Visitors should see a labeled playback toggle')
  assert.ok(markup.includes('bgmer.net/wp-content/uploads/2025/04/456_BPM80.mp3'),
   'Server render must point to the official audio file')
- console.log('PASS: single site-wide looping BGM, persisted choice, autoplay fallback, mobile controls and attribution')
+ console.log('PASS: fresh-visit music start, browser-blocked entry gate, play-on-click, optional mute, one looping player and attribution')
 }finally{await vite.close()}
