@@ -13,8 +13,9 @@ const sources=['src/lib/shift-calendar.ts','src/lib/shifts.ts','src/pages/Shifts
  'src/pages/shifts-page.css','src/pages/admin/shift-management.css',
  'supabase/migrations/20261115_09_rolling_four_week_shifts.sql',
  'supabase/migrations/20261115_10_owner_self_attendance.sql',
- 'supabase/migrations/20261115_11_employee_shift_display_name.sql']
-const [calendar,lib,page,editor,app,shell,modules,routes,main,otherPages,css,adminCss,sql,ownerSql,nameSql]=await Promise.all(sources.map(path=>readFile(path,'utf8')))
+ 'supabase/migrations/20261115_11_employee_shift_display_name.sql',
+ 'supabase/migrations/20261115_12_employee_preferred_shift_name.sql']
+const [calendar,lib,page,editor,app,shell,modules,routes,main,otherPages,css,adminCss,sql,ownerSql,nameSql,preferredSql]=await Promise.all(sources.map(path=>readFile(path,'utf8')))
 for(const path of sources.filter(p=>p.endsWith('.ts')||p.endsWith('.tsx'))){
  const source=await readFile(path,'utf8')
  const ast=ts.createSourceFile(path,source,ts.ScriptTarget.Latest,true,path.endsWith('tsx')?ts.ScriptKind.TSX:ts.ScriptKind.TS)
@@ -87,6 +88,36 @@ for(const clause of [
 ])assert.ok(nameSql.includes(clause),'Secure duty-name edit migration missing: '+clause)
 assert.ok(!nameSql.includes('grant update on public.shift_attendance to authenticated'),
  'Do not grant broad UPDATE rights to employee shift dates or identities')
+for(const phrase of [
+ 'ADD COLUMN IF NOT EXISTS shift_display_name text',
+ 'UPDATE public.employee_accounts AS account',
+ 'GRANT UPDATE(shift_display_name) ON public.employee_accounts TO authenticated',
+ 'user_id=(SELECT auth.uid())',
+ 'AND active=true',
+ 'WITH CHECK',
+])assert.ok(preferredSql.includes(phrase),'Missing secure persistent preferred name: '+phrase)
+assert.ok(!preferredSql.includes('GRANT UPDATE ON public.employee_accounts'),
+ 'Employees must never receive full employee-account UPDATE permissions')
+assert.ok(lib.includes("select('user_id,display_name,shift_display_name')"),
+ 'Owner roster must retrieve saved preferred names')
+assert.ok(lib.includes("name:r.shift_display_name||r.display_name"),
+ 'Owner roster must prefer saved RP name over account display name')
+assert.ok(lib.includes('export async function saveOwnPreferredShiftName('),
+ 'Employees must persist their selected public name securely')
+assert.ok(lib.includes('.eq(\'user_id\',user.id).eq(\'active\',true)'),
+ 'Preferred name updates must target the authenticated active account')
+assert.ok(editor.includes('await saveOwnPreferredShiftName(person.name)'),
+ 'Employee self-signup must sync preferred name before saving shift')
+assert.ok(editor.includes('await saveOwnPreferredShiftName(label)'),
+ 'Editing a recorded shift should also update future manager assignments')
+assert.ok(editor.includes('fetchOwnPreferredShiftName(signedInId)'),
+ 'Employee login must load server preference across devices')
+assert.ok(editor.includes('儲存常用出勤名稱')&&editor.includes('savePreferredName()'),
+ 'Employee must be able to save preferred name without picking a shift')
+assert.ok(editor.includes("person.accountName!==person.name"),
+ 'Manager can distinguish account identity from preferred RP label')
+assert.ok(adminCss.includes('.shift-admin-save-preference'),
+ 'Save-preference control needs responsive styling')
 assert.ok(editor.includes('date>=today'))
 assert.ok(page.includes('opening?.open?members.get(date)||[]:[]'))
 assert.ok(page.includes('status===\'open\''))
@@ -149,7 +180,7 @@ try{
  const {default:ShiftManagement}=await vite.ssrLoadModule('/src/pages/admin/ShiftManagement.tsx')
  const employeeHtml=renderToStaticMarkup(createElement(MemoryRouter,null,
   createElement(ShiftManagement,{access:{kind:'employee',active:true,displayName:'試班狐姬',permissions:[]}})))
- assert.ok(employeeHtml.includes('我的出勤顯示名稱')&&employeeHtml.includes('shift-employee-duty-name'),
+ assert.ok(employeeHtml.includes('我的出勤顯示名稱')&&employeeHtml.includes('shift-employee-duty-name')&&employeeHtml.includes('儲存常用出勤名稱'),
   'Employee admin page must render the editable public shift name')
  assert.equal(typeof ShiftManagement,'function')
  console.log('PASS: Taiwan Monday rolling 4 weeks, public calendar, employee shift signup, manager opening dates, secure RLS')
