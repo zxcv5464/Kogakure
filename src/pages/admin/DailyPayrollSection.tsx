@@ -59,7 +59,7 @@ export default function DailyPayrollSection({
   if(working||!data||frozen||!data.roster.length||data.revenueGil<=0)return
   if(!window.confirm(
    '確定依 '+date+' 已完成的茶宴訂單＋其他收入，共 '+money(data.revenueGil)+
-   '，平均分配給 '+data.roster.length+' 位排班員工？\n'+
+   '，平均分配給 '+data.roster.length+' 位出勤人員？\n'+
    '建立後會固定當日分薪金額，不會因日後訂單或排班異動自動更改。'
   ))return
   setWorking(true);setError('');setNotice('')
@@ -89,7 +89,7 @@ export default function DailyPayrollSection({
  return <section className="daily-payroll" aria-label="當日營業額與員工分薪">
   <header className="daily-payroll-header">
    <div><p>KOGAKURE · DAY BOOK & PAYROLL</p><h2>當日營業額・員工分薪</h2>
-    <small>以完成訂單統計茶宴業績，依當日排班員工平均分配 Gil。</small></div>
+    <small>以完成訂單統計茶宴業績，依當日員工及婆婆／管理員出勤平均分配 Gil。</small></div>
    <div className="daily-payroll-date">
     <button type="button" aria-label="分薪日期前一天" disabled={working} onClick={()=>setDate(x=>shiftVenueDate(x,-1))}><ChevronLeft size={18}/></button>
     <label><CalendarDays size={17}/><input type="date" aria-label="選擇當日營業額與分薪日期"
@@ -114,8 +114,8 @@ export default function DailyPayrollSection({
      <div><small>帳務已登錄收入（實收紀錄）</small><strong>{money(data.manualReceiptGil)}</strong></div>
     </div>
     <div className="daily-payroll-roster-heading">
-     <div><h3><UsersRound size={18}/>員工薪資分配</h3>
-      <p>{frozen?'當日分薪清單已建立，金額為建立當時的固定快照。':'以當日「值班排班」中有登記的員工計算；婆婆／管理員出勤不列入員工薪資。'}</p>
+     <div><h3><UsersRound size={18}/>當日出勤人員薪資分配</h3>
+      <p>{frozen?'當日分薪清單已建立，金額為建立當時的固定快照。':'依當日「值班排班」登記的員工與婆婆／管理員平均分配；同一帳號只計算一次。'}</p>
      </div>
      {!frozen&&<button type="button" className="is-create"
       disabled={working||loading||!preview.length||!data.revenueGil}
@@ -126,13 +126,13 @@ export default function DailyPayrollSection({
      <span>已發薪：{paidCount}/{data.allocations.length} 人 · {money(paidTotal)}</span>
     </div>}
     {frozenMismatch&&<p className="daily-payroll-message is-warning">當前訂單金額或排班人數與建立清單時不同。已建立的薪資不會自動重算，以免有人已領薪後金額改變。</p>}
-    {!data.roster.length&&!frozen?<p className="daily-payroll-no-staff">此日期尚無員工排班紀錄。請先在「值班排班」確認當日出勤人員，再建立分薪清單。</p>:
+    {!data.roster.length&&!frozen?<p className="daily-payroll-no-staff">此日期尚無員工或管理員出勤紀錄。請先在「值班排班」確認當日出勤人員，再建立分薪清單。</p>:
      <div className="daily-payroll-members">
       {(frozen?data.allocations:preview).map((person,index)=>{
        const paid=frozen&&(person as PayrollAllocation).paidAt!==null
        return <div className="daily-payroll-member" key={person.id}>
         <div><span className="daily-payroll-member-number">{String(index+1).padStart(2,'0')}</span>
-         <strong>{person.name}</strong></div>
+         <strong>{person.name}{person.source==='owner'&&<small>（婆婆／管理員）</small>}</strong></div>
         <strong className="daily-payroll-amount">{money(person.amountGil)}</strong>
         {frozen?<button type="button" className={paid?'is-paid':'is-pay'}
           disabled={working||paid} onClick={()=>void pay(person as PayrollAllocation)}>
@@ -141,7 +141,7 @@ export default function DailyPayrollSection({
        </div>
       })}
      </div>}
-    {!frozen&&preview.length>0&&<p className="daily-payroll-footnote">分配總額 {money(preview.reduce((sum,x)=>sum+x.amountGil,0))}，平均分給 {preview.length} 位員工；無法整除時，尾數依名單順序逐人補 1 Gil，總額不遺失。</p>}
+    {!frozen&&preview.length>0&&<p className="daily-payroll-footnote">分配總額 {money(preview.reduce((sum,x)=>sum+x.amountGil,0))}，平均分給 {preview.length} 位出勤人員；無法整除時，尾數依名單順序逐人補 1 Gil，總額不遺失。</p>}
     <p className="daily-payroll-footnote">
      「建立清單」不會發送遊戲貨幣。只有在 FFXIV 實際交付薪水、按下「確認已發薪」後，才會同步產生一筆帳務支出；薪資支出不會再計入營業額。
     </p>

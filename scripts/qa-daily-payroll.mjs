@@ -15,8 +15,9 @@ const files=[
  'src/pages/admin/daily-payroll.css',
  'src/pages/admin/accounting-management.css',
  'supabase/migrations/20261115_18_accounting_sales_payroll.sql',
+ 'supabase/migrations/20261115_21_owner_attendance_payroll.sql',
 ]
-const [orders,accounting,ui,helper,styles,ledgerStyles,sql]=
+const [orders,accounting,ui,helper,styles,ledgerStyles,sql,ownerSql]=
  await Promise.all(files.map(path=>readFile(path,'utf8')))
 assert.ok(orders.includes("{id:'active',text:'待處理'}"),
  'Keep the existing pending+preparing queue')
@@ -40,9 +41,16 @@ assert.ok(helper.includes("rpc('get_accounting_daily_sales'")&&
  helper.includes("rpc('create_daily_payroll'")&&
  helper.includes("rpc('confirm_payroll_paid'"),
  'Use server RPCs for protected revenue aggregation, roster freeze and atomic payout')
-assert.ok(helper.includes("from('shift_attendance')")&&
- !helper.includes("from('shift_owner_attendance')"),
- 'Only scheduled employees, not owner shifts, share employee payroll')
+assert.ok(helper.includes("rpc('get_accounting_daily_payroll_roster'")&&
+ helper.includes("source:item.member_type==='owner'?'owner':'employee'"),
+ 'Both scheduled employees and owner attendance must be included in the shared payroll roster')
+assert.ok(ownerSql.includes('from public.shift_attendance')&&
+ ownerSql.includes('from public.shift_owner_attendance')&&
+ ownerSql.includes('distinct on (c.employee_id)')&&
+ ownerSql.includes('from private.accounting_payroll_roster(p_day)')&&
+ ownerSql.includes('member_type')&&
+ ownerSql.includes('sort_index'),
+ 'Payroll preview and frozen allocations must use the same deduplicated owner+employee roster')
 assert.ok(helper.includes("x.category!=='茶宴收入'"),
  'Do not double-count manually recorded tea receipts')
 assert.ok(styles.includes('.daily-payroll-metrics')&&
@@ -98,6 +106,19 @@ try{
  assert.deepEqual(payroll.calculateEqualPayroll(17,[]),[])
  assert.equal(payroll.calculateEqualPayroll(9,[employees[0],employees[0]]).length,1,
   'Duplicate staff identities must not draw two shares')
+ const withOwner=[
+  {id:'owner',name:'婆婆',source:'owner',sortIndex:1},
+  {id:'staff-a',name:'狐姬',source:'employee',sortIndex:2},
+  {id:'staff-b',name:'狐月',source:'employee',sortIndex:3},
+ ]
+ const ownerShares=payroll.calculateEqualPayroll(10001,withOwner)
+ assert.deepEqual(ownerShares.map(person=>person.amountGil),[3334,3334,3333],
+  'Owner/admin shift must receive one equal wage share alongside staff')
+ assert.equal(ownerShares[0].source,'owner','Keep owner role visible in payroll list')
+ assert.equal(payroll.calculateEqualPayroll(10001,[...withOwner,withOwner[0]]).length,3,
+  'Same owner account cannot be paid twice')
+ assert.ok(ui.includes('婆婆／管理員出勤')&&ui.includes("person.source==='owner'"),
+  'The payroll UI should identify owner/admin and explain that they share pay')
  assert.throws(()=>payroll.calculateEqualPayroll(-1,employees))
  const entry=(kind,category,amountGil)=>({kind,category,amountGil})
  const ledger=[
@@ -119,5 +140,5 @@ try{
  assert.ok(html.includes('帳務管理')&&html.includes('當日營業額・員工分薪')&&
  html.includes('選擇當日營業額與分薪日期'),
  'Dashboard must render a selectable daily payroll section even on first paint')
- console.log('PASS: unified 待處理, protected completed-tea gross, 100% equal Gil payroll, immutable payout and accounting integration')
+ console.log('PASS: unified 待處理, owner/admin and employee equal-share payroll, immutable payout and accounting integration')
 }finally{await vite.close()}

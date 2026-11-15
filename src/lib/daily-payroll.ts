@@ -5,7 +5,7 @@ import {fetchAccountingEntries} from './accounting'
 import type {AccountingEntry} from './accounting'
 
 export type SalesSummary={completedCount:number;completedGil:number}
-export type PayrollEmployee={id:string;name:string}
+export type PayrollEmployee={id:string;name:string;source?:'employee'|'owner';sortIndex?:number}
 export type PayrollShare=PayrollEmployee&{amountGil:number}
 export type PayrollAllocation=PayrollShare&{
  date:string;revenueGil:number;employeeCount:number;paidAt:string|null
@@ -40,29 +40,28 @@ export async function getDailyCompletedSales(date:string):Promise<SalesSummary>{
  return {completedCount:gil(raw.completed_orders),completedGil:gil(raw.total_gil)}
 }
 
-/** Use signed-up EMPLOYEES from this exact business day. Owner shifts are
- * intentionally excluded: the user requested salaries for employees only. */
+/** Pay all distinct staff and owner/admin users who signed up for this day. */
 export async function fetchDailyPayrollRoster(date:string):Promise<PayrollEmployee[]>{
  dateCheck(date)
- const {data,error}=await db().from('shift_attendance')
-  .select('employee_id,employee_name').eq('shift_date',date)
-  .order('employee_name',{ascending:true})
- if(error)throw new Error('讀取當日員工排班失敗：'+error.message)
- const unique=new Map<string,PayrollEmployee>()
- for(const record of data||[]){
-  if(!unique.has(record.employee_id))
-   unique.set(record.employee_id,{id:record.employee_id,name:record.employee_name})
- }
- return [...unique.values()].sort((a,b)=>a.name.localeCompare(b.name,'zh-TW')||a.id.localeCompare(b.id))
+ // This permission-checked RPC returns both employee and owner attendance
+ // even for historical dates that are no longer published on the public calendar.
+ const {data,error}=await db().rpc('get_accounting_daily_payroll_roster',{p_day:date})
+ if(error)throw new Error('讀取當日員工／管理員排班失敗：'+error.message)
+ return (data||[]).map(row=>({
+  id:row.employee_id,name:row.employee_name,
+  source:row.member_type==='owner'?'owner' as const:'employee' as const,
+  sortIndex:Number(row.sort_index),
+ }))
 }
 export async function fetchDailyPayrollAllocations(date:string):Promise<PayrollAllocation[]>{
  dateCheck(date)
  const {data,error}=await db().from('payroll_allocations')
-  .select('pay_date,employee_id,employee_name,revenue_gil,employee_count,amount_gil,paid_at,accounting_entry_id,created_at')
+  .select('pay_date,employee_id,employee_name,member_type,revenue_gil,employee_count,amount_gil,paid_at,accounting_entry_id,created_at')
   .eq('pay_date',date).order('employee_name',{ascending:true})
  if(error)throw new Error('讀取分薪紀錄失敗：'+error.message)
  return (data||[]).map(item=>({
   date:item.pay_date,id:item.employee_id,name:item.employee_name,
+  source:item.member_type==='owner'?'owner':'employee',
   revenueGil:gil(item.revenue_gil),employeeCount:Number(item.employee_count),
   amountGil:gil(item.amount_gil),paidAt:item.paid_at,
   accountingEntryId:item.accounting_entry_id,createdAt:item.created_at,
@@ -80,7 +79,7 @@ export function sumRecordedReceipts(entries:AccountingEntry[]):number{
  return entries.filter(x=>x.kind==='income').reduce((s,x)=>s+x.amountGil,0)
 }
 /** Distribute every whole Gil deterministically. If not divisible, the
- * remainder is given 1 Gil at a time in stable name/id order. */
+ * remainder is given 1 Gil at a time in the same server-defined roster order. */
 export function calculateEqualPayroll(totalGil:number,people:PayrollEmployee[]):PayrollShare[]{
  if(!Number.isSafeInteger(totalGil)||totalGil<0)throw new Error('營業額不是有效整數')
  const unique=new Map<string,PayrollEmployee>()
@@ -88,7 +87,9 @@ export function calculateEqualPayroll(totalGil:number,people:PayrollEmployee[]):
   if(!unique.has(person.id))unique.set(person.id,person)
  }
  const sorted=[...unique.values()].sort((a,b)=>
-  a.name.localeCompare(b.name,'zh-TW')||a.id.localeCompare(b.id))
+  a.sortIndex!==undefined&&b.sortIndex!==undefined
+   ? a.sortIndex-b.sortIndex
+   : a.name.localeCompare(b.name,'zh-TW')||a.id.localeCompare(b.id))
  if(!sorted.length)return []
  const base=Math.floor(totalGil/sorted.length)
  const remainder=totalGil%sorted.length
