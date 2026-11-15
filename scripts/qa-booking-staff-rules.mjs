@@ -11,8 +11,9 @@ const paths=[
  'src/pages/admin/AdminBookingCreate.tsx','src/pages/admin/StaffManagement.tsx',
  'src/pages/admin/booking-management.css',
  'supabase/migrations/20261115_29_staff_booking_plan_joint_rules.sql',
+ 'supabase/migrations/20261115_30_booking_rule_trigger_execute.sql',
 ]
-const [types,staff,bookings,publicPage,admin,manual,staffAdmin,css,sql]=
+const [types,staff,bookings,publicPage,admin,manual,staffAdmin,css,sql,grants]=
  await Promise.all(paths.map(path=>readFile(path,'utf8')))
 for(const path of paths.filter(p=>/\.tsx?$/.test(p))){
  const ast=ts.createSourceFile(path,await readFile(path,'utf8'),
@@ -64,6 +65,9 @@ for(const item of [
 ]){
  assert.ok(sql.includes(item),'Database rule enforcement missing: '+item)
 }
+assert.ok(grants.includes('grant execute on function private.validate_staff_booking_rules(uuid) to authenticated')&&
+ grants.includes('revoke execute on function private.validate_staff_booking_rules(uuid) from anon'),
+ 'Invoking the database rule trigger must work for authenticated booking managers without granting guest RPC access')
 assert.ok(!sql.includes('delete from public.booking_requests')&&!sql.includes('drop table public.staff'),
  'Migration must preserve existing reservations and staff')
 const vite=await createServer({server:{middlewareMode:true,hmr:false},appType:'custom'})

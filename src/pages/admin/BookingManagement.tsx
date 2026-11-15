@@ -306,7 +306,7 @@ export default function BookingManagement(){
       </div>
      </article>})}
     </div>}
-   <p className="booking-admin-nominee-footnote">只有名帖已公開、接受指名已開啟且擁有可預約方案的館員才能接受新指名。雙人指名必須兩位狐姬都同意、且接受相同方案。既有預約不會刪除；尚未接取的預約會於接單時驗證最新設定。</p>
+   <p className="booking-admin-nominee-footnote">只有名帖已公開、接受指名已開啟且擁有可預約方案的館員才能接受新指名。雙人指名必須兩位狐姬都同意、且接受相同方案。不限職稱。既有預約不會刪除；尚未接取的預約會於接單時驗證最新設定。</p>
   </section>}
   {!loading&&tab==='plans'&&<div className="booking-admin-plans">
    <div className="booking-admin-plan-head"><p>新開放的方案才會顯示在前台。範例方案預設未開放，請確認內容與費用後再啟用。</p><button type="button" onClick={()=>choosePlan(initialPlan(),true)}><Plus size={16}/>新增方案</button></div>
