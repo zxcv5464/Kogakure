@@ -134,7 +134,7 @@ assert.ok(!docs.includes('inviteUserByEmail')&&!docs.includes('建立並寄送�
 const vite=await createServer({server:{middlewareMode:true,hmr:false},appType:'custom'})
 try{
  const mod=await vite.ssrLoadModule('/src/lib/employee-accounts.ts')
- assert.deepEqual(mod.EMPLOYEE_PERMISSIONS.map(x=>x.id),['staff.manage','menu.manage','booking.manage','orders.manage'])
+ assert.deepEqual(mod.EMPLOYEE_PERMISSIONS.map(x=>x.id),['staff.manage','menu.manage','booking.manage','orders.manage','accounting.manage'])
  assert.equal(mod.staffLoginEmail('Fox_01'),'fox_01@staff.kogakure.invalid')
  assert.equal(mod.staffLoginEmail(' yueying '),'yueying@staff.kogakure.invalid')
  for(const invalid of ['a','1user','ab','a.b','evil@example.com','a b','john+1'])
@@ -152,9 +152,13 @@ try{
  assert.equal(mod.permitted(manager,'menu.manage'),true)
  assert.equal(mod.permitted(manager,'booking.manage'),true)
  assert.equal(mod.permitted(manager,'orders.manage'),true)
+ assert.equal(mod.permitted(manager,'accounting.manage'),true)
+ assert.equal(mod.permitted(staff,'accounting.manage'),false)
  assert.equal(mod.permitted(staff,'orders.manage'),false)
  assert.equal(mod.permitted(staff,'booking.manage'),true)
  assert.equal(mod.permitted(staff,'staff.manage'),false)
  assert.equal(mod.permitted({...staff,active:false},'booking.manage'),false)
+ assert.equal(mod.permitted({...staff,permissions:['accounting.manage']},'accounting.manage'),true)
+ assert.equal(mod.permitted({...staff,permissions:['accounting.manage'],active:false},'accounting.manage'),false)
  console.log('PASS: manager-created staff credentials, no invitations, protected delete/reset and scoped module RLS')
 } finally {await vite.close()}
