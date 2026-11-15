@@ -10,10 +10,11 @@ import './route-motion.css'
 // flash of the destination page before the fade-in begins.
 const COVER_MS = 650
 const REVEAL_MS = 760
-// Tea banquet and nomination use bundled, first-paint-ready pages: avoid
-// spending 1.4s on the curtain when no lazy route download is necessary.
-const QUICK_COVER_MS = 340
-const QUICK_REVEAL_MS = 410
+// Tea banquet and booking are already in the main bundle and display their
+// stable shells without awaiting network. Minimize the time visitors see a
+// fully opaque curtain, instead of treating it as a loading spinner.
+const QUICK_COVER_MS = 180
+const QUICK_REVEAL_MS = 260
 const STAFF_READY_TIMEOUT_MS = 8000
 const MENU_READY_TIMEOUT_MS = 8000
 
