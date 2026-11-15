@@ -103,3 +103,31 @@
 .booking-admin-nominee-list{display:flex;flex-wrap:wrap;align-items:center;gap:7px;min-width:0;overflow-wrap:anywhere}
 .booking-admin-nominee-list>span{display:inline-flex;align-items:center;max-width:100%;padding:5px 9px;border:1px solid rgba(218,178,121,.35);border-radius:5px;background:rgba(218,178,121,.09);color:#f1d9b8;font-size:.8rem;line-height:1.5;overflow-wrap:anywhere;white-space:normal}
 .booking-admin-detail dd.booking-admin-nominee-list{display:flex;flex-wrap:wrap}
+
+/* Nomination eligibility belongs to Booking Management, not Staff Directory. */
+.booking-admin-nominee-settings{display:grid;gap:17px;padding:21px;border:1px solid rgba(216,178,125,.28);border-radius:8px;background:linear-gradient(145deg,rgba(49,39,50,.8),rgba(28,27,37,.93))}
+.booking-admin-nominee-settings-head{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:14px}
+.booking-admin-nominee-settings-head h2{margin:0 0 8px;font:600 1.2rem 'Noto Serif TC',serif;color:#f1dbbc}
+.booking-admin-nominee-settings-head p{max-width:690px;margin:0;color:#c6b6a3;font-size:.83rem;line-height:1.8}
+.booking-admin-nominee-summary{display:flex;align-items:center;gap:8px;padding:10px 14px;border:1px solid rgba(207,169,120,.36);background:rgba(167,128,74,.1);border-radius:6px;color:#d9c3a4;font-size:.77rem}
+.booking-admin-nominee-summary strong{font:600 1.5rem Georgia,serif;color:#f2d19b}
+.booking-admin-nominee-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.booking-admin-nominee-card{display:flex;flex-direction:column;min-width:0;gap:15px;padding:17px;border:1px solid rgba(218,178,126,.28);border-radius:7px;background:rgba(25,24,35,.78)}
+.booking-admin-nominee-identity{display:flex;align-items:center;gap:13px;min-width:0}
+.booking-admin-nominee-identity>div{min-width:0}
+.booking-admin-nominee-avatar{display:grid;flex:0 0 69px;place-items:center;width:69px;height:75px;overflow:hidden;border:1px solid rgba(217,182,129,.42);border-radius:5px;background:#302a35;color:#e4c59d;font:600 1.5rem 'Noto Serif TC',serif}
+.booking-admin-nominee-avatar img{width:100%;height:100%;object-fit:cover;object-position:center 24%}
+.booking-admin-nominee-identity h3{margin:0 0 4px;color:#f1ddc2;font-size:1rem;overflow-wrap:anywhere}
+.booking-admin-nominee-identity p{margin:0 0 7px;color:#c3b0a5;font-size:.78rem}
+.booking-admin-nominee-publish{display:inline-block;border:1px solid rgba(190,174,157,.3);border-radius:3px;padding:3px 7px;color:#aaa1a0;font-size:.69rem}
+.booking-admin-nominee-publish.is-published{border-color:rgba(133,185,147,.38);color:#b9e1c6}
+.booking-admin-visibility-switch{display:flex;align-items:flex-start;gap:11px;padding:13px;border:1px solid rgba(209,180,135,.26);border-radius:5px;background:rgba(77,64,67,.19);cursor:pointer}
+.booking-admin-visibility-switch:focus-within{border-color:#e1ba84}
+.booking-admin-visibility-switch input{flex:0 0 auto;width:20px;height:20px;margin-top:2px;accent-color:#d0a878;cursor:pointer}
+.booking-admin-visibility-switch input:disabled{cursor:wait;opacity:.55}
+.booking-admin-visibility-switch span{display:grid;gap:6px;min-width:0}
+.booking-admin-visibility-switch strong{font-size:.83rem;font-weight:600;color:#f0dabd;line-height:1.5}
+.booking-admin-visibility-switch small{color:#bcb2a9;font-size:.74rem;line-height:1.7}
+.booking-admin-nominee-footnote{margin:0;padding-top:13px;border-top:1px solid rgba(217,176,127,.2);font-size:.78rem;line-height:1.8;color:#bdb1a5}
+@media(max-width:920px){.booking-admin-nominee-grid{grid-template-columns:1fr}}
+@media(max-width:600px){.booking-admin-nominee-settings{padding:14px 11px}.booking-admin-nominee-card{padding:13px}.booking-admin-nominee-avatar{flex-basis:58px;width:58px;height:66px}.booking-admin-visibility-switch{padding:11px}.booking-admin-tabs{flex-wrap:wrap}}
