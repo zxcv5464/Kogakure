@@ -166,7 +166,6 @@ export default function ShiftManagement({access}:{access:BackofficeAccess}){
   return run(()=>markOwnerShiftAttendance(date,label),'已登記您在 '+date+' 出勤，顯示名稱為「'+label+'」。')
  }
  function remove(date:string,person:ShiftAttendance){
-  if(owner&&!window.confirm('確定移除「'+person.name+'」於 '+date+' 的出勤登記？'))return Promise.resolve()
   return run(()=>unmarkShiftAttendance(date,person.employeeId,person.source),'已取消 '+person.name+' 在 '+date+' 的出勤。')
  }
  const openings=new Map(calendar.days.map(x=>[x.date,x]))
