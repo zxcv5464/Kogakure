@@ -33,8 +33,8 @@ if (!offlinePreview && redirected) {
  */
 if(!offlinePreview){
  const current=window.location.pathname
- if(current.startsWith(base)&&current!==base&&/\\/+$/.test(current)){
-  const clean=current.replace(/\\/+$/,'')
+ if(current.startsWith(base)&&current!==base&&current.endsWith('/')){
+  const clean=current.slice(0,-1)
   window.history.replaceState(window.history.state,'',clean+window.location.search+window.location.hash)
  }
 }
