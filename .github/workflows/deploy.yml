@@ -60,6 +60,16 @@ jobs:
         run: node scripts/qa-entry-intro-first-load.mjs
       - name: Verify shared rotating scene backgrounds on services and shifts
         run: node scripts/qa-public-scene-backdrops.mjs
+      - name: Verify tea menu and booking public caches, safe first-paint UI and existing submission flows
+        env:
+          VITE_OFFLINE_PREVIEW: 'true'
+        run: |
+          node scripts/qa-menu-booking-load-performance.mjs
+          node scripts/qa-menu-first-load.mjs
+          node scripts/qa-booking-fade.mjs
+          node scripts/qa-booking-empty-state.mjs
+      - name: Verify cold first-visit tea and booking pages during slow database reads in Chromium
+        run: node scripts/qa-menu-booking-cold-visit.mjs
       - name: Verify cold first-visit shifts stay responsive during delayed database reads
         run: node scripts/qa-shift-cold-first-paint.mjs
       - name: Verify smooth public shifts loading, cache and refresh behaviour
