@@ -11,8 +11,9 @@ const sources=['src/lib/shift-calendar.ts','src/lib/shifts.ts','src/pages/Shifts
  'src/pages/admin/ShiftManagement.tsx','src/App.tsx','src/pages/AdminPage.tsx',
  'src/pages/admin/modules.ts','scripts/prepare-pages.mjs',
  'src/pages/shifts-page.css','src/pages/admin/shift-management.css',
- 'supabase/migrations/20261115_09_rolling_four_week_shifts.sql']
-const [calendar,lib,page,editor,app,shell,modules,routes,css,adminCss,sql]=await Promise.all(sources.map(path=>readFile(path,'utf8')))
+ 'supabase/migrations/20261115_09_rolling_four_week_shifts.sql',
+ 'supabase/migrations/20261115_10_owner_self_attendance.sql']
+const [calendar,lib,page,editor,app,shell,modules,routes,css,adminCss,sql,ownerSql]=await Promise.all(sources.map(path=>readFile(path,'utf8')))
 for(const path of sources.filter(p=>p.endsWith('.ts')||p.endsWith('.tsx'))){
  const source=await readFile(path,'utf8')
  const ast=ts.createSourceFile(path,source,ts.ScriptTarget.Latest,true,path.endsWith('tsx')?ts.ScriptKind.TSX:ts.ScriptKind.TS)
@@ -48,6 +49,38 @@ assert.ok(page.includes('status===\'open\''))
 assert.ok(lib.includes("onConflict:'shift_date'"))
 assert.ok(css.includes('@media(max-width:590px)'))
 assert.ok(adminCss.includes('@media(max-width:460px)'))
+assert.ok(adminCss.includes('.shift-admin-owner-identity'),'Owner display-name control needs responsive styling')
+for(const phrase of [
+ 'create table if not exists public.shift_owner_attendance',
+ "references public.admin_users(user_id) on delete cascade",
+ 'alter table public.shift_owner_attendance enable row level security',
+ 'for select to anon,authenticated',
+ 'for insert to authenticated with check',
+ 'owner_id=(select auth.uid())',
+ 'public.is_site_admin()',
+ "day.is_open=true",
+ "for delete to authenticated using",
+])assert.ok(ownerSql.includes(phrase),'Owner self-attendance authorization missing: '+phrase)
+assert.ok(!ownerSql.includes('drop table public.shift_attendance')&&!ownerSql.includes('drop constraint'),
+ 'Do not weaken staff attendance permissions or foreign keys')
+assert.ok(lib.includes("db.from('shift_owner_attendance').select("),
+ 'Public schedule must fetch owner attendance in addition to employees')
+assert.ok(lib.includes("source:'owner' as const")&&lib.includes("source:'employee' as const"),
+ 'Owner attendance records must be source-tagged for safe cancellation')
+assert.ok(lib.includes("export async function markOwnerShiftAttendance("),
+ 'Site owner needs a distinct self-signup API without a fabricated employee account')
+assert.ok(lib.includes("const table=source==='owner'?'shift_owner_attendance':'shift_attendance'"),
+ 'Cancelling attendance must target the correct table')
+assert.ok(editor.includes('onMarkOwn(date,ownerName)'),
+ 'Site owner must see a real self-signup action on open days')
+assert.ok(editor.includes('onRemove(date,mine)'),
+ 'Site owner must be able to cancel own attendance')
+assert.ok(editor.includes('我的出勤顯示名稱'),
+ 'Owner duty nickname must be editable')
+assert.ok(editor.includes("markOwnerShiftAttendance(date,label)"),
+ 'Owner self-signup must not attempt the employee account insert')
+assert.ok(editor.includes('unmarkShiftAttendance(date,person.employeeId,person.source)'),
+ 'Owners and employees must cancel rows from their respective tables')
 const vite=await createServer({server:{middlewareMode:true,hmr:false},appType:'custom'})
 try{
  const {taipeiToday,rollingShiftWeeks,shiftAddDays,shiftWeekStart}=await vite.ssrLoadModule('/src/lib/shift-calendar.ts')
