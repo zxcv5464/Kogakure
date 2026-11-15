@@ -34,6 +34,8 @@ jobs:
         env:
           VITE_OFFLINE_PREVIEW: 'true'
         run: node scripts/qa-tea-orders.mjs
+      - name: Verify first shift visit paints all dates before slow Supabase responses
+        run: node scripts/qa-shift-cold-first-paint.mjs
       - name: Verify public shifts load without repeated queries or long row animations
         env:
           VITE_OFFLINE_PREVIEW: 'true'
