@@ -3,7 +3,7 @@ import {Link} from 'react-router-dom'
 import {CalendarDays,CheckCircle2,ExternalLink,RefreshCw,Save,UsersRound,AlertCircle,X} from 'lucide-react'
 import {supabase} from '../../lib/supabase'
 import {useRollingShiftWeeks,shiftDateLabel,SHIFT_WEEKDAYS} from '../../lib/shift-calendar'
-import {fetchShifts,listActiveShiftEmployees,markOwnerShiftAttendance,markShiftAttendance,renameOwnShiftAttendance,setShiftOpening,unmarkShiftAttendance} from '../../lib/shifts'
+import {fetchOwnPreferredShiftName,fetchShifts,listActiveShiftEmployees,markOwnerShiftAttendance,markShiftAttendance,renameOwnShiftAttendance,saveOwnPreferredShiftName,setShiftOpening,unmarkShiftAttendance} from '../../lib/shifts'
 import type {ShiftAttendance,ShiftCalendarData,ShiftEmployee,ShiftOpenDay} from '../../lib/shifts'
 import type {BackofficeAccess} from '../../lib/employee-accounts'
 import './shift-management.css'
@@ -72,7 +72,7 @@ function ShiftDayEditor({date,weekday,today,day,staff,people,access,selfId,owner
    {owner&&<div className="shift-admin-add-person">
     <select value={member} disabled={busy} aria-label={date+' 選擇出勤員工'} onChange={e=>setMember(e.target.value)}>
      <option value="">選擇館員加入出勤…</option>
-     {people.filter(person=>!submitted.has(person.id)).map(person=><option value={person.id} key={person.id}>{person.name}</option>)}
+     {people.filter(person=>!submitted.has(person.id)).map(person=><option value={person.id} key={person.id}>{person.name}{person.accountName&&person.accountName!==person.name?'（帳號名稱：'+person.accountName+'）':''}</option>)}
     </select>
     <button type="button" disabled={busy||!chosen} onClick={()=>{if(chosen){void onMark(date,chosen);setMember('')}}}>加入其他館員</button>
    </div>}
@@ -88,6 +88,7 @@ export default function ShiftManagement({access}:{access:BackofficeAccess}){
  const [people,setPeople]=useState<ShiftEmployee[]>([])
  const [selfId,setSelfId]=useState('')
  const [employeeShiftName,setEmployeeShiftName]=useState(()=>access.kind==='employee'?access.displayName:'')
+ const [savedEmployeeShiftName,setSavedEmployeeShiftName]=useState(()=>access.kind==='employee'?access.displayName:'')
  const [ownerName,setOwnerName]=useState(()=>{
   try{return window.localStorage.getItem('kogakure-shift-owner-display-name')||'婆婆'}
   catch{return '婆婆'}
@@ -108,14 +109,22 @@ export default function ShiftManagement({access}:{access:BackofficeAccess}){
   let active=true
   setLoading(true)
   Promise.all([fetchShifts(start,end),owner?listActiveShiftEmployees():Promise.resolve([]),supabase?.auth.getUser()])
-   .then(([data,employees,auth])=>{
+   .then(async ([data,employees,auth])=>{
     if(!active)return
     setCalendar(data);setPeople(employees)
     const signedInId=auth?.data.user?.id||''
     setSelfId(signedInId)
     if(access.kind==='employee'){
-     try{setEmployeeShiftName(window.localStorage.getItem('kogakure-shift-employee-name:'+signedInId)||access.displayName)}
-     catch{setEmployeeShiftName(access.displayName)}
+     // Server preference wins over the local last-used name, so another
+     // device's updated setting is not overwritten on page load.
+     let preferred:string|null=null
+     try{preferred=await fetchOwnPreferredShiftName(signedInId)}
+     catch(e){if(active)setNotice({error:true,message:e instanceof Error?e.message:'無法讀取常用出勤名稱'})}
+     if(!active)return
+     let localName=''
+     try{localName=window.localStorage.getItem('kogakure-shift-employee-name:'+signedInId)||''}catch{/* Optional cache. */}
+     setEmployeeShiftName(preferred||localName||access.displayName)
+     setSavedEmployeeShiftName(preferred||access.displayName)
     }
     setError('')
    })
@@ -138,11 +147,23 @@ export default function ShiftManagement({access}:{access:BackofficeAccess}){
  }
  function mark(date:string,person:ShiftEmployee){
   return run(async()=>{
-   await markShiftAttendance(date,person)
    if(!owner&&person.id===selfId){
-    try{window.localStorage.setItem('kogakure-shift-employee-name:'+selfId,person.name.trim())}catch{/* Preference only. */}
+    // Keep the preference visible to the manager even if no further shifts
+    // are registered. Authentication is checked inside this operation.
+    await saveOwnPreferredShiftName(person.name)
+    setSavedEmployeeShiftName(person.name.trim())
+    try{window.localStorage.setItem('kogakure-shift-employee-name:'+selfId,person.name.trim())}catch{/* Optional cache. */}
    }
+   await markShiftAttendance(date,person)
   },'已登記 '+person.name.trim()+' 在 '+date+' 出勤。')
+ }
+ function savePreferredName(){
+  const label=employeeShiftName.trim()
+  return run(async()=>{
+   await saveOwnPreferredShiftName(label)
+   setSavedEmployeeShiftName(label)
+   try{window.localStorage.setItem('kogakure-shift-employee-name:'+selfId,label)}catch{/* Optional cache. */}
+  },'已儲存常用出勤名稱「'+label+'」，管理員日後安排新班次會使用這個名稱。')
  }
  function rename(date:string,person:ShiftAttendance,name:string){
   const label=name.trim()
@@ -151,9 +172,13 @@ export default function ShiftManagement({access}:{access:BackofficeAccess}){
    return Promise.resolve()
   }
   return run(async()=>{
+   if(person.source==='employee'){
+    await saveOwnPreferredShiftName(label)
+    setSavedEmployeeShiftName(label)
+   }
    await renameOwnShiftAttendance(date,person.source,label)
    const key=person.source==='owner'?'kogakure-shift-owner-display-name':'kogakure-shift-employee-name:'+selfId
-   try{window.localStorage.setItem(key,label)}catch{/* Preference only. */}
+   try{window.localStorage.setItem(key,label)}catch{/* Optional cache. */}
   },'已將 '+date+' 的出勤顯示名稱更新為「'+label+'」。')
  }
  function markOwn(date:string,name:string){
@@ -195,8 +220,10 @@ export default function ShiftManagement({access}:{access:BackofficeAccess}){
    <label htmlFor="shift-employee-duty-name">我的出勤顯示名稱</label>
    <input id="shift-employee-duty-name" value={employeeShiftName} maxLength={100} disabled={busy}
     onChange={e=>setEmployeeShiftName(e.target.value)} placeholder="例：狐姬・紫月"/>
-   <small>可自訂與登入帳號不同的公開名稱。新增報班會使用這個名稱；已登記的日期請點該日「儲存我的出勤名稱」更新，不會更動員工帳號或密碼。</small>
-  </div>}
+   <small>管理員安排新班次會使用已儲存的常用出勤名稱（不是帳號名稱）。自助報班會同步儲存常用名稱；已存在的班次不會自動改名，請在該日期點「儲存我的出勤名稱」。</small>
+   <button type="button" className="shift-admin-save-preference" disabled={busy||!employeeShiftName.trim()||employeeShiftName.trim().length>100||employeeShiftName.trim()===savedEmployeeShiftName}
+    onClick={()=>void savePreferredName()}><Save size={15}/>儲存常用出勤名稱</button>
+  </div>
   {notice&&<p className={'shift-admin-message'+(notice.error?' is-error':'')} role={notice.error?'alert':'status'}>
    {notice.error?<AlertCircle size={18}/>:<CheckCircle2 size={18}/>} {notice.message}</p>}
   {error&&<p className="shift-admin-message is-error" role="alert">{error}</p>}
