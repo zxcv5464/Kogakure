@@ -170,9 +170,29 @@ assert.ok(adminCss.includes('.shift-admin-modal-backdrop'),
 assert.ok(adminCss.includes('overflow-x:auto'),
  'Calendar needs horizontal access on smaller screens')
 assert.ok(page.includes('opening?.open?members.get(date)||[]:[]'))
+assert.ok(page.includes('className="shift-calendar-weekdays"')&&page.includes('className="shift-weeks"'),
+ 'Public roster must use a recognizable weekday-aligned calendar')
+assert.ok(page.includes("weeks.map((week,index)=>")&&page.includes('week.days.map((date,i)=>'),
+ 'Public calendar must show all 28 days in four weekly rows')
+assert.ok(page.includes('aria-pressed={selectedDate===date}')&&page.includes('onClick={()=>selectDate(date)}'),
+ 'All calendar dates must be keyboard-accessible buttons that select a detailed day')
+assert.ok(page.includes('id="shift-selected-detail"')&&page.includes('selectedNames.map('),
+ 'Selected-day detail must show actual published attendance names')
+assert.ok(page.includes('selectedOpening?.eventTitle')&&page.includes('shift-event-indicator'),
+ 'Travelers must see scheduled activities and a mobile event marker')
+assert.ok(page.includes('selectedStatus===\'open\'')&&page.includes('休館')&&page.includes('未公告'),
+ 'Only announced opening dates may show traveler-facing shift rosters')
+assert.ok(page.includes('opening?.open?members.get(date)||[]:[]'),
+ 'Closed and unannounced days must not display roster names')
+assert.ok(css.includes('grid-template-columns:repeat(7,minmax(0,1fr))'),
+ 'Public four-week calendar needs seven fixed weekday columns')
+assert.ok(css.includes('.shift-selected-detail')&&css.includes('.shift-day.is-selected'),
+ 'Day selection needs a visually clear detail section')
+assert.ok(css.includes('.shift-event-indicator{display:block')&&css.includes('.shift-day-details,.shift-day-muted{display:none}'),
+ 'Mobile calendar cells should remain legible without overflow')
 assert.ok(page.includes('status===\'open\''))
 assert.ok(lib.includes("onConflict:'shift_date'"))
-assert.ok(css.includes('@media(max-width:590px)'))
+assert.ok(css.includes('@media(max-width:690px)'))
 assert.ok(adminCss.includes('@media(max-width:460px)'))
 assert.ok(adminCss.includes('.shift-admin-owner-identity'),'Owner display-name control needs responsive styling')
 for(const phrase of [
@@ -226,7 +246,11 @@ try{
  const publicHtml=renderToStaticMarkup(createElement(MemoryRouter,null,createElement(ShiftsPage)))
  assert.equal((publicHtml.match(/class="shift-week"/g)||[]).length,4)
  assert.equal((publicHtml.match(/class="shift-day /g)||[]).length,28)
- assert.ok(publicHtml.includes('未公告'))
+ assert.equal((publicHtml.match(/aria-pressed="/g)||[]).length,28)
+ assert.ok(publicHtml.includes('shift-calendar-weekdays'))
+ assert.ok(publicHtml.includes('shift-selected-detail'))
+ assert.ok(publicHtml.includes('休館')&&publicHtml.includes('未公告'))
+ assert.ok(publicHtml.includes('當日資訊'))
  const {default:ShiftManagement}=await vite.ssrLoadModule('/src/pages/admin/ShiftManagement.tsx')
  const employeeHtml=renderToStaticMarkup(createElement(MemoryRouter,null,
   createElement(ShiftManagement,{access:{kind:'employee',active:true,displayName:'試班狐姬',permissions:[]}})))
