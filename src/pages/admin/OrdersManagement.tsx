@@ -1,7 +1,8 @@
-import {useCallback,useEffect,useMemo,useState} from 'react'
-import {Check,Clock3,RefreshCw,ShoppingBag,Timer,Trash2,TriangleAlert,X} from 'lucide-react'
+import {useCallback,useEffect,useMemo,useRef,useState} from 'react'
+import {CalendarDays,Check,ChevronLeft,ChevronRight,Clock3,RefreshCw,ShoppingBag,Timer,Trash2,TriangleAlert,X} from 'lucide-react'
 import {advanceTeaOrder,deleteTeaOrder,fetchTeaOrders,formatGil,watchTeaOrders} from '../../lib/tea-orders'
 import type {TeaOrder,TeaOrderStatus} from '../../lib/tea-orders'
+import {shiftVenueDate,validVenueDate,venueDate} from '../../lib/taipei-date'
 import './orders-management.css'
 
 const statusName:Record<TeaOrderStatus,string>={
@@ -20,21 +21,37 @@ export default function OrdersManagement(){
  const [error,setError]=useState('')
  const [notice,setNotice]=useState('')
  const [filter,setFilter]=useState<Filter>('active')
+ const [selectedDate,setSelectedDate]=useState(()=>venueDate())
+ const [allDates,setAllDates]=useState(false)
+ const requestId=useRef(0)
  const [saving,setSaving]=useState<string|null>(null)
 
+ // Each date runs its own server-side query. Prevent late responses for a
+ // previously selected day from overwriting the current business date.
  const refresh=useCallback(async()=>{
-  const next=await fetchTeaOrders()
-  setOrders(next);setError('')
- },[])
+  const current=++requestId.current
+  try{
+   const next=await fetchTeaOrders(allDates?undefined:selectedDate)
+   if(current===requestId.current){setOrders(next);setError('')}
+  }catch(e){
+   if(current===requestId.current)setError(errText(e))
+  }finally{
+   if(current===requestId.current)setLoading(false)
+  }
+ },[selectedDate,allDates])
  useEffect(()=>{
-  let active=true
-  async function run(){try{await refresh()}catch(e){if(active)setError(errText(e))}finally{if(active)setLoading(false)}}
-  void run()
-  const unwatch=watchTeaOrders(()=>{void run()})
-  const interval=window.setInterval(()=>{if(document.visibilityState==='visible')void run()},12000)
-  const onFocus=()=>{void run()}
+  setOrders([]);setLoading(true);setError('')
+  void refresh()
+  const unwatch=watchTeaOrders(()=>{void refresh()})
+  const interval=window.setInterval(()=>{
+   if(document.visibilityState==='visible')void refresh()
+  },12000)
+  const onFocus=()=>{void refresh()}
   window.addEventListener('focus',onFocus)
-  return()=>{active=false;unwatch();window.clearInterval(interval);window.removeEventListener('focus',onFocus)}
+  return()=>{
+   requestId.current++
+   unwatch();window.clearInterval(interval);window.removeEventListener('focus',onFocus)
+  }
  },[refresh])
 
  async function advance(order:TeaOrder,to:'preparing'|'completed'|'cancelled'){
@@ -72,6 +89,7 @@ export default function OrdersManagement(){
   cancelled:orders.filter(x=>x.status==='cancelled').length,
  }),[orders])
  const displayed=orders.filter(x=>filter==='all'||(filter==='active'?x.status==='pending'||x.status==='preparing':x.status===filter))
+ const completedAmount=orders.filter(x=>x.status==='completed').reduce((sum,x)=>sum+x.totalGil,0)
  const tabs: {id:Filter;text:string}[]=[
   {id:'active',text:'待處理'},
   {id:'pending',text:'待接單'},
@@ -86,10 +104,27 @@ export default function OrdersManagement(){
     <h1>茶宴訂單管理</h1>
     <p>旅人送出的茶宴點單，請確認供應、製作進度與館內收款。</p>
    </div>
-   <button type="button" onClick={()=>{void refresh().catch(e=>setError(errText(e)))}} disabled={!!saving}>
+   <button type="button" onClick={()=>void refresh()} disabled={!!saving}>
     <RefreshCw size={16}/>更新訂單
    </button>
   </header>
+  <div className="tea-order-admin-date-toolbar" aria-label="營業日期選擇">
+   <div className="tea-order-admin-date-title"><CalendarDays size={18}/><div><strong>營業日期</strong><small>以台灣時間（UTC+8）查詢當日訂單</small></div></div>
+   <div className="tea-order-admin-date-controls">
+    <button type="button" disabled={allDates} aria-label="前一天" onClick={()=>setSelectedDate(prev=>shiftVenueDate(prev,-1))}><ChevronLeft size={18}/></button>
+    <input type="date" aria-label="選擇訂單營業日期" value={selectedDate}
+     onChange={event=>{if(validVenueDate(event.target.value)){setSelectedDate(event.target.value);setAllDates(false)}}}/>
+    <button type="button" disabled={allDates} aria-label="後一天" onClick={()=>setSelectedDate(prev=>shiftVenueDate(prev,1))}><ChevronRight size={18}/></button>
+    <button type="button" className={!allDates&&selectedDate===venueDate()?'is-active':''}
+     onClick={()=>{setSelectedDate(venueDate());setAllDates(false)}}>今日</button>
+    <button type="button" className={allDates?'is-active':''} aria-pressed={allDates}
+     onClick={()=>setAllDates(value=>!value)}>{allDates?'返回日期':'最近 200 筆'}</button>
+   </div>
+   <div className="tea-order-admin-date-summary" role="status">
+    {allDates?'最近 200 筆訂單':selectedDate+' 的訂單'} · 共 {orders.length} 筆
+    <span>已完成訂單金額 {formatGil(completedAmount)}（不代表已收款）</span>
+   </div>
+  </div>
   <div className="tea-order-admin-stats" aria-label="訂單狀態統計">
    <div><strong>{stats.pending}</strong><span>待接單</span></div>
    <div><strong>{stats.preparing}</strong><span>製作中</span></div>
@@ -106,7 +141,7 @@ export default function OrdersManagement(){
    </button>)}
   </nav>
   {loading?<p className="tea-order-admin-empty" role="status">正在讀取茶宴訂單…</p>
-   :!displayed.length?<p className="tea-order-admin-empty">此分類目前沒有訂單。</p>:
+   :!displayed.length?<p className="tea-order-admin-empty">{allDates?'最近訂單中沒有符合此狀態的訂單。':'這一天沒有符合此狀態的訂單。'}</p>:
    <div className="tea-order-admin-list">
     {displayed.map(order=><article className="tea-order-admin-card" key={order.id}>
      <header className="tea-order-admin-card-heading">
@@ -147,6 +182,6 @@ export default function OrdersManagement(){
      </div>
     </article>)}
    </div>}
-  <p className="tea-order-admin-footnote">顯示最新 200 筆訂單。刪除會永久清除整筆訂單與餐點明細，無法復原；若只想停止處理，請使用「取消訂單」。網站送單不會自動扣除 Gil。</p>
+  <p className="tea-order-admin-footnote">依選定日期查詢最多 1,000 筆訂單；「最近 200 筆」可跨日查看近期紀錄。日期以台灣時間為準。訂單「已完成」僅表示製作完成，實際收款請至帳務管理登錄。刪除會永久清除訂單及餐點明細，無法復原。</p>
  </section>
 }
