@@ -129,3 +129,12 @@
 .booking-nominee-name{min-width:0;color:#f2e2cd;font-size:.86rem;overflow-wrap:anywhere}
 .booking-success .booking-nominee-summary{max-width:470px;margin:2px auto;text-align:left}
 @media(max-width:440px){.booking-nominee-summary{padding:13px 12px}.booking-nominee-summary li{gap:6px 8px}}
+
+
+/* The reservation headline appears immediately; only the live people list
+   stays pending until plans, profiles and occupancy all resolve. */
+.booking-loading-stage{min-height:220px}
+.booking-loading-stage .booking-loading{
+ min-height:220px;padding:25px 18px;background:transparent;
+ border:1px solid rgba(213,176,119,.25);border-radius:6px;
+}
