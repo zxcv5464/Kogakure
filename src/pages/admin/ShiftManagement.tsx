@@ -1,6 +1,6 @@
 import {useCallback,useEffect,useRef,useState} from 'react'
 import {Link} from 'react-router-dom'
-import {CalendarDays,CheckCircle2,ExternalLink,RefreshCw,Save,UsersRound,AlertCircle,X,Clock3,ChevronRight} from 'lucide-react'
+import {CalendarDays,CheckCircle2,ExternalLink,RefreshCw,Save,UsersRound,AlertCircle,X,Clock3,ChevronRight,Sparkles} from 'lucide-react'
 import {supabase} from '../../lib/supabase'
 import {useRollingShiftWeeks,shiftDateLabel,SHIFT_WEEKDAYS} from '../../lib/shift-calendar'
 import {fetchOwnPreferredShiftName,fetchShifts,listActiveShiftEmployees,markOwnerShiftAttendance,markShiftAttendance,renameOwnShiftAttendance,saveOwnPreferredShiftName,setShiftOpening,unmarkShiftAttendance} from '../../lib/shifts'
@@ -14,7 +14,7 @@ const empty:ShiftCalendarData={days:[],attendance:[]}
 function ShiftDayEditor({date,weekday,today,day,staff,people,access,selfId,ownerName,employeeShiftName,busy,onOpening,onMark,onMarkOwn,onRename,onRemove}:{
  date:string;weekday:string;today:string;day:ShiftOpenDay|undefined;staff:ShiftAttendance[]
  people:ShiftEmployee[];access:BackofficeAccess;selfId:string;ownerName:string;employeeShiftName:string;busy:boolean
- onOpening:(date:string,kind:ShiftKind,hours:string,note:string)=>Promise<void>
+ onOpening:(date:string,kind:ShiftKind,hours:string,note:string,eventTitle:string)=>Promise<void>
  onMark:(date:string,person:ShiftEmployee)=>Promise<void>
  onMarkOwn:(date:string,name:string)=>Promise<void>
  onRename:(date:string,person:ShiftAttendance,name:string)=>Promise<void>
@@ -25,9 +25,10 @@ function ShiftDayEditor({date,weekday,today,day,staff,people,access,selfId,owner
  const [kind,setKind]=useState<ShiftKind>(savedKind)
  const [hours,setHours]=useState(day?.hours||'')
  const [note,setNote]=useState(day?.note||'')
+ const [eventTitle,setEventTitle]=useState(day?.eventTitle||'')
  const [member,setMember]=useState('')
- useEffect(()=>{setKind(savedKind);setHours(day?.hours||'');setNote(day?.note||'')},[savedKind,day?.hours,day?.note,date])
- const hasEdits=kind!==savedKind||hours!==(day?.hours||'')||note!==(day?.note||'')
+ useEffect(()=>{setKind(savedKind);setHours(day?.hours||'');setNote(day?.note||'');setEventTitle(day?.eventTitle||'')},[savedKind,day?.hours,day?.note,day?.eventTitle,date])
+ const hasEdits=kind!==savedKind||hours!==(day?.hours||'')||note!==(day?.note||'')||eventTitle!==(day?.eventTitle||'')
  const chosen=people.find(person=>person.id===member)
  const mine=staff.find(x=>x.employeeId===selfId&&x.source===(owner?'owner':'employee'))
  const myDisplayName=owner?ownerName:employeeShiftName
@@ -45,12 +46,15 @@ function ShiftDayEditor({date,weekday,today,day,staff,people,access,selfId,owner
    </select></label>
    {kind==='open'&&<label>營業時段（可留空）<input value={hours} disabled={busy} maxLength={80}
     onChange={e=>setHours(e.target.value)} placeholder="例：21:00–24:00"/></label>}
+   {kind==='open'&&<label>活動安排（選填）<input value={eventTitle} disabled={busy} maxLength={120}
+    onChange={e=>setEventTitle(e.target.value)} placeholder="例：百鬼夜行・月下茶會"/></label>}
    {kind!=='unannounced'&&<label>日期備註（可留空）<input value={note} disabled={busy} maxLength={240}
     onChange={e=>setNote(e.target.value)} placeholder="例：今晚特別活動"/></label>}
    <button type="button" className="shift-admin-save" disabled={busy||!hasEdits}
-    onClick={()=>void onOpening(date,kind,hours,note)}><Save size={15}/>儲存開店設定</button>
+    onClick={()=>void onOpening(date,kind,hours,note,eventTitle)}><Save size={15}/>儲存開店設定</button>
   </div>:<p className="shift-admin-day-hint">{open?day?.hours||'本日營業':savedKind==='closed'?'館方設定休館':'等待管理員公布開店日'}</p>}
   {day?.note&&<p className="shift-admin-note">{day.note}</p>}
+  {!owner&&open&&day?.eventTitle&&<p className="shift-admin-event-detail"><Sparkles size={15}/>活動：{day.eventTitle}</p>}
   {open&&<div className="shift-admin-attendance">
    <h3><UsersRound size={15}/>出勤登記 · {staff.length} 位</h3>
    {staff.length?<ul>{staff.map(person=><li key={person.employeeId}>
@@ -181,8 +185,8 @@ export default function ShiftManagement({access}:{access:BackofficeAccess}){
   }catch(e){setNotice({error:true,message:e instanceof Error?e.message:'操作失敗，請重試'})}
   finally{busyRef.current=false;setBusy(false)}
  }
- function saveOpening(date:string,kind:ShiftKind,hours:string,note:string){
-  return run(()=>setShiftOpening(date,kind,hours,note),'已更新 '+date+' 的營業狀態。')
+ function saveOpening(date:string,kind:ShiftKind,hours:string,note:string,eventTitle:string){
+  return run(()=>setShiftOpening(date,kind,hours,note,eventTitle),'已更新 '+date+' 的營業狀態與活動安排。')
  }
  function mark(date:string,person:ShiftEmployee){
   return run(async()=>{
@@ -302,7 +306,7 @@ export default function ShiftManagement({access}:{access:BackofficeAccess}){
       return <button type="button" key={date}
        className={'shift-calendar-cell is-'+state+(isToday?' is-today':'')+(date<today?' is-past':'')}
        aria-label={date+' 週'+SHIFT_WEEKDAYS[index%7]+'，'+(state==='open'?'營業':state==='closed'?'休館':'未公告')+
-        (state==='open'?'，出勤'+visibleStaff.length+'位':'')+'，開啟當日安排'}
+        (state==='open'?'，出勤'+visibleStaff.length+'位'+(day?.eventTitle?'，活動：'+day.eventTitle:''):'')+'，開啟當日安排'}
        aria-haspopup="dialog" aria-expanded={selectedDate===date}
        onClick={event=>showDay(date,event.currentTarget)}>
        <span className="shift-calendar-cell-top">
@@ -313,9 +317,8 @@ export default function ShiftManagement({access}:{access:BackofficeAccess}){
        {state==='open'?<span className="shift-calendar-summary">
         {day?.hours&&<span className="shift-calendar-time"><Clock3 size={12}/>{day.hours}</span>}
         <span className="shift-calendar-count"><UsersRound size={13}/>{visibleStaff.length} 位出勤</span>
-        {visibleStaff.length>0&&<span className="shift-calendar-names">
-         {visibleStaff.slice(0,2).map(person=><span key={person.source+person.employeeId}>{person.name}</span>)}
-         {visibleStaff.length>2&&<span>另有 {visibleStaff.length-2} 位</span>}
+        {day?.eventTitle&&<span className="shift-calendar-event" title={day.eventTitle}>
+         <Sparkles size={13}/><span>{day.eventTitle}</span>
         </span>}
        </span>:<span className="shift-calendar-empty">{state==='closed'?'當日休館':'尚未設定開店日'}</span>}
        <span className="shift-calendar-edit"><span>查看／安排</span><ChevronRight size={14}/></span>
