@@ -6,7 +6,7 @@ const files=[
  'src/pages/BookingPage.tsx',
  'src/pages/booking-page.css',
  'src/pages/admin/AdminBookingCreate.tsx',
- 'src/pages/admin/StaffManagement.tsx',
+ 'src/pages/admin/BookingManagement.tsx',
  'supabase/migrations/20261114_03_booking_all_roles.sql',
 ]
 const [page,css,admin,editor,migration]=await Promise.all(files.map(p=>readFile(p,'utf8')))
@@ -18,7 +18,8 @@ assert.ok(page.includes('onClick={()=>openBooking(person)} disabled={busy}'),'Ca
 assert.ok(page.includes('booking-plan-unavailable'),'Guests should understand when plans remain unpublished')
 assert.ok(page.includes('disabled={sending||!plans.length}'),'Never submit a booking without a published plan')
 assert.ok(!page.includes("role.includes('狐姬')")&&!admin.includes("role.includes('狐姬')"),'No job title gating is allowed')
-assert.ok(editor.includes('須先公開名帖，不限職稱。'),'Editor must clearly explain non-role-limited bookings')
+assert.ok(editor.includes('名帖已公開')&&editor.includes('不限職稱'),
+ 'Booking manager must explain that only published profiles may accept nomination, regardless of job title')
 for(const part of [
  '.booking-profile-action{','height:auto;min-height:298px',
  'display:grid;grid-template-columns:minmax(145px,34%) minmax(0,1fr)',
