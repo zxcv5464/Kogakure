@@ -249,19 +249,19 @@ export type PaidPayrollAudit={
 }
 export async function managePaidPayroll(
  mode:PayrollPeriodMode,date:string,employeeId:string,action:PaidPayrollAction,
- amountGil:number|null,reason:string,
+ amountGil:number|null,
 ):Promise<void>{
  payrollPeriodWindow(mode,date)
  if(!/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(employeeId))
   throw new Error('員工編號無效')
  if(action!=='edit'&&action!=='delete')throw new Error('不支援此操作')
- const clean=reason.trim()
- if(clean.length<3||clean.length>240)throw new Error('調整原因需為 3～240 字')
+ // Audit history remains durable without asking managers to type a reason.
+ const auditNote=action==='edit'?'系統紀錄：管理員修改已發薪金額':'系統紀錄：管理員刪除已發薪紀錄'
  if(action==='edit'&&(!Number.isSafeInteger(amountGil)||amountGil===null||amountGil<0||amountGil>1_000_000_000))
   throw new Error('校正金額須為 0～1,000,000,000 Gil')
  const {error}=await db().rpc('manage_paid_payroll',{
   p_mode:mode,p_anchor:date,p_employee_id:employeeId,p_action:action,
-  p_new_amount:action==='edit'?amountGil:null,p_reason:clean,
+  p_new_amount:action==='edit'?amountGil:null,p_reason:auditNote,
  })
  if(error)throw new Error(error.message||'已發薪資料變更失敗')
 }

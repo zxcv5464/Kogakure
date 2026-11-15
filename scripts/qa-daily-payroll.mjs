@@ -104,9 +104,14 @@ assert.ok(accounting.includes('PaidPayrollRecordEditor')&&
  correctionSql.includes('pg_catalog.pg_advisory_xact_lock')&&
  correctionSql.includes('revoke all on function public.manage_paid_payroll')&&
  correctionSql.includes('to authenticated')&&
- paidEditor.includes('修改／刪除原因')&&paidEditor.includes("void run('delete')")&&
+ !paidEditor.includes('修改／刪除原因（必填')&&
+ !paidEditor.includes('<textarea')&&
+ !paidEditor.includes('validReason')&&
+ helper.includes('系統紀錄：管理員修改已發薪金額')&&
+ helper.includes('系統紀錄：管理員刪除已發薪紀錄')&&
+ paidEditor.includes("void run('delete')")&&
  paidEditor.includes("void run('edit')"),
- 'Paid correction/delete requires reason, atomic ledger sync, and durable audit')
+ 'Paid correction/delete must work without manual reasons and preserve protected ledger audit')
 assert.ok(styles.includes('.daily-payroll-salary-basis')&&
  styles.includes('@media(max-width:640px)')&&
  ledgerStyles.includes('.accounting-payroll-locked'),
