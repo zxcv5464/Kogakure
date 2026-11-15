@@ -82,6 +82,10 @@ jobs:
         env:
           VITE_OFFLINE_PREVIEW: 'true'
         run: node scripts/qa-service-photo-crop.mjs
+      - name: Verify Chinese service titles avoid lone-character line breaks on phones
+        env:
+          VITE_OFFLINE_PREVIEW: 'true'
+        run: node scripts/qa-service-title-wrap.mjs
       - name: Verify service content and admin editor before publication
         env:
           VITE_OFFLINE_PREVIEW: 'true'
