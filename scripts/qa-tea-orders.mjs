@@ -122,7 +122,7 @@ assert.ok(adminShell.includes('admin-nav-order-badge')&&adminShell.includes('pen
 assert.ok(modules.includes("id: 'orders'")&&pages.includes("'admin/orders'"),
  'Order module must have an entry and refresh-safe GitHub Pages route')
 assert.ok(permissions.includes("id:'orders.manage'"),'Order operator permission missing')
-assert.ok(edge.includes("'orders.manage'")&&edge.includes('value.length>4'),
+assert.ok(edge.includes("'orders.manage'")&&edge.includes('value.length>allowedPermissions.size'),
  'Owner-only credential management must support the new module permission')
 
 const rules=[
