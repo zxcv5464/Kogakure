@@ -111,6 +111,7 @@ export default function ShiftsPage(){
           {isToday&&<span className="shift-today-tag">今日</span>}
          </span>
          <span className={'shift-status is-'+status}>{stateLabel[status]}</span>
+         {status==='open'&&opening?.eventTitle&&<span className="shift-event-indicator" aria-hidden="true">✦ 活動</span>}
          {status==='open'&&<span className="shift-day-details">
           {opening?.hours&&<span className="shift-hours"><Clock3 size={12}/><span>{opening.hours}</span></span>}
           {opening?.eventTitle&&<span className="shift-event"><Sparkles size={12}/><span>{opening.eventTitle}</span></span>}
