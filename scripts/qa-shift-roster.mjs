@@ -14,8 +14,9 @@ const sources=['src/lib/shift-calendar.ts','src/lib/shifts.ts','src/pages/Shifts
  'supabase/migrations/20261115_09_rolling_four_week_shifts.sql',
  'supabase/migrations/20261115_10_owner_self_attendance.sql',
  'supabase/migrations/20261115_11_employee_shift_display_name.sql',
- 'supabase/migrations/20261115_12_employee_preferred_shift_name.sql']
-const [calendar,lib,page,editor,app,shell,modules,routes,main,otherPages,css,adminCss,sql,ownerSql,nameSql,preferredSql]=await Promise.all(sources.map(path=>readFile(path,'utf8')))
+ 'supabase/migrations/20261115_12_employee_preferred_shift_name.sql',
+ 'supabase/migrations/20261115_13_shift_event_title.sql']
+const [calendar,lib,page,editor,app,shell,modules,routes,main,otherPages,css,adminCss,sql,ownerSql,nameSql,preferredSql,eventSql]=await Promise.all(sources.map(path=>readFile(path,'utf8')))
 for(const path of sources.filter(p=>p.endsWith('.ts')||p.endsWith('.tsx'))){
  const source=await readFile(path,'utf8')
  const ast=ts.createSourceFile(path,source,ts.ScriptTarget.Latest,true,path.endsWith('tsx')?ts.ScriptKind.TSX:ts.ScriptKind.TS)
@@ -55,7 +56,7 @@ for(const term of [
  "on delete cascade",
 ])assert.ok(sql.includes(term),'Shift RLS missing: '+term)
 assert.ok(!sql.includes('drop table')&&!sql.includes('delete from public.employee_accounts'))
-assert.ok(editor.includes('setShiftOpening(date,kind,hours,note)'))
+assert.ok(editor.includes('setShiftOpening(date,kind,hours,note,eventTitle)'))
 assert.ok(editor.includes('markShiftAttendance(date,person)'))
 assert.ok(editor.includes('unmarkShiftAttendance(date,person.employeeId,person.source)'), 'Cancel attendance must use owner/employee source')
 assert.ok(!editor.includes('window.confirm('),
@@ -142,6 +143,28 @@ assert.ok(editor.includes('staff={byDate.get(selectedDate)||[]}'),
  'Daily editor must use the stored shift records')
 assert.ok(adminCss.includes('.shift-calendar-grid')&&adminCss.includes('grid-template-columns:repeat(7,'),
  'Calendar needs seven weekday columns')
+assert.ok(!editor.includes('shift-calendar-names'), 'Calendar overview must not reveal employee names')
+assert.ok(editor.includes('visibleStaff.length')&&editor.includes('位出勤'), 'Calendar should keep attendance counts')
+assert.ok(editor.includes('day?.eventTitle&&<span className="shift-calendar-event"'),
+ 'Only dates with an arranged event should show an event label')
+assert.ok(editor.includes('活動安排（選填）')&&editor.includes('onChange={e=>setEventTitle(e.target.value)}'),
+ 'Manager should be able to add, change, and clear events in day editor')
+assert.ok(editor.includes('onOpening(date,kind,hours,note,eventTitle)'),
+ 'Saving an opening date should also persist the arranged event')
+assert.ok(editor.includes("const [eventTitle,setEventTitle]=useState(day?.eventTitle||'')"),
+ 'Daily edit dialog should hydrate existing event title')
+assert.ok(!adminCss.includes('.shift-calendar-names'), 'Old name-list styling should be removed')
+assert.ok(adminCss.includes('.shift-calendar-event'), 'Event titles should receive distinct calendar styling')
+assert.ok(eventSql.includes('add column if not exists event_title text not null default'),
+ 'Event title needs a backward-compatible database column')
+assert.ok(eventSql.includes('char_length(event_title)<=120'),
+ 'Event names should have database length validation')
+assert.ok(!eventSql.includes('drop table')&&!eventSql.includes('delete from'),
+ 'Event feature must not change existing attendance records')
+assert.ok(lib.includes("note,event_title")&&lib.includes("eventTitle:r.event_title||''"),
+ 'Calendar must read persisted event title')
+assert.ok(lib.includes("event_title:kind==='open'?eventTitle.trim():''"),
+ 'Opening updates must save or clear event title for closed dates')
 assert.ok(adminCss.includes('.shift-admin-modal-backdrop'),
  'Daily edit options must appear in a modal overlay')
 assert.ok(adminCss.includes('overflow-x:auto'),
