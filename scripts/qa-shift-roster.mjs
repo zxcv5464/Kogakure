@@ -111,7 +111,7 @@ assert.ok(lib.includes("export async function markOwnerShiftAttendance("),
  'Site owner needs a distinct self-signup API without a fabricated employee account')
 assert.ok(lib.includes("const table=source==='owner'?'shift_owner_attendance':'shift_attendance'"),
  'Cancelling attendance must target the correct table')
-assert.ok(editor.includes('onMarkOwn(date,ownerName)'),
+assert.ok(editor.includes('onMarkOwn(date,myDisplayName)'),
  'Site owner must see a real self-signup action on open days')
 assert.ok(editor.includes('onRemove(date,mine)'),
  'Site owner must be able to cancel own attendance')
