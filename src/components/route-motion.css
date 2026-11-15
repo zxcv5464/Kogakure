@@ -71,10 +71,10 @@
 .route-stage .shift-disclaimer{animation:quietFade .6s var(--public-reveal-ease) .25s both}
 /* 點菜：茶宴題字 → 主旨 → 卷別與御品 → 點單；分類可由 Supabase 非同步載入 */
 .route-stage .tea-menu-brand,
-.route-stage .tea-menu-seal{animation:quietRise 1.12s var(--public-reveal-ease) .16s both}
-.route-stage .tea-menu-hero h1{animation:quietRise 1.26s var(--public-reveal-ease) .34s both}
-.route-stage .tea-menu-subtitle{animation:quietRise 1.18s var(--public-reveal-ease) .55s both}
-.route-stage .tea-menu-verse{animation:quietRise 1.28s var(--public-reveal-ease) .73s both}
+.route-stage .tea-menu-seal{animation:quietRise .68s var(--public-reveal-ease) .04s both}
+.route-stage .tea-menu-hero h1{animation:quietRise .8s var(--public-reveal-ease) .12s both}
+.route-stage .tea-menu-subtitle{animation:quietRise .74s var(--public-reveal-ease) .19s both}
+.route-stage .tea-menu-verse{animation:quietRise .82s var(--public-reveal-ease) .26s both}
 .route-stage .tea-menu-state,
 .route-stage .tea-menu-status{animation:quietRise 1.15s var(--public-reveal-ease) .84s both}
 .route-stage .tea-menu-section{animation:quietRise .85s var(--public-reveal-ease) both}
@@ -118,10 +118,10 @@
 ){animation-play-state:paused}
 /* 預約名片：與狐姬名冊共用 staffReveal 節奏，先題字、再介紹、
    最後按名帖同樣的延遲和緩動方式逐張浮現。 */
-.route-stage .booking-eyebrow,.route-stage .booking-emblem{animation:quietRise 1.12s var(--public-reveal-ease) .15s both}
-.route-stage .booking-hero h1{animation:quietRise 1.26s var(--public-reveal-ease) .33s both}
-.route-stage .booking-hero-label{animation:quietRise 1.18s var(--public-reveal-ease) .54s both}
-.route-stage .booking-hero-verse{animation:quietRise 1.28s var(--public-reveal-ease) .72s both}
+.route-stage .booking-eyebrow,.route-stage .booking-emblem{animation:quietRise .68s var(--public-reveal-ease) .04s both}
+.route-stage .booking-hero h1{animation:quietRise .8s var(--public-reveal-ease) .12s both}
+.route-stage .booking-hero-label{animation:quietRise .74s var(--public-reveal-ease) .19s both}
+.route-stage .booking-hero-verse{animation:quietRise .82s var(--public-reveal-ease) .26s both}
 .route-stage .booking-legend{animation:quietRise .88s var(--public-reveal-ease) .42s both}
 /* Empty-state and offline/error notices use the same gentle entrance as
    other public pages; multiple notices are staggered rather than flashing. */
