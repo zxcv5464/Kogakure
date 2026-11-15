@@ -13,8 +13,8 @@ const money=(v:number)=>v.toLocaleString('en-US')+' Gil'
 /** This is a *financial preview* tied to a business date. Staff wages are
  * recorded as accounting expenses only after manual Gil payment confirmation. */
 export default function DailyPayrollSection({
- selectedDate,onLedgerChanged,
-}:{selectedDate:string;onLedgerChanged:()=>void}){
+ selectedDate,refreshToken,onLedgerChanged,
+}:{selectedDate:string;refreshToken:number;onLedgerChanged:()=>void}){
  const [date,setDate]=useState(selectedDate)
  const [data,setData]=useState<DailyPayrollReport|null>(null)
  const [loading,setLoading]=useState(true)
@@ -38,7 +38,15 @@ export default function DailyPayrollSection({
   setLoading(true);setData(null);setError('');setNotice('')
   void load()
   return()=>{requestRef.current++}
- },[load])
+ },[load,refreshToken])
+ // A completed tea order can be updated from another employee's browser.
+ // Keep the report fresh without remounting salary rows or blocking editing.
+ useEffect(()=>{
+  const update=()=>{if(document.visibilityState==='visible'&&!working)void load()}
+  const timer=window.setInterval(update,30000)
+  window.addEventListener('focus',update)
+  return()=>{window.clearInterval(timer);window.removeEventListener('focus',update)}
+ },[load,working])
  const preview=useMemo(()=>data?calculateEqualPayroll(data.revenueGil,data.roster):[],[data])
  const frozen=(data?.allocations.length??0)>0
  const paidCount=data?.allocations.filter(x=>x.paidAt!==null).length??0
