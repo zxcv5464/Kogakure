@@ -10,6 +10,10 @@ import './route-motion.css'
 // flash of the destination page before the fade-in begins.
 const COVER_MS = 650
 const REVEAL_MS = 760
+// Tea banquet and nomination use bundled, first-paint-ready pages: avoid
+// spending 1.4s on the curtain when no lazy route download is necessary.
+const QUICK_COVER_MS = 340
+const QUICK_REVEAL_MS = 410
 const STAFF_READY_TIMEOUT_MS = 8000
 const MENU_READY_TIMEOUT_MS = 8000
 
@@ -53,12 +57,15 @@ export default function PageTransition({
   }
 
   // Keep the curtain closed while the destination mounts and first-paints.
-  // In particular, the tea menu should never reveal its lazy fallback and
-  // immediately replace it with a Supabase loading screen or live items.
+  // Tea/booking page shells are already bundled; their real data still loads
+  // safely inside the visible shell after the faster curtain opens.
   const readyEvent = location.pathname === '/staff' ? STAFF_PAGE_READY_EVENT
    : location.pathname === '/menu' ? MENU_PAGE_READY_EVENT
    : location.pathname === '/booking' ? BOOKING_PAGE_READY_EVENT
    : location.pathname === '/shifts' ? SHIFT_PAGE_READY_EVENT : null
+  const quick = location.pathname === '/menu' || location.pathname === '/booking'
+  const coverMs = quick ? QUICK_COVER_MS : COVER_MS
+  const revealMs = quick ? QUICK_REVEAL_MS : REVEAL_MS
   const readyTimeout = location.pathname === '/menu' ? MENU_READY_TIMEOUT_MS : STAFF_READY_TIMEOUT_MS
   let swapped = false
   let ready = readyEvent === null
@@ -69,7 +76,7 @@ export default function PageTransition({
    if (!swapped || !ready || revealed) return
    revealed = true
    setPhase('reveal')
-   finish = window.setTimeout(() => setPhase('idle'), REVEAL_MS + 40)
+   finish = window.setTimeout(() => setPhase('idle'), revealMs + 40)
   }
   const onPageReady = () => {
    ready = true
@@ -86,7 +93,7 @@ export default function PageTransition({
    swapped = true
    if (!ready) fallback = window.setTimeout(onPageReady, readyTimeout)
    reveal()
-  }, COVER_MS)
+  }, coverMs)
 
   return () => {
    window.clearTimeout(swap)
@@ -121,7 +128,7 @@ export default function PageTransition({
   </div>
   <div
    aria-hidden="true"
-   className={'page-transition-curtain' + (phase === 'cover' ? ' is-covering' : phase === 'reveal' ? ' is-revealing' : '')}
+   className={'page-transition-curtain' + (location.pathname === '/menu' || location.pathname === '/booking' ? ' is-quick' : '') + (phase === 'cover' ? ' is-covering' : phase === 'reveal' ? ' is-revealing' : '')}
   />
  </>
 }
