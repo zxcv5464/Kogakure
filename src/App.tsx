@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from 'react'
+import { lazy, Suspense, useCallback, useRef, useState } from 'react'
 import { Route, Routes, useLocation } from 'react-router-dom'
 import Layout from './components/Layout'
 import AdminLayout from './components/AdminLayout'
@@ -31,8 +31,10 @@ export default function App() {
 
 function PublicApp() {
  const [introReady, setIntroReady] = useState(() => !shouldPlay())
+ const startMusic=useRef<()=>void>(()=>{})
+ const registerBgm=useCallback((start:()=>void)=>{startMusic.current=start},[])
  return <>
-  <Layout introReady={introReady}>
+  <Layout onRegisterBgm={registerBgm}>
    <PageTransition introReady={introReady}>
     {location => (
      <Suspense fallback={location.pathname === '/staff' ? <StaffLoading /> : location.pathname === '/menu' ? <MenuLoading /> : location.pathname === '/booking' ? <BookingLoading /> : <div className="empty-staff">正在載入頁面…</div>}>
@@ -50,6 +52,6 @@ function PublicApp() {
     )}
    </PageTransition>
   </Layout>
-  <EntryIntro onReveal={() => setIntroReady(true)} />
+  <EntryIntro onEnter={()=>startMusic.current()} onReveal={() => setIntroReady(true)} />
  </>
 }
