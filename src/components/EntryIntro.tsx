@@ -4,7 +4,8 @@ import {asset} from '../lib/paths'
 import './entry-intro.css'
 
 type Phase='enter'|'ready'|'clear'|'reveal'|'done'
-const HOLD_MS=1080
+// The logo, wordmark and motto arrive first; let the button finish fading in.
+const HOLD_MS=1650
 const CLEAR_MS=180
 const REVEAL_MS=480
 
@@ -79,9 +80,9 @@ export default function EntryIntro({onEnter,onReveal}:{onEnter?:()=>void;onRevea
    <span id="intro-wordmark" className="intro-wordmark">KOGAKURE</span>
    <span className="intro-divider" aria-hidden="true"/>
    <span id="intro-motto" className="intro-motto">循狐而入，借湯忘憂。</span>
-   {phase==='ready'&&<button ref={entryButton} type="button" className="intro-entry-action"
-    onClick={enterInn}><Music2 size={17} strokeWidth={1.7}/>進入狐隱・開始播放音樂<ArrowRight size={17} strokeWidth={1.7}/></button>}
-   {phase==='ready'&&<small className="intro-music-note">入館後可於頁首隨時關閉或重新播放 BGM</small>}
+   <button ref={entryButton} type="button" className="intro-entry-action"
+    disabled={phase!=='ready'} onClick={enterInn}><Music2 size={17} strokeWidth={1.7}/>進入狐隱<ArrowRight size={17} strokeWidth={1.7}/></button>
+   <small className="intro-music-note">入館後可於頁首隨時關閉或重新播放 BGM</small>
   </div>
  </div>
 }
