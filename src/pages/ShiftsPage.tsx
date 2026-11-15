@@ -8,8 +8,8 @@ import type {ShiftCalendarData} from '../lib/shifts'
 import './shifts-page.css'
 
 const blank:ShiftCalendarData={days:[],attendance:[]}
-type DayState='open'|'closed'|'unannounced'
-const stateLabel:Record<DayState,string>={open:'營業',closed:'休館',unannounced:'未公告'}
+type DayState='open'|'closed'
+const stateLabel:Record<DayState,string>={open:'營業',closed:'休館'}
 
 export default function ShiftsPage(){
  const {today,weeks}=useRollingShiftWeeks()
@@ -45,7 +45,7 @@ export default function ShiftsPage(){
  const openingCount=calendar.days.filter(day=>day.open).length
  const activityCount=calendar.days.filter(day=>day.open&&day.eventTitle.trim()).length
  const selectedOpening=openings.get(selectedDate)
- const selectedStatus:DayState=!selectedOpening?'unannounced':selectedOpening.open?'open':'closed'
+ const selectedStatus:DayState=selectedOpening?.open?'open':'closed'
  const selectedNames=selectedOpening?.open?members.get(selectedDate)||[]:[]
  const dayNumber=weeks.flatMap(week=>week.days).indexOf(selectedDate)
  const selectedWeekday=dayNumber>=0?SHIFT_WEEKDAYS[dayNumber%7]:''
@@ -87,7 +87,7 @@ export default function ShiftsPage(){
      <div className="shift-legend" aria-label="月曆圖例">
       <span><i className="shift-dot is-open"/>營業・可查看名單</span>
       <span><i className="shift-dot is-closed"/>休館</span>
-      <span><i className="shift-dot is-unannounced"/>未公告</span>
+      
       <span><i className="shift-dot is-today"/>今天</span>
      </div>
      <p className="shift-calendar-instruction">選擇日期，即可查看當天的營業時間、活動與出勤人員。</p>
@@ -99,7 +99,7 @@ export default function ShiftsPage(){
        {week.days.map((date,i)=>{
         const opening=openings.get(date)
         const names=opening?.open?members.get(date)||[]:[]
-        const status:DayState=!opening?'unannounced':opening.open?'open':'closed'
+        const status:DayState=opening?.open?'open':'closed'
         const isToday=date===today
         return <button type="button" key={date}
          className={'shift-day is-'+status+(isToday?' is-today':'')+(date<today?' is-past':'')+(selectedDate===date?' is-selected':'')}
@@ -117,7 +117,7 @@ export default function ShiftsPage(){
           {opening?.eventTitle&&<span className="shift-event"><Sparkles size={12}/><span>{opening.eventTitle}</span></span>}
           <span className="shift-attendance-count"><UsersRound size={12}/>{names.length>0?names.length+' 位出勤':'名單待更新'}</span>
          </span>}
-         {status!=='open'&&<span className="shift-day-muted">{status==='closed'?'暫停接待':'敬請期待'}</span>}
+         {status!=='open'&&<span className="shift-day-muted">暫停接待</span>}
         </button>
        })}
       </div>)}
@@ -147,12 +147,12 @@ export default function ShiftsPage(){
       <Link className="shift-booking-link" to="/booking">查看預約方式 <ArrowRight size={16}/></Link>
      </div>:<div className="shift-detail-empty">
       <CalendarCheck2 size={27}/>
-      <p>{selectedStatus==='closed'?'這一天館方安排休館，暫不對外接待。':'這一天尚未公布營業安排，請留意後續消息。'}</p>
+      <p>這一天為休館日，暫不對外接待。</p>
       {selectedOpening?.note&&<p className="shift-detail-note">{selectedOpening.note}</p>}
      </div>}
     </section>
    </>}
-   <p className="shift-disclaimer">月曆依台灣時間顯示，並於每週一更新四週範圍。只有標示「營業」的日期代表館方已公告開店；出勤名單與活動安排可能調整，實際接待與預約仍以最新公告為準。</p>
+   <p className="shift-disclaimer">月曆依台灣時間顯示，並於每週一更新四週範圍。未設定營業的日期預設為「休館」，只有標示「營業」的日期代表館方已公告開店；出勤名單與活動安排可能調整，實際接待與預約仍以最新公告為準。</p>
   </div>
  </section>
 }
