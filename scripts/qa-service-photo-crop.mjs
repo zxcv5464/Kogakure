@@ -31,7 +31,7 @@ assert.ok(lib.includes('imageCrops:ServicePhotoCrop[]')&&
  'Photo positions and zoom must be persisted with the same image order')
 assert.ok(lib.includes('imageCrops:normalizeServiceCrops(row.image_crops,imageUrls.length)'),
  'Public and admin reads must restore saved crop metadata')
-assert.ok(lib.includes('imageUrl:service.imageUrls[0]||null'),
+assert.ok(lib.includes('image_url:service.imageUrls[0]||null'),
  'The original single-photo compatibility mirror must be preserved')
 assert.ok(admin.includes('crop:ServicePhotoCrop')&&
  admin.includes('const crops=normalizeServiceCrops(record?.imageCrops,urls.length)'),
