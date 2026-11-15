@@ -119,6 +119,33 @@ assert.ok(editor.includes("person.accountName!==person.name"),
 assert.ok(adminCss.includes('.shift-admin-save-preference'),
  'Save-preference control needs responsive styling')
 assert.ok(editor.includes('date>=today'))
+// 28 accessible date buttons in a 7-column calendar; forms open only on demand.
+assert.ok(editor.includes('className="shift-calendar-grid"'),
+ 'Admin shifts must use a compact calendar rather than stacked week forms')
+assert.ok(editor.includes('weeks.flatMap(week=>week.days).map((date,index)=>'),
+ 'The calendar must render one button for all 28 dates')
+assert.ok(editor.includes('SHIFT_WEEKDAYS.map(day=>'),
+ 'Calendar must show fixed Monday-to-Sunday weekday labels')
+assert.ok(editor.includes('showDay(date,event.currentTarget)'),
+ 'Clicking a calendar date must open its own editing controls')
+assert.ok(editor.includes('aria-haspopup="dialog"')&&editor.includes('aria-expanded={selectedDate===date}'),
+ 'Date buttons must advertise the editor dialog')
+assert.ok(editor.includes('role="dialog" aria-modal="true"'),
+ 'The daily editor must be an accessible modal')
+assert.ok(editor.includes('ShiftDayEditor key={selectedDate}'),
+ 'Opening a different day should reset editing draft state')
+assert.ok(editor.includes("event.key==='Escape'")&&editor.includes('triggerRef.current?.focus()'),
+ 'Escape should close the modal and restore focus to the date')
+assert.ok(editor.includes("if(busyRef.current)return"),
+ 'Modal must not close while changes are saving')
+assert.ok(editor.includes('staff={byDate.get(selectedDate)||[]}'),
+ 'Daily editor must use the stored shift records')
+assert.ok(adminCss.includes('.shift-calendar-grid')&&adminCss.includes('grid-template-columns:repeat(7,'),
+ 'Calendar needs seven weekday columns')
+assert.ok(adminCss.includes('.shift-admin-modal-backdrop'),
+ 'Daily edit options must appear in a modal overlay')
+assert.ok(adminCss.includes('overflow-x:auto'),
+ 'Calendar needs horizontal access on smaller screens')
 assert.ok(page.includes('opening?.open?members.get(date)||[]:[]'))
 assert.ok(page.includes('status===\'open\''))
 assert.ok(lib.includes("onConflict:'shift_date'"))
