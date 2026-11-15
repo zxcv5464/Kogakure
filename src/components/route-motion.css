@@ -77,12 +77,12 @@
 .route-stage .tea-menu-verse{animation:quietRise 1.28s var(--public-reveal-ease) .73s both}
 .route-stage .tea-menu-state,
 .route-stage .tea-menu-status{animation:quietRise 1.15s var(--public-reveal-ease) .84s both}
-.route-stage .tea-menu-section{animation:quietRise 1.3s var(--public-reveal-ease) both}
-.route-stage .tea-menu-section:nth-of-type(1){animation-delay:1.08s}
-.route-stage .tea-menu-section:nth-of-type(2){animation-delay:1.24s}
-.route-stage .tea-menu-section:nth-of-type(n+3){animation-delay:1.4s}
-.route-stage .tea-menu-summary{animation:quietRise 1.24s var(--public-reveal-ease) 1.54s both}
-.route-stage .tea-menu-ending{animation:quietRise 1.24s var(--public-reveal-ease) 1.68s both}
+.route-stage .tea-menu-section{animation:quietRise .85s var(--public-reveal-ease) both}
+.route-stage .tea-menu-section:nth-of-type(1){animation-delay:.2s}
+.route-stage .tea-menu-section:nth-of-type(2){animation-delay:.3s}
+.route-stage .tea-menu-section:nth-of-type(n+3){animation-delay:.4s}
+.route-stage .tea-menu-summary{animation:quietRise .84s var(--public-reveal-ease) .5s both}
+.route-stage .tea-menu-ending{animation:quietRise .82s var(--public-reveal-ease) .62s both}
 /* A covered route must not finish its entrance behind the opaque curtain.
    The existing intro-waiting class also handles a first-visit logo intro.
    No data or page markup changes are needed. */
@@ -122,13 +122,13 @@
 .route-stage .booking-hero h1{animation:quietRise 1.26s var(--public-reveal-ease) .33s both}
 .route-stage .booking-hero-label{animation:quietRise 1.18s var(--public-reveal-ease) .54s both}
 .route-stage .booking-hero-verse{animation:quietRise 1.28s var(--public-reveal-ease) .72s both}
-.route-stage .booking-legend{animation:quietRise 1.22s var(--public-reveal-ease) .9s both}
+.route-stage .booking-legend{animation:quietRise .88s var(--public-reveal-ease) .42s both}
 /* Empty-state and offline/error notices use the same gentle entrance as
    other public pages; multiple notices are staggered rather than flashing. */
-.route-stage .booking-notice{animation:quietRise 1.28s var(--public-reveal-ease) 1.16s both}
-.route-stage .booking-notice+.booking-notice{animation-delay:1.34s}
-.route-stage .booking-profile{animation:staffReveal 1.34s var(--public-reveal-ease) both;animation-delay:calc(1.2s + min(var(--booking-delay,0ms),640ms))}
-.route-stage .booking-footnote{animation:quietFade 1.12s ease-out 1.45s both}
+.route-stage .booking-notice{animation:quietRise .82s var(--public-reveal-ease) .48s both}
+.route-stage .booking-notice+.booking-notice{animation-delay:.56s}
+.route-stage .booking-profile{animation:staffReveal .92s var(--public-reveal-ease) both;animation-delay:calc(.48s + min(var(--booking-delay,0ms),640ms))}
+.route-stage .booking-footnote{animation:quietFade .84s ease-out .6s both}
 .route-stage:is(.is-covering,.intro-waiting) :is(.booking-eyebrow,.booking-emblem,.booking-hero h1,.booking-hero-label,.booking-hero-verse,.booking-legend,.booking-notice,.booking-profile,.booking-footnote){animation-play-state:paused}
 /* Match the unhurried entrance of the other public pages.
    Pause the directory while the route curtain covers it; otherwise slow
