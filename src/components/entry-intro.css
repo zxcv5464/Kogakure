@@ -58,18 +58,22 @@
  color:#221a21;font:600 clamp(.83rem,2.8vw,.94rem)/1.5 'Noto Serif TC',serif;
  letter-spacing:.07em;cursor:pointer;
  box-shadow:0 9px 28px rgba(0,0,0,.25);
- animation:intro-letter-arrive .5s ease-out both;
+ opacity:0;
+ /* Keep button in layout from the start so the centered LOGO never jumps.
+    Fade in only after the 530ms motto entrance has finished. */
+ animation:intro-letter-arrive 650ms ease-out 1000ms both;
  transition:filter .2s ease,transform .2s ease;
 }
 .intro-entry-action svg{flex:none}
-.intro-entry-action:hover{filter:brightness(1.12);transform:translateY(-1px)}
+.intro-entry-action:hover:not(:disabled){filter:brightness(1.12);transform:translateY(-1px)}
+.intro-entry-action:disabled{pointer-events:none;cursor:default}
 .intro-entry-action:focus-visible{outline:3px solid #9ce4d5;outline-offset:4px}
-.intro-music-note{display:block;max-width:100%;margin-top:13px;color:#b8a998;font-size:.7rem;line-height:1.6;animation:intro-letter-arrive .55s ease-out both}
+.intro-music-note{display:block;max-width:100%;margin-top:13px;color:#b8a998;font-size:.7rem;line-height:1.6;opacity:0;animation:intro-letter-arrive 550ms ease-out 1320ms both}
 @media(max-width:570px){
  .intro-entry-action{margin-top:27px;gap:7px}
 }
 @media(prefers-reduced-motion:reduce){
  .entry-intro,.entry-intro *{animation:none!important;transition:none!important}
- .intro-seal,.intro-wordmark,.intro-motto{opacity:1!important;transform:none!important}
+ .intro-seal,.intro-wordmark,.intro-motto,.intro-entry-action,.intro-music-note{opacity:1!important;transform:none!important}
  .intro-divider{transform:none!important}
 }
