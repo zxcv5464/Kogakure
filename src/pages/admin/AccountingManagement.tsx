@@ -34,6 +34,7 @@ export default function AccountingManagement(){
  const [error,setError]=useState('')
  const [notice,setNotice]=useState('')
  const [busy,setBusy]=useState(false)
+ const [payrollRefreshKey,setPayrollRefreshKey]=useState(0)
  const [kindFilter,setKindFilter]=useState<'all'|AccountingKind>('all')
  const [draft,setDraft]=useState<AccountingInput>(fresh)
  const [editingId,setEditingId]=useState<string|null>(null)
@@ -100,6 +101,7 @@ export default function AccountingManagement(){
   try{
    await saveAccountingEntry(draft,editingId??undefined)
    await refresh()
+   setPayrollRefreshKey(value=>value+1)
    resetForm()
    setNotice('帳務紀錄已儲存。收入與支出只根據正式登錄的 Gil 計算。')
   }catch(e){setError(e instanceof Error?e.message:'帳務儲存失敗')}
@@ -111,6 +113,7 @@ export default function AccountingManagement(){
   try{
    await deleteAccountingEntry(entry.id)
    await refresh()
+   setPayrollRefreshKey(value=>value+1)
    if(editingId===entry.id)resetForm()
    setNotice('帳務紀錄已刪除。')
   }catch(e){setError(e instanceof Error?e.message:'刪除未成功')}
@@ -155,7 +158,7 @@ export default function AccountingManagement(){
   </div>
   {error&&<p role="alert" className="accounting-notice is-error"><TriangleAlert size={17}/>{error}</p>}
   {notice&&<p role="status" className="accounting-notice is-success"><CheckCircle2 size={17}/>{notice}</p>}
-  <DailyPayrollSection selectedDate={mode==='day'?date:venueDate()} onLedgerChanged={()=>{void refresh()}}/>
+  <DailyPayrollSection selectedDate={mode==='day'?date:venueDate()} refreshToken={payrollRefreshKey} onLedgerChanged={()=>{void refresh()}}/>
   <div className="accounting-workspace">
    <div className="accounting-list-panel">
     <div className="accounting-list-heading"><div><h2>收支紀錄</h2><small>依日期由新至舊排列 · {visible.length} 筆</small></div>
