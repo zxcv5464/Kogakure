@@ -121,7 +121,8 @@ export default function AdminPage() {
 }
 
 function allowed(access:BackofficeAccess,id:string){
- if(id==='accounts'||id==='services'||id==='accounting')return access.kind==='owner'
+ if(id==='accounts'||id==='services')return access.kind==='owner'
+ if(id==='accounting')return permitted(access,'accounting.manage')
  if(id==='shifts')return access.kind==='owner'||(access.kind==='employee'&&access.active)
  if(id==='staff')return permitted(access,'staff.manage')
  if(id==='menu')return permitted(access,'menu.manage')
