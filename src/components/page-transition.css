@@ -23,6 +23,15 @@
  transition-duration: 760ms;
  transition-timing-function: cubic-bezier(.35, 0, .22, 1);
 }
+/* Menu and booking already have a branded, first-paint-ready shell.
+   Faster curtains remove the extra 1–2s perceived wait only on these routes. */
+.page-transition-curtain.is-quick.is-covering{
+ transition-duration:340ms;
+}
+.page-transition-curtain.is-quick.is-revealing{
+ transition-duration:410ms;
+}
+
 @media (prefers-reduced-motion: reduce) {
  .page-transition-curtain { transition: none !important; display: none !important; }
 }
