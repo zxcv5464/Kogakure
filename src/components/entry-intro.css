@@ -7,6 +7,14 @@
  color:#e8d2ad;opacity:1;
  transition:opacity 480ms cubic-bezier(.35,0,.22,1);
 }
+/* Keep every part of the logo entrance hidden on the first uncached load.
+   React removes this state only after logo decoding and two paint frames. */
+.entry-intro.is-preparing :is(
+ .intro-seal,.intro-wordmark,.intro-divider,.intro-motto,
+ .intro-entry-action,.intro-music-note
+){animation:none!important;opacity:0}
+.entry-intro.is-preparing .intro-seal{transform:translateY(9px) scale(.976)}
+.entry-intro.is-preparing .intro-divider{transform:scaleX(0)}
 .entry-intro.is-clearing .intro-brand,.entry-intro.is-revealing .intro-brand{opacity:0}
 .entry-intro.is-revealing{opacity:0;pointer-events:none}
 .intro-brand{
