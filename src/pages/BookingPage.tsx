@@ -6,10 +6,11 @@ import { resolveBookingNominees } from '../lib/booking-selection'
 import type { BookingNominee } from '../lib/booking-selection'
 import { BOOKING_PAGE_READY_EVENT } from '../lib/route-events'
 import BookingLoading from '../components/BookingLoading'
-import { loadPublicStaff } from '../lib/public-staff'
+import { getCachedPublicStaff,loadPublicStaff } from '../lib/public-staff'
+import {loadPublicBookingPlans,loadPublicStaffPresence,peekPublicBookingPlans,peekPublicStaffPresence} from '../lib/public-booking-data'
 import { getStaff } from '../lib/staff'
 import {
- describeBookingError, isStaffBusy, loadBookingPlans, loadStaffPresence,
+ describeBookingError, isStaffBusy,
  submitNomination, watchBookingChanges,
 } from '../lib/bookings'
 import type { BookingPlan, StaffPresence } from '../lib/bookings'
@@ -29,10 +30,10 @@ function NomineeSummary({nominees}: {nominees: BookingNominee[]}) {
 }
 
 export default function BookingPage(){
- const [people,setPeople]=useState<Staff[]>([])
- const [plans,setPlans]=useState<BookingPlan[]>([])
- const [presence,setPresence]=useState<StaffPresence[]>([])
- const [loading,setLoading]=useState(true)
+ const [people,setPeople]=useState<Staff[]>(()=>getCachedPublicStaff()?.filter(p=>p.published&&p.bookingVisible)??[])
+ const [plans,setPlans]=useState<BookingPlan[]>(()=>peekPublicBookingPlans()??[])
+ const [presence,setPresence]=useState<StaffPresence[]>(()=>peekPublicStaffPresence()??[])
+ const [loading,setLoading]=useState(()=>!(configured&&getCachedPublicStaff()&&peekPublicBookingPlans()&&peekPublicStaffPresence()))
  const [error,setError]=useState('')
  const [now,setNow]=useState(Date.now())
  const [selected,setSelected]=useState<Staff|null>(null)
@@ -52,7 +53,7 @@ export default function BookingPage(){
  useEffect(()=>{
   if(!configured){setLoading(false);setError('預約系統尚未連線，請洽館方。');return}
   let live=true
-  Promise.all([loadPublicStaff(),loadBookingPlans(),loadStaffPresence()])
+  Promise.all([loadPublicStaff(),loadPublicBookingPlans(),loadPublicStaffPresence()])
    .then(([staff,loadedPlans,status])=>{
     if(!live)return
     setPeople(staff.filter(p=>p.published&&p.bookingVisible))
@@ -61,17 +62,25 @@ export default function BookingPage(){
    .finally(()=>{if(live)setLoading(false)})
   return()=>{live=false}
  },[])
- // Notify the shared route transition only after data or an error is ready.
- useEffect(()=>{if(!loading)window.dispatchEvent(new Event(BOOKING_PAGE_READY_EVENT))},[loading])
+ // Release the route curtain after the branded booking shell first paints,
+ // not after three unrelated network reads. Booking cards remain blocked
+ // until staff, plans and presence are all available.
+ useEffect(()=>{
+  let one=0,two=0
+  one=window.requestAnimationFrame(()=>{
+   two=window.requestAnimationFrame(()=>window.dispatchEvent(new Event(BOOKING_PAGE_READY_EVENT)))
+  })
+  return()=>{window.cancelAnimationFrame(one);window.cancelAnimationFrame(two)}
+ },[])
 
  useEffect(()=>{
   if(loading||!configured)return
   let live=true
   const refresh=()=>{
-   void loadStaffPresence().then(p=>{if(live)setPresence(p)}).catch(()=>{})
+   void loadPublicStaffPresence({force:true}).then(p=>{if(live)setPresence(p)}).catch(()=>{})
    // Plans are editable in the admin console; refresh while this page is open.
    void getStaff().then(rows=>{if(live)setPeople(rows.filter(p=>p.published&&p.bookingVisible))}).catch(()=>{})
-   void loadBookingPlans().then(updated=>{
+   void loadPublicBookingPlans({force:true}).then(updated=>{
     if(!live)return
     setPlans(updated)
     setPlanId(previous=>updated.some(p=>p.id===previous)?previous:(updated[0]?.id||''))
@@ -138,7 +147,6 @@ export default function BookingPage(){
   finally{setSending(false)}
  }
 
- if(loading)return <BookingLoading />
  return <section className="booking-page" aria-label="狐隱館員指名預約">
   <header className="booking-hero">
    <p className="booking-eyebrow">狐隱 · KOGAKURE</p>
@@ -149,7 +157,7 @@ export default function BookingPage(){
   </header>
   <div className="booking-content">
    <div className="booking-legend"><span><i className="booking-dot is-free"/>空閒中</span><span><i className="booking-dot is-busy"/>指名中</span><small>即時指名申請 · 以館方接取為準</small></div>
-   {loading&&<div className="booking-notice" role="status">正在尋訪館中的狐姬…</div>}
+   {loading&&<div className="booking-loading-stage" aria-busy="true"><BookingLoading /></div>}
    {error&&<div className="booking-notice is-error" role="alert">無法取得預約資訊：{error}</div>}
    {!loading&&!error&&!plans.length&&<div className="booking-notice">館方尚未啟用指名方案，角色名帖可先行欣賞；請待館方開放預約。</div>}
    {!loading&&!error&&!people.length&&<div className="booking-notice">目前沒有開放指名的館員，敬請期待。</div>}
