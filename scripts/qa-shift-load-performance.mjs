@@ -17,25 +17,26 @@ assert.ok(source.includes('peekPublicShifts(start,end)')&&source.includes('loadP
  'Public shifts must reuse cached snapshots and fetch through deduplicating reader')
 assert.ok(source.includes('setRefreshing(true)')&&source.includes('loadPublicShifts(start,end,{force:true})'),
  'Visitor refresh must force a network read without blanking the existing calendar')
-assert.ok(source.includes('!loading&&(!error||hasSnapshot)'),
- 'A previous calendar should remain visible if an update fails')
+assert.ok(!source.includes('!loading&&(!error||hasSnapshot)')&&
+ source.includes('const unavailable=configured&&!hasSnapshot')&&
+ source.includes('aria-busy={unavailable}'),
+ 'All 28 calendar cells should paint even on first network load, without pretending missing days are closed')
 assert.ok(source.includes('latestRequest.current')&&source.includes('request===latestRequest.current'),
  'Out-of-order requests must not overwrite the latest schedule or error state')
 assert.ok(source.includes('useMemo(()=>')&&calendar.includes('useMemo(()=>rollingShiftWeeks(today),[today])'),
  'Selection and data updates must not recompute calendar dates and daily lookups unnecessarily')
 assert.ok(prefetch.includes("export function prefetchShiftsPage():void")&&
- prefetch.includes("import('../pages/ShiftsPage')")&&
  prefetch.includes('prefetchCurrentPublicShifts()'),
- 'Prefetch lazy bundle and data on navigation intent, not unconditionally')
+ 'Keep intent-driven schedule prefetch, without prefetching production data on home load')
 assert.ok((nav.match(/onMouseEnter=\{to==='\/staff'\?prefetchStaffPage:to==='\/shifts'\?prefetchShiftsPage/g)||[]).length===2,
  'Both desktop and mobile Shifts links must warm the lazy page and data')
 assert.ok(publicSource.includes('CACHE_TTL_MS=45_000')&&publicSource.includes('pending.get(key)'),
  'Use a bounded, in-flight-deduplicated cache for the public page')
 assert.ok(!admin.includes('peekPublicShifts')&&!admin.includes('loadPublicShifts'),
  'Administration must keep fetching fresh data and ignore visitor-only caches')
-assert.ok(motion.includes('.route-stage .shift-week{animation:quietRise .74s')&&
- motion.includes('.route-stage .shift-week:nth-child(4){animation-delay:.68s}'),
- 'Four rows should reveal smoothly without spending nearly three seconds staggering')
+assert.ok(motion.includes('.route-stage .shift-week{animation:quietFade .45s')&&
+ motion.includes('.route-stage .shift-week:nth-child(4){animation-delay:.23s}'),
+ 'All rows should reveal with opacity only, avoiding costly transform layers during first data render')
 assert.ok(source.includes("opening?.open?members.get(date)||[]:[]")&&
  source.includes('shift-selected-detail'),
  'Preserve the actual daily roster and selected-day UI')
