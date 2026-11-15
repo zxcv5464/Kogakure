@@ -51,6 +51,13 @@ assert.ok(dashboard.includes('accountingSummary')&&dashboard.includes('saveAccou
  dashboard.includes("entry.reference.startsWith('PAYROLL:')")&&
  dashboard.includes('input type="date"')&&dashboard.includes('input type="month"'),
  'Finance module must keep inline editing/deletion while showing paid payroll correction controls')
+assert.ok(!dashboard.includes('type="checkbox"')&&
+ !css.includes('.accounting-payroll-checkbox')&&
+ dashboard.includes("draft.isAdditionalRevenue?draft.payrollDistribution:'order_receipt'")&&
+ dashboard.includes("value=\"order_receipt\"")&&
+ dashboard.includes('這筆收入如何分薪？')&&
+ css.includes('grid-column:1/-1')&&css.includes('box-sizing:border-box'),
+ 'Income entry must use one responsive payroll select, with no oversized checkbox or duplicated turnover')
 assert.ok(accounting.includes("rpc('get_accounting_payroll_payees'")&&
  dashboard.includes('payrollDistribution')&&dashboard.includes('payrollRecipientId')&&
  dashboard.includes('額外收入')&&dashboard.includes('平均分配給出勤員工')&&

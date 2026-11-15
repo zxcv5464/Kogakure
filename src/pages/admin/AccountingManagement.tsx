@@ -116,13 +116,13 @@ export default function AccountingManagement(){
    isAdditionalRevenue:value==='income',
    payrollDistribution:value==='income'?'shared':'none',payrollRecipientId:null}))
  }
- function changeRevenueIncluded(included:boolean){
-  setDraft(prev=>({...prev,isAdditionalRevenue:included,
-   payrollDistribution:included?'shared':'none',payrollRecipientId:null}))
- }
- function changePayDistribution(distribution:PayrollDistribution){
-  setDraft(prev=>({...prev,payrollDistribution:distribution,
-   payrollRecipientId:distribution==='individual'?prev.payrollRecipientId:null}))
+ function changePayDistribution(option:PayrollDistribution|'order_receipt'){
+  setDraft(prev=>({
+   ...prev,
+   isAdditionalRevenue:option!=='order_receipt',
+   payrollDistribution:option==='order_receipt'?'none':option,
+   payrollRecipientId:option==='individual'?prev.payrollRecipientId:null,
+  }))
  }
  async function save(event:FormEvent<HTMLFormElement>){
   event.preventDefault()
@@ -270,36 +270,34 @@ export default function AccountingManagement(){
       value={draft.amountGil||''} onChange={e=>setField('amountGil',Number(e.target.value))}
       placeholder="輸入實際收付金額"/></label>
      {draft.kind==='income'&&<div className="accounting-payroll-setting">
-      <label className="accounting-payroll-checkbox">
-       <input type="checkbox" checked={draft.isAdditionalRevenue}
-        onChange={e=>changeRevenueIncluded(e.target.checked)}/>
-       <span>這筆是<strong>額外收入</strong>，納入館內營業額</span>
+      <label>這筆收入如何分薪？
+       <select value={draft.isAdditionalRevenue?draft.payrollDistribution:'order_receipt'}
+        onChange={e=>changePayDistribution(e.target.value as PayrollDistribution|'order_receipt')}>
+        <option value="shared">平均分配給出勤員工（包含管理員）</option>
+        <option value="individual">全額納入指定員工薪水</option>
+        <option value="none">不納入員工分薪（仍計入營業額）</option>
+        <option value="order_receipt">已完成茶宴的收款（不重複計入營業額）</option>
+       </select>
       </label>
-      <small>一般手動收入請勾選；如果只是已完成茶宴訂單的實際收款，取消勾選以避免重複計算。</small>
-      {draft.isAdditionalRevenue&&<>
-       <label>這筆收入如何分薪？
-        <select value={draft.payrollDistribution}
-         onChange={e=>changePayDistribution(e.target.value as PayrollDistribution)}>
-         <option value="shared">平均分配給出勤員工（包含管理員）</option>
-         <option value="individual">全額納入指定員工薪水</option>
-         <option value="none">不納入員工分薪</option>
+      <small className="accounting-payroll-explain">
+       {draft.isAdditionalRevenue
+        ?'手動收入會自動計入營業額；依選擇分薪或不分薪。'
+        :'這筆金額只記錄實際收款，已完成訂單的營業額不會再次計算。'}
+      </small>
+      {draft.isAdditionalRevenue&&draft.payrollDistribution==='individual'&&
+       <label>指定員工／管理員
+        <select value={draft.payrollRecipientId||''}
+         onChange={e=>setField('payrollRecipientId',e.target.value||null)} required>
+         <option value="">請選擇員工</option>
+         {payees.map(person=><option key={person.id} value={person.id}>
+          {person.name}{person.source==='owner'?'（婆婆／管理員）':''}
+         </option>)}
         </select>
-       </label>
-       {draft.payrollDistribution==='individual'&&
-        <label>指定員工／管理員
-         <select value={draft.payrollRecipientId||''}
-          onChange={e=>setField('payrollRecipientId',e.target.value||null)} required>
-          <option value="">請選擇員工</option>
-          {payees.map(person=><option key={person.id} value={person.id}>
-           {person.name}{person.source==='owner'?'（婆婆／管理員）':''}
-          </option>)}
-         </select>
-        </label>}
-       {draft.payrollDistribution==='individual'&&payeeError&&
-        <small className="accounting-error" role="alert">{payeeError}</small>}
-       {draft.payrollDistribution==='individual'&&!payees.length&&!payeeError&&
-        <small>目前沒有可指派的員工，請先建立員工帳號或登記管理員出勤。</small>}
-      </>}
+       </label>}
+      {draft.isAdditionalRevenue&&draft.payrollDistribution==='individual'&&payeeError&&
+       <small className="accounting-error" role="alert">{payeeError}</small>}
+      {draft.isAdditionalRevenue&&draft.payrollDistribution==='individual'&&!payees.length&&!payeeError&&
+       <small>目前沒有可指派的員工，請先建立員工帳號或登記管理員出勤。</small>}
      </div>}
      <label>備註 <textarea rows={3} maxLength={240} value={draft.description}
       onChange={e=>setField('description',e.target.value)} placeholder="例如：旅人餐費、員工薪酬、採買材料…"/></label>
@@ -312,7 +310,7 @@ export default function AccountingManagement(){
       <Save size={16}/>{busy?'儲存中…':editingId?'儲存修改':'新增收支'}
      </button>
     </div>
-    <p className="accounting-editor-hint">手動收入會依「額外收入」勾選結果計入營業額；分薪可選平均、指定員工或不分配。請勿重複計入已完成訂單的收款。修改分薪設定後，未建立的分薪試算會重新計算；已發薪的清單不會自動變動。</p>
+    <p className="accounting-editor-hint">手動收入預設計入營業額，可選平均分薪、指定員工或不分薪；已完成訂單的收款可在同一選單中標記以避免重複計算。未建立的分薪會重新試算，已發薪清單不自動變動。</p>
    </form>
   </div>
  </section>
