@@ -25,10 +25,14 @@ export async function getStaff(includeUnpublished=false):Promise<Staff[]> {
 export async function saveStaff(staff: Staff, creating: boolean):Promise<void> {
  if(!supabase) throw new Error('尚未設定 Supabase')
  const row=staffToRow(staff)
+ // Nomination availability is owned by BookingManagement. A stale staff
+ // editor must never overwrite a recently changed booking setting.
+ const {is_booking_visible:_bookingVisible,...profileRow}=row
+ void _bookingVisible
  // An update must never silently recreate a profile that another admin deleted.
  const query = creating
   ? supabase.from('staff').insert(row).select('id')
-  : supabase.from('staff').update(row).eq('id',row.id).select('id')
+  : supabase.from('staff').update(profileRow).eq('id',row.id).select('id')
  const {data,error}=await query
  if(error) throw error
  if(!data || data.length!==1) throw new Error('沒有成功寫入任何名帖，資料可能已遭其他管理員刪除，或權限不足。請更新清單。')
