@@ -12,21 +12,22 @@ ALTER TABLE public.employee_accounts
 -- Preserve the latest existing RP duty nickname without editing past rosters.
 -- A user with no previous shifts keeps the existing account name as a fallback.
 UPDATE public.employee_accounts AS account
-SET shift_display_name=latest.employee_name
-FROM LATERAL (
- SELECT a.employee_id, a.employee_name
- FROM public.shift_attendance AS a
- ORDER BY a.shift_date DESC, a.created_at DESC
-) AS latest
-WHERE latest.employee_id=account.user_id
-  AND account.shift_display_name IS NULL
-  AND latest.employee_name IS NOT NULL
-  AND char_length(btrim(latest.employee_name)) BETWEEN 1 AND 100
-  AND latest.employee_name=btrim(latest.employee_name)
-  AND latest.shift_date=(
-   SELECT MAX(a2.shift_date) FROM public.shift_attendance a2
-   WHERE a2.employee_id=account.user_id
-  );
+SET shift_display_name=(
+ SELECT duty.employee_name
+ FROM public.shift_attendance duty
+ WHERE duty.employee_id=account.user_id
+   AND char_length(btrim(duty.employee_name)) BETWEEN 1 AND 100
+   AND duty.employee_name=btrim(duty.employee_name)
+ ORDER BY duty.shift_date DESC,duty.created_at DESC
+ LIMIT 1
+)
+WHERE account.shift_display_name IS NULL
+ AND EXISTS (
+  SELECT 1 FROM public.shift_attendance duty
+  WHERE duty.employee_id=account.user_id
+    AND char_length(btrim(duty.employee_name)) BETWEEN 1 AND 100
+    AND duty.employee_name=btrim(duty.employee_name)
+ );
 
 -- Employees can edit only their own preferred duty name, never their
 -- permissions, active status, account display_name, email, or user ID.
