@@ -147,7 +147,17 @@ export default function ShiftManagement({access}:{access:BackofficeAccess}){
  }
  function mark(date:string,person:ShiftEmployee){
   return run(async()=>{
-   if(!owner&&person.id===selfId){
+   if(owner){
+    // Re-read immediately before assignment: a staff member may have
+    // changed the preferred name after the manager opened this page.
+    const fresh=await listActiveShiftEmployees()
+    const latest=fresh.find(entry=>entry.id===person.id)
+    if(!latest)throw new Error('員工帳號已停用或不存在，請重新整理排班清單')
+    await markShiftAttendance(date,latest)
+    setPeople(fresh)
+    return
+   }
+   if(person.id===selfId){
     // Keep the preference visible to the manager even if no further shifts
     // are registered. Authentication is checked inside this operation.
     await saveOwnPreferredShiftName(person.name)
@@ -155,7 +165,7 @@ export default function ShiftManagement({access}:{access:BackofficeAccess}){
     try{window.localStorage.setItem('kogakure-shift-employee-name:'+selfId,person.name.trim())}catch{/* Optional cache. */}
    }
    await markShiftAttendance(date,person)
-  },'已登記 '+person.name.trim()+' 在 '+date+' 出勤。')
+  },owner?'已安排 '+date+' 出勤，名稱以員工最新設定為準。':'已登記 '+person.name.trim()+' 在 '+date+' 出勤。')
  }
  function savePreferredName(){
   const label=employeeShiftName.trim()
