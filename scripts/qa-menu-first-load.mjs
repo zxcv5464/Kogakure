@@ -19,7 +19,9 @@ assert.ok(page.includes("mode==='loading'&&<div className=\"tea-menu-loading-sta
  'Show an in-place loading area under the visible menu title, not a full-screen placeholder')
 assert.ok(page.includes("const categories = mode === 'loading' ? []"),
  'Never show sample dish prices while the actual menu is pending')
-assert.ok(app.includes("location.pathname === '/menu' ? <MenuLoading />"), 'Menu lazy fallback must be identical to data loader')
+assert.ok(app.includes("import MenuPage from './pages/MenuPage'")&&
+ !app.includes("const MenuPage = lazy(() => import('./pages/MenuPage'))"),
+ 'Menu should be bundled with the public app rather than load an extra chunk on first visit')
 assert.ok(transition.includes("location.pathname === '/menu' ? MENU_PAGE_READY_EVENT"),
  'Curtain must wait for the destination page first paint, not all network requests')
 assert.ok(transition.includes('if (readyEvent) window.addEventListener(readyEvent, onPageReady)'), 'Readiness listener must be registered')
@@ -37,4 +39,4 @@ try {
  assert.ok(html.includes('role="status"'), 'Accessible load status missing')
 } finally {await vite.close()}
 
-console.log('PASS: menu title paints before network data; in-place loading keeps prices hidden, no intro remount or lazy-route flash')
+console.log('PASS: menu code is prebundled; first-paint shell and verified prices remain safe without lazy fallback')
