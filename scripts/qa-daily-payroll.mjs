@@ -89,7 +89,7 @@ assert.ok(accounting.includes('PaidPayrollRecordEditor')&&
  helper.includes('parsePayrollReference')&&
  correctionSql.includes('public.payroll_correction_audit')&&
  correctionSql.includes("p_action='edit'")&&
- correctionSql.includes("p_action='delete'")&&
+ correctionSql.includes("p_action not in ('edit','delete')")&&
  correctionSql.includes('v_pay.paid_at is null')&&
  correctionSql.includes('delete from public.accounting_entries')&&
  correctionSql.includes('delete from public.payroll_allocations')&&
@@ -97,7 +97,7 @@ assert.ok(accounting.includes('PaidPayrollRecordEditor')&&
  correctionSql.includes('pg_catalog.pg_advisory_xact_lock')&&
  correctionSql.includes('revoke all on function public.manage_paid_payroll')&&
  correctionSql.includes('to authenticated')&&
- paidEditor.includes('調整原因')&&paidEditor.includes("void run('delete')")&&
+ paidEditor.includes('修改／刪除原因')&&paidEditor.includes("void run('delete')")&&
  paidEditor.includes("void run('edit')"),
  'Paid correction/delete requires reason, atomic ledger sync, and durable audit')
 assert.ok(styles.includes('.daily-payroll-salary-basis')&&
