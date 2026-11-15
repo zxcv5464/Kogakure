@@ -1,6 +1,7 @@
 import {useEffect,useRef,useState} from 'react'
 import {ImagePlus} from 'lucide-react'
 import type {ServiceEntry} from '../lib/service-content'
+import {normalizeServiceCrops,servicePhotoFrameStyle} from '../lib/service-photo-crop'
 
 const slideIntervalMs=5000
 type Layer=0|1
@@ -11,6 +12,7 @@ type Slides={indices:[number,number];active:Layer}
  * avoiding extra image decodes and timers during navigation or page scrolling. */
 export default function ServicePhotoGallery({service,number}:{service:ServiceEntry;number:string}){
  const photos=service.imageUrls.length?service.imageUrls:(service.imageUrl?[service.imageUrl]:[])
+ const photoCrops=normalizeServiceCrops(service.imageCrops,photos.length)
  const photoKey=photos.join('\n')
  const galleryRef=useRef<HTMLDivElement>(null)
  const nextIndexRef=useRef(0)
@@ -90,6 +92,7 @@ export default function ServicePhotoGallery({service,number}:{service:ServiceEnt
   {photos.length?
    <div className="services-photo-slides" aria-label={service.category+'形象照片輪播'} aria-live="off">
     {slides.indices.map((photoIndex,layer)=><img key={layer} src={photos[photoIndex]}
+     style={servicePhotoFrameStyle(photoCrops[photoIndex])}
      alt={(service.photoLabel||service.category+'服務照片')+'，第 '+(photoIndex+1)+' 張'}
      aria-hidden={layer!==slides.active}
      className={'services-photo-slide'+(layer===slides.active?' is-visible':'')}
