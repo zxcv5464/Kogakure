@@ -42,6 +42,15 @@ export async function loadBookingPlans(includeInactive=false):Promise<BookingPla
  if(error)throw error
  return (data as PlanRow[]).map(planFromRow)
 }
+/** Update only the nomination visibility flag through an authorization-checked
+ * database function. Booking operators cannot edit staff profiles. */
+export async function setBookingNomineeVisibility(staffId:string,visible:boolean):Promise<void>{
+ const {data,error}=await client().rpc('set_staff_booking_visibility',{
+  p_staff_id:staffId,p_visible:visible,
+ })
+ if(error)throw error
+ if(data!==true)throw new Error('指名開放狀態未成功儲存，請重新整理')
+}
 export async function loadStaffPresence():Promise<StaffPresence[]>{
  const {data,error}=await client().from('staff_booking_presence').select('staff_id,busy_until')
  if(error)throw error
