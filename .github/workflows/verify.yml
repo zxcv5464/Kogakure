@@ -42,6 +42,10 @@ jobs:
         env:
           VITE_OFFLINE_PREVIEW: 'true'
         run: node scripts/qa-service-content.mjs
+      - name: Verify Discord social links and mobile navigation
+        env:
+          VITE_OFFLINE_PREVIEW: 'true'
+        run: node scripts/qa-discord-social-entry.mjs
       - name: Verify shared public background music and mobile playback controls
         env:
           VITE_OFFLINE_PREVIEW: 'true'
