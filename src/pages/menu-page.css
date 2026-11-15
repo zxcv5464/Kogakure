@@ -84,3 +84,13 @@
 
 /* Narrow screens: show the clear option on a second aligned row, not squeezed beside the total. */
 @media(max-width:490px){.tea-menu-summary-heading .tea-menu-clear{margin-left:auto}}
+
+
+/* Keep the brand heading visible during the very first catalog request.
+   Only the content area waits; the curtain can reveal a stable page shell. */
+.tea-menu-loading-stage{min-height:210px;margin:0 auto 20px}
+.tea-menu-loading-stage .tea-menu-loading{
+ min-height:210px;padding:22px 18px;
+ background:transparent;border:1px solid rgba(213,173,123,.22);
+ border-radius:6px;
+}
