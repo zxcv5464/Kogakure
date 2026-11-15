@@ -1,5 +1,6 @@
 import {configured} from './config'
 import {supabase} from './supabase'
+import {venueDayWindow} from './taipei-date'
 
 export type TeaOrderStatus = 'pending'|'preparing'|'completed'|'cancelled'
 export type TeaOrderLine = {
@@ -35,10 +36,14 @@ type TeaOrderRow={
  total_gil:number;created_at:string;updated_at:string;
  tea_order_items:{id:string;menu_item_id:string|null;item_name:string;unit_gil:number;quantity:number;line_gil:number}[]
 }
-export async function fetchTeaOrders():Promise<TeaOrder[]>{
- const {data,error}=await client().from('tea_orders')
+/** Date-scoped reads query the server first, rather than filtering the
+ * latest 200 rows in the browser (which hides older operating days). */
+export async function fetchTeaOrders(date?:string):Promise<TeaOrder[]>{
+ const range=date?venueDayWindow(date):null
+ let request=client().from('tea_orders')
   .select('id,guest_name,guest_world,status,total_gil,created_at,updated_at,tea_order_items(id,menu_item_id,item_name,unit_gil,quantity,line_gil)')
-  .order('created_at',{ascending:false}).limit(200)
+ if(range)request=request.gte('created_at',range.start).lt('created_at',range.end)
+ const {data,error}=await request.order('created_at',{ascending:false}).limit(date?1000:200)
  if(error)throw new Error(error.message||'無法讀取茶宴訂單')
  return (data as TeaOrderRow[]).map(r=>({
   id:r.id,guestName:r.guest_name,guestWorld:r.guest_world,status:r.status,
