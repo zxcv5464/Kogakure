@@ -10,7 +10,7 @@
  text-align: center;
 }
 .tea-menu-loading-inner {
- animation: teaLoadingAppear .45s ease .35s both;
+ animation: teaLoadingAppear .3s ease .08s both;
 }
 .tea-menu-loading-seal {
  display: block;
