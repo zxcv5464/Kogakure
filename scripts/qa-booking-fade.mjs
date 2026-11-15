@@ -13,18 +13,18 @@ assert.ok(motion.includes('.route-stage .booking-page{--public-reveal-ease:cubic
  'Booking must share other public pages\' easing curve')
 assert.ok(motion.includes('.route-stage .staff-entry{animation:staffReveal 1.34s var(--staff-ease) both;animation-delay:calc(1.2s + min(var(--delay,0ms),640ms))}'),
  'Staff directory reference animation has unexpectedly changed')
-assert.ok(motion.includes('.route-stage .booking-profile{animation:staffReveal .92s var(--public-reveal-ease) both;animation-delay:calc(.48s + min(var(--booking-delay,0ms),640ms))}'),
+assert.ok(motion.includes('.route-stage .booking-profile{animation:staffReveal .64s var(--public-reveal-ease) both;animation-delay:calc(.24s + min(var(--booking-delay,0ms),400ms))}'),
  'Booking cards should arrive gently but without an extra 1.2s invisible delay')
 assert.ok(!motion.includes('.booking-profile.staff-entry'), 'Obsolete selector cannot match the redesigned landscape cards')
 assert.ok(!bookingCss.includes('animation:bookingReveal'), 'Do not override the shared entrance with an earlier page-local animation')
 assert.ok(!bookingCss.includes('@keyframes bookingReveal'), 'Remove unused faster animation')
 assert.ok(bookingPage.includes("'--booking-delay':Math.min(index,8)*80+'ms'"),
  'Each card should stagger at the same 80ms interval as staff profiles')
-assert.ok(motion.includes('.route-stage .booking-hero-label{animation:quietRise .74s var(--public-reveal-ease) .19s both}'),
+assert.ok(motion.includes('.route-stage .booking-hero-label{animation:quietRise .5s var(--public-reveal-ease) .1s both}'),
  'Subtitle should reveal between heading and verse')
-assert.ok(motion.includes('.route-stage .booking-hero-verse{animation:quietRise .82s var(--public-reveal-ease) .26s both}'),
+assert.ok(motion.includes('.route-stage .booking-hero-verse{animation:quietRise .55s var(--public-reveal-ease) .14s both}'),
  'Intro should follow the same cadence as the staff page')
-assert.ok(motion.includes('.route-stage .booking-legend{animation:quietRise .88s var(--public-reveal-ease) .42s both}'),
+assert.ok(motion.includes('.route-stage .booking-legend{animation:quietRise .55s var(--public-reveal-ease) .19s both}'),
  'Booking status legend should precede cards')
 assert.ok(motion.includes('.booking-profile,.booking-footnote){animation-play-state:paused}'),
  'Curtain and first-visit intro must pause the booking animations')
