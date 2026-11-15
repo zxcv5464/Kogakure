@@ -6,7 +6,7 @@ import {
  saveAccountingEntry,validateAccountingInput,
 } from '../../lib/accounting'
 import type {AccountingEntry,AccountingInput,AccountingKind,AccountingPeriod} from '../../lib/accounting'
-import {shiftVenueDate,validVenueDate,validVenueMonth,venueDate} from '../../lib/taipei-date'
+import {validVenueDate,validVenueMonth,venueDate} from '../../lib/taipei-date'
 import {useAdminEditGuard} from './AdminEditGuard'
 import './accounting-management.css'
 
