@@ -205,7 +205,7 @@ export default function ShiftsPage(){
       {selectedOpening?.note&&<p className="shift-detail-note">{selectedOpening.note}</p>}
      </div>}
     </section>
-   </>}
+   </>
    <p className="shift-disclaimer">月曆依台灣時間顯示，並於每週一更新四週範圍。未設定營業的日期預設為「休館」，只有標示「營業」的日期代表館方已公告開店；出勤名單與活動安排可能調整，實際接待與預約仍以最新公告為準。</p>
   </div>
  </section>
