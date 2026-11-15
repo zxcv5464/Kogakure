@@ -57,6 +57,10 @@ assert.ok(!sql.includes('drop table')&&!sql.includes('delete from public.employe
 assert.ok(editor.includes('setShiftOpening(date,kind,hours,note)'))
 assert.ok(editor.includes('markShiftAttendance(date,person)'))
 assert.ok(editor.includes('unmarkShiftAttendance(date,person.employeeId,person.source)'), 'Cancel attendance must use owner/employee source')
+assert.ok(!editor.includes('window.confirm('),
+ 'Administrator cancellation must not show a blocking confirmation dialog')
+assert.ok(editor.includes("已取消 '+person.name+' 在 '+date+' 的出勤。"),
+ 'Cancelled shifts should still report completion')
 assert.ok(editor.includes('我的出勤顯示名稱')&&editor.includes('shift-employee-duty-name'),
  'Active employee should see a custom shift display-name input')
 assert.ok(editor.includes('onMark(date,{id:selfId,name:myDisplayName})'),
