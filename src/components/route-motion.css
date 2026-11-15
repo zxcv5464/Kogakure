@@ -64,11 +64,11 @@
 .route-stage .shift-hero-sub{animation:quietRise 1.18s var(--public-reveal-ease) .54s both}
 .route-stage .shift-intro,.route-stage .shift-legend{animation:quietRise 1.26s var(--public-reveal-ease) .72s both}
 .route-stage .shift-toolbar{animation:quietRise 1.12s var(--public-reveal-ease) .94s both}
-.route-stage .shift-week{animation:quietRise .74s var(--public-reveal-ease) both;animation-delay:.38s}
-.route-stage .shift-week:nth-child(2){animation-delay:.48s}
-.route-stage .shift-week:nth-child(3){animation-delay:.58s}
-.route-stage .shift-week:nth-child(4){animation-delay:.68s}
-.route-stage .shift-disclaimer{animation:quietFade .85s var(--public-reveal-ease) .74s both}
+.route-stage .shift-week{animation:quietFade .45s var(--public-reveal-ease) both;animation-delay:.08s}
+.route-stage .shift-week:nth-child(2){animation-delay:.13s}
+.route-stage .shift-week:nth-child(3){animation-delay:.18s}
+.route-stage .shift-week:nth-child(4){animation-delay:.23s}
+.route-stage .shift-disclaimer{animation:quietFade .6s var(--public-reveal-ease) .25s both}
 /* 點菜：茶宴題字 → 主旨 → 卷別與御品 → 點單；分類可由 Supabase 非同步載入 */
 .route-stage .tea-menu-brand,
 .route-stage .tea-menu-seal{animation:quietRise 1.12s var(--public-reveal-ease) .16s both}
