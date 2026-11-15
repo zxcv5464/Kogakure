@@ -5,9 +5,11 @@
  min-width: 0;
  padding-bottom: clamp(55px, 7vw, 100px);
  color: #e9e0d5;
+ /* The seven shared scene photos already rotate behind this page.
+    Use a translucent ink wash so the five-second crossfade stays visible. */
  background:
   radial-gradient(ellipse at 52% 1%, rgba(126, 91, 117, .16), transparent 47%),
-  linear-gradient(180deg, #11101b 0%, #17131e 56%, #110f19 100%);
+  linear-gradient(180deg, rgba(13, 12, 22, .69) 0%, rgba(15, 13, 24, .77) 52%, rgba(16, 14, 25, .87) 100%);
 }
 .services-hero {
  width: min(100% - 40px, 900px);
