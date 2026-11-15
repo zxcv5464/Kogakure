@@ -1,5 +1,5 @@
-// Regression guard: the menu must not reveal a temporary lazy fallback,
-// replace it with a second loader, then remount/re-query after the Logo intro.
+// Regression guard: the first menu visit reveals a branded stable shell,
+// then loads verified live prices without flashing sample items or refetching.
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { createElement } from 'react'
@@ -13,10 +13,15 @@ const [page,transition,app,events,motion,loader] = await Promise.all([
 ].map(file => readFile(file,'utf8')))
 
 assert.ok(events.includes('MENU_PAGE_READY_EVENT'), 'Menu readiness event missing')
-assert.ok(page.includes("if (mode !== 'loading') window.dispatchEvent(new Event(MENU_PAGE_READY_EVENT))"), 'Only signal readiness after data settles')
-assert.ok(page.includes("if (mode === 'loading') return <MenuLoading />"), 'Keep one stable loader during Supabase fetch')
+assert.ok(page.includes('window.requestAnimationFrame(()=>window.dispatchEvent(new Event(MENU_PAGE_READY_EVENT)))'),
+ 'Signal readiness only after the actual branded menu shell has painted')
+assert.ok(page.includes("mode==='loading'&&<div className=\"tea-menu-loading-stage\""),
+ 'Show an in-place loading area under the visible menu title, not a full-screen placeholder')
+assert.ok(page.includes("const categories = mode === 'loading' ? []"),
+ 'Never show sample dish prices while the actual menu is pending')
 assert.ok(app.includes("location.pathname === '/menu' ? <MenuLoading />"), 'Menu lazy fallback must be identical to data loader')
-assert.ok(transition.includes("location.pathname === '/menu' ? MENU_PAGE_READY_EVENT"), 'The curtain must wait for menu data')
+assert.ok(transition.includes("location.pathname === '/menu' ? MENU_PAGE_READY_EVENT"),
+ 'Curtain must wait for the destination page first paint, not all network requests')
 assert.ok(transition.includes('if (readyEvent) window.addEventListener(readyEvent, onPageReady)'), 'Readiness listener must be registered')
 assert.ok(transition.includes('if (readyEvent) window.removeEventListener(readyEvent, onPageReady)'), 'Readiness listener must be removed')
 assert.ok(transition.includes('key={displayed.pathname}'), 'Intro should never remount an already loading route')
@@ -32,4 +37,4 @@ try {
  assert.ok(html.includes('role="status"'), 'Accessible load status missing')
 } finally {await vite.close()}
 
-console.log('PASS: stable menu loader, route data readiness gate, one intro mount and retained entrances')
+console.log('PASS: menu title paints before network data; in-place loading keeps prices hidden, no intro remount or lazy-route flash')
