@@ -34,10 +34,14 @@ try{
   createElement(Layout,null,createElement('p',null,'CHECK'))))
  assert.equal((html.match(/class="social-header"/g)||[]).length,2,
   'Header must present exactly one Threads icon and one Discord icon')
- assert.equal((html.match(/class="mobile-extra-link mobile-social-link"/g)||[]).length,2,
-  'Mobile more menu must include both social channels')
- assert.equal((html.match(/href="https:\/\/discord\.gg\/f34DSnUgGV"/g)||[]).length,3,
-  'Discord should be linked in header, mobile menu and footer')
+ // Mobile "更多" items only render after the visitor opens the menu.
+ // Source checks cover their JSX; SSR checks cover always-visible links.
+ assert.equal((layout.match(/className="mobile-extra-link mobile-social-link"/g)||[]).length,2,
+  'Mobile more menu JSX must contain both social channels')
+ assert.equal((layout.match(/href=\{DISCORD_INVITE\}/g)||[]).length,3,
+  'Discord must be wired in the header, mobile menu and footer')
+ assert.equal((html.match(/href="https:\/\/discord\.gg\/f34DSnUgGV"/g)||[]).length,2,
+  'With the mobile menu closed, desktop header and footer links should render')
  assert.ok(html.includes('aria-label="狐隱 Discord"')&&html.includes('官方 Discord'),
   'Discord controls must be identifiable to accessibility tools and visitors')
  assert.ok(html.includes('href="https://www.threads.com/@kogakure_ffxiv"'),
