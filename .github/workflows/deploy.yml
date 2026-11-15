@@ -48,6 +48,10 @@ jobs:
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
           VITE_BASE_PATH: /Kogakure/
         run: npm run build
+      - name: Verify website BGM controls and autoplay fallback
+        env:
+          VITE_OFFLINE_PREVIEW: 'true'
+        run: node scripts/qa-site-bgm.mjs
       - name: Verify shared rotating scene backgrounds on services and shifts
         run: node scripts/qa-public-scene-backdrops.mjs
       - name: Verify rolling four-week opening dates and employee duty roster
