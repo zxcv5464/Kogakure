@@ -1,21 +1,24 @@
 import {useCallback,useEffect,useMemo,useRef,useState} from 'react'
 import {Link} from 'react-router-dom'
-import {AlertCircle,ArrowDown,ArrowUp,CheckCircle2,ExternalLink,ImagePlus,Plus,RefreshCw,Save,Search,Trash2,X} from 'lucide-react'
+import {AlertCircle,ArrowDown,ArrowUp,CheckCircle2,Crop,ExternalLink,ImagePlus,Plus,RefreshCw,Save,Search,Trash2,X} from 'lucide-react'
 import {
  deleteServiceContent,fetchServiceContents,removeUnusedServicePhoto,
  saveServiceContent,uploadServicePhoto,validateServicePhoto,
 } from '../../lib/service-content'
 import type {ServiceEntry} from '../../lib/service-content'
 import {useAdminEditGuard} from './AdminEditGuard'
+import ServicePhotoCropEditor from './ServicePhotoCropEditor'
+import {DEFAULT_SERVICE_CROP,normalizeServiceCrops,servicePhotoFrameStyle} from '../../lib/service-photo-crop'
+import type {ServicePhotoCrop} from '../../lib/service-photo-crop'
 import './service-management.css'
 
 type Notice={kind:'success'|'error';message:string}
-type PhotoSlot={id:string;url:string;file?:File}
+type PhotoSlot={id:string;url:string;file?:File;crop:ServicePhotoCrop}
 const maxServicePhotos=12
 const blank=(sortOrder:number):ServiceEntry=>({
  id:crypto.randomUUID(),slug:'service-'+crypto.randomUUID(),category:'',
  english:'',title:'',quote:'',paragraphs:[],details:[],photoLabel:'服務形象照片',
- imageUrl:null,imageUrls:[],sortOrder,published:false,updatedAt:'',
+ imageUrl:null,imageUrls:[],imageCrops:[],sortOrder,published:false,updatedAt:'',
 })
 const paragraphsOf=(value:string)=>value.split(/\n\s*\n/).map(x=>x.trim()).filter(Boolean)
 const detailsOf=(value:string)=>value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean)
@@ -34,22 +37,26 @@ export default function ServiceManagement(){
  const [paragraphText,setParagraphText]=useState('')
  const [detailsText,setDetailsText]=useState('')
  const [photoSlots,setPhotoSlots]=useState<PhotoSlot[]>([])
+ const [editingPhotoId,setEditingPhotoId]=useState<string|null>(null)
  const stagedUrls=useRef<string[]>([])
  const editor=useRef<HTMLDivElement>(null)
  const {setEditing}=useAdminEditGuard()
 
  useEffect(()=>()=>{stagedUrls.current.forEach(url=>URL.revokeObjectURL(url))},[])
  function resetPhotos(record:ServiceEntry|null){
+  setEditingPhotoId(null)
   stagedUrls.current.forEach(url=>URL.revokeObjectURL(url))
   stagedUrls.current=[]
   const urls=record?(record.imageUrls.length?record.imageUrls:(record.imageUrl?[record.imageUrl]:[])):[]
-  setPhotoSlots(urls.map(url=>({id:crypto.randomUUID(),url})))
+  const crops=normalizeServiceCrops(record?.imageCrops,urls.length)
+  setPhotoSlots(urls.map((url,index)=>({id:crypto.randomUUID(),url,crop:crops[index]})))
  }
  const dirty=Boolean(draft&&(creating||
   JSON.stringify(draft)!==JSON.stringify(original)||
   paragraphText!==original?.paragraphs.join('\n\n')||
   detailsText!==original?.details.join('\n')||
-  JSON.stringify(photoSlots.map(photo=>photo.file?photo.id:photo.url))!==JSON.stringify(original?.imageUrls||[])))
+  JSON.stringify(photoSlots.map(photo=>photo.file?photo.id:photo.url))!==JSON.stringify(original?.imageUrls||[])||
+  JSON.stringify(photoSlots.map(photo=>photo.crop))!==JSON.stringify(normalizeServiceCrops(original?.imageCrops,original?.imageUrls.length??0))))
  useEffect(()=>setEditing(dirty,busy),[dirty,busy,setEditing])
  useEffect(()=>()=>setEditing(false,false),[setEditing])
 
@@ -81,7 +88,7 @@ export default function ServiceManagement(){
  }
  function select(row:ServiceEntry){
   if(!mayDiscard())return
-  const snapshot={...row,paragraphs:[...row.paragraphs],details:[...row.details]}
+  const snapshot={...row,paragraphs:[...row.paragraphs],details:[...row.details],imageCrops:[...row.imageCrops]}
   setDraft(snapshot);setOriginal(snapshot);setCreating(false)
   setParagraphText(row.paragraphs.join('\n\n'))
   setDetailsText(row.details.join('\n'))
@@ -112,7 +119,7 @@ export default function ServiceManagement(){
   const added=incoming.map(file=>{
    const url=URL.createObjectURL(file)
    stagedUrls.current.push(url)
-   return {id:crypto.randomUUID(),url,file}
+   return {id:crypto.randomUUID(),url,file,crop:{...DEFAULT_SERVICE_CROP}}
   })
   setPhotoSlots(prev=>[...prev,...added])
   setNotice(null)
@@ -169,7 +176,7 @@ export default function ServiceManagement(){
      imageUrls.push(upload.url)
     }else imageUrls.push(photo.url)
    }
-   const record={...draft,paragraphs,details,imageUrls,imageUrl:imageUrls[0]||null}
+   const record={...draft,paragraphs,details,imageUrls,imageUrl:imageUrls[0]||null,imageCrops:photoSlots.map(photo=>photo.crop)}
    await saveServiceContent(record,creating)
    savedToDatabase=true
    const updated=await refresh()
@@ -217,7 +224,7 @@ export default function ServiceManagement(){
   <header className="service-admin-head">
    <div><p className="eyebrow">KOGAKURE · RITUAL EDITOR</p>
     <h1>服務內容管理</h1>
-    <p>新增隱世服務、上傳多張形象照片、調整輪播順序、介紹及公開狀態。所有改動以儲存後的資料為準。</p></div>
+    <p>新增隱世服務、上傳多張形象照片、圈選顯示範圍、調整輪播順序、介紹及公開狀態。所有改動以儲存後的資料為準。</p></div>
    <div className="service-admin-top-actions">
     <Link to="/services" target="_blank" rel="noopener noreferrer"><ExternalLink size={16}/>查看服務頁</Link>
     <button type="button" disabled={busy||loading} onClick={()=>void retry()}><RefreshCw size={16}/>更新清單</button>
@@ -272,7 +279,7 @@ export default function ServiceManagement(){
       </div>
       <div className="service-admin-photo-list" aria-label="服務照片播放順序">
        {photoSlots.map((photo,index)=><div className="service-admin-photo-card" key={photo.id}>
-        <div className="service-admin-preview"><img src={photo.url} alt={'第 '+(index+1)+' 張服務照片預覽'}/></div>
+        <div className="service-admin-preview"><img src={photo.url} style={servicePhotoFrameStyle(photo.crop)} alt={'第 '+(index+1)+' 張服務照片預覽'}/></div>
         <div className="service-admin-photo-card-tools">
          <span>第 {index+1} 張{photo.file?' · 待上傳':''}</span>
          <div>
@@ -284,6 +291,8 @@ export default function ServiceManagement(){
            aria-label={'移除第 '+(index+1)+' 張照片'} title="移除照片"><Trash2 size={16}/></button>
          </div>
         </div>
+        <button type="button" className="service-admin-photo-crop-button" disabled={busy}
+         onClick={()=>setEditingPhotoId(photo.id)}><Crop size={16}/>圈選顯示範圍</button>
        </div>)}
        {!photoSlots.length&&<div className="service-admin-photo-empty">
         <ImagePlus size={32}/><span>等待上傳 · 照片預留區</span>
@@ -295,8 +304,15 @@ export default function ServiceManagement(){
         <input type="file" accept="image/jpeg,image/png,image/webp" multiple disabled={busy||photoSlots.length>=maxServicePhotos}
          onChange={e=>{choosePhotos(e.target.files);e.target.value=''}}/>
        </label>
-       <small>可一次選擇多張 JPG、PNG、WebP；每張最多 6 MB，每個服務最多 {maxServicePhotos} 張。使用上下箭頭調整輪播順序，移除不需要的照片。新照片會在按「儲存服務」後才上傳。</small>
+       <small>可一次選擇多張 JPG、PNG、WebP；每張最多 6 MB，每個服務最多 {maxServicePhotos} 張。每張可獨立圈選顯示範圍，使用上下箭頭調整輪播順序。照片圈選只影響前台顯示，不會修改原圖；套用後仍需按「儲存服務」。</small>
       </div>
+      {photoSlots.filter(photo=>photo.id===editingPhotoId).map(photo=><ServicePhotoCropEditor key={photo.id}
+       photoUrl={photo.url} photoNumber={photoSlots.indexOf(photo)+1} initialCrop={photo.crop}
+       onCancel={()=>setEditingPhotoId(null)}
+       onApply={crop=>{
+        setPhotoSlots(prev=>prev.map(item=>item.id===photo.id?{...item,crop}:item))
+        setEditingPhotoId(null)
+       }}/>)}
      </div>
      <div className="service-admin-fields two">
       <label>顯示順序 <small>數字越小越前面</small>
