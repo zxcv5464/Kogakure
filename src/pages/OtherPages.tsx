@@ -14,8 +14,12 @@ export function HomePage(){
  return <div className="home-page"><section className="home-hero"><div className="home-image" aria-hidden="true"/><div className="home-content"><img className="home-logo" src={asset('images/brand/logo-wide.webp')} alt="狐隱 KOGAKURE 狐隱の湯"/><p className="home-verse">世有百鬼，夜有萬境。<br/>循狐而入，借湯忘憂。</p><p className="home-blurb">傳說在月色最深的夜晚，山林裡會出現一盞青色狐火。<br/>循著那盞光，你將抵達隱於結界之中的湯宿。</p><Link className="primary-link" to="/staff" onMouseEnter={prefetchStaffPage} onFocus={prefetchStaffPage} onTouchStart={prefetchStaffPage}>邂逅狐姬 <ArrowRight size={18}/></Link><div className="home-note"><Sparkles size={16}/><span>狐隱正在籌備中，其餘內容將逐步開放。</span></div></div></section></div>
 }
 export function OtherPage(){
- const path=useLocation().pathname
- const page=pages[path as keyof typeof pages]||pages['/about']
- const Icon=page.icon
- return <section className="coming-page"><div className="coming-photo" aria-hidden="true"/><div className="coming-panel"><Icon size={29}/><h1>{page.title}</h1><div className="gold-rule"><span>◇</span></div><p>{page.desc}</p><span className="coming-tag">內容籌備中</span><p className="coming-explain">更多內容，敬請期待。</p><Link to="/staff" className="primary-link" onMouseEnter={prefetchStaffPage} onFocus={prefetchStaffPage} onTouchStart={prefetchStaffPage}>先看看狐姬名冊 <ArrowRight size={18}/></Link></div></section>
+ // Direct GitHub Pages URLs may arrive as /shifts/ before canonicalization.
+ // Never mistake an unmatched route for the old "入館須知" page.
+ const path=useLocation().pathname.replace(/\/+$/,'')||'/'
+ const page=pages[path as keyof typeof pages]
+ const unknown=!page
+ const display=page||{title:'頁面未找到',desc:'這個連結目前沒有對應的館內頁面，請使用上方導覽前往想去的地方。',icon:Compass}
+ const Icon=display.icon
+ return <section className="coming-page"><div className="coming-photo" aria-hidden="true"/><div className="coming-panel"><Icon size={29}/><h1>{display.title}</h1><div className="gold-rule"><span>◇</span></div><p>{display.desc}</p><span className="coming-tag">{unknown?"頁面不存在":"內容籌備中"}</span><p className="coming-explain">{unknown?"請返回首頁或重新確認網址。":"更多內容，敬請期待。"}</p><Link to="/staff" className="primary-link" onMouseEnter={prefetchStaffPage} onFocus={prefetchStaffPage} onTouchStart={prefetchStaffPage}>先看看狐姬名冊 <ArrowRight size={18}/></Link></div></section>
 }
