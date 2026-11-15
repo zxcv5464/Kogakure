@@ -57,8 +57,12 @@ assert.ok(!app.includes('<SiteBgm')&&app.includes('return <PublicApp />'),
  'Only the public shell should own the BGM player, not every page or admin')
 assert.ok(intro.includes("images/brand/logo-intro.webp")&&intro.includes('intro-motto'),
  'Use the existing original animated logo and motto, not a new entrance page')
-assert.ok(intro.includes('進入狐隱・開始播放音樂')&&intro.includes('onClick={enterInn}'),
- 'The original logo page must show the single enter-and-start-music action')
+assert.ok(intro.includes('進入狐隱<ArrowRight')&&intro.includes('onClick={enterInn}'),
+ 'The original logo page must show just 進入狐隱 on the enter-and-play button')
+assert.ok(!intro.includes('進入狐隱・開始播放音樂'),
+ 'Long music activation wording should be removed from the intro button')
+assert.ok(intro.includes("disabled={phase!=='ready'}")&&intro.includes('const HOLD_MS=1650'),
+ 'Button stays mounted for a smooth fade but must not be clickable before it fully appears')
 assert.ok(intro.includes('onEnter?.()')&&intro.indexOf('onEnter?.()')<intro.indexOf("setPhase('clear')"),
  'Start the audio synchronously within the entry button click before fade timers')
 assert.ok(intro.includes("phase==='ready'")&&intro.includes("setPhase('ready')"),
@@ -70,6 +74,13 @@ assert.ok(intro.includes('role="dialog" aria-modal="true"')&&intro.includes('ent
 assert.ok(introCss.includes('.intro-entry-action')&&
  introCss.includes('.intro-entry-action:focus-visible'),
  'The enter-and-play control must be legible and keyboard focusable')
+assert.ok(introCss.includes('opacity:0;')&&
+ introCss.includes('animation:intro-letter-arrive 650ms ease-out 1000ms both;'),
+ 'Logo entrance button should fade in after the brand and motto, not flash into view')
+assert.ok(introCss.includes('animation:intro-letter-arrive 550ms ease-out 1320ms both'),
+ 'Music control hint should fade softly after the entry action')
+assert.ok(introCss.includes('.intro-entry-action,.intro-music-note{opacity:1!important'),
+ 'Reduced-motion visitors must still be able to see and use the entry action')
 assert.ok(introCss.includes('@media(prefers-reduced-motion:reduce)')&&
  !introCss.includes('.entry-intro{display:none!important}'),
  'Visitors with reduced motion must retain access to the entry button')
