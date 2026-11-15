@@ -75,7 +75,7 @@
 .intro-entry-action svg{flex:none}
 .intro-entry-action:hover:not(:disabled){filter:brightness(1.12);transform:translateY(-1px)}
 .intro-entry-action:disabled{pointer-events:none;cursor:default}
-.intro-entry-action:focus-visible{outline:3px solid #9ce4d5;outline-offset:4px}
+.intro-entry-action:focus-visible{outline:2px solid rgba(220,180,121,.9);outline-offset:3px}
 .intro-music-note{display:block;max-width:100%;margin-top:13px;color:#b8a998;font-size:.7rem;line-height:1.6;opacity:0;animation:intro-letter-arrive 550ms ease-out 1320ms both}
 @media(max-width:570px){
  .intro-entry-action{margin-top:27px;gap:7px}
