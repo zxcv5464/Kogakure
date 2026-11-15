@@ -78,6 +78,10 @@ jobs:
         env:
           VITE_OFFLINE_PREVIEW: 'true'
         run: node scripts/qa-service-load-performance.mjs
+      - name: Verify interactive photo crop editor, display framing and backwards-compatible schema
+        env:
+          VITE_OFFLINE_PREVIEW: 'true'
+        run: node scripts/qa-service-photo-crop.mjs
       - name: Verify service content and admin editor before publication
         env:
           VITE_OFFLINE_PREVIEW: 'true'
