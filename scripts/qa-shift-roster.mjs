@@ -57,6 +57,22 @@ for(const term of [
 ])assert.ok(sql.includes(term),'Shift RLS missing: '+term)
 assert.ok(!sql.includes('drop table')&&!sql.includes('delete from public.employee_accounts'))
 assert.ok(editor.includes('setShiftOpening(date,kind,hours,note,eventTitle)'))
+assert.ok(lib.includes("kind:'open'|'closed'")&&!lib.includes("kind:'open'|'closed'|'unannounced'"),
+ 'Business opening API should expose only open or closed')
+assert.ok(!lib.includes("kind==='unannounced'"),
+ 'Marking a day closed must not delete historical opening rows')
+assert.ok(editor.includes("const savedKind:ShiftKind=day?.open?'open':'closed'"),
+ 'Owner and employee calendar editors must default missing days to closed')
+assert.ok(editor.includes("const state:ShiftKind=day?.open?'open':'closed'"),
+ 'Admin calendar cells must render missing dates as closed')
+assert.ok(!editor.includes('未公告')&&!editor.includes('unannounced'),
+ 'Remove unannounced labels and manager dropdown options')
+assert.ok(!page.includes('未公告')&&!page.includes('unannounced'),
+ 'No unannounced status should remain on the visitor page')
+assert.ok(!css.includes('is-unannounced')&&!adminCss.includes('is-unannounced'),
+ 'Unused unannounced styling should not remain')
+assert.ok(editor.includes('<option value="open">營業</option>')&&editor.includes('<option value="closed">休館</option>'),
+ 'Owner may switch only between business open and closed states')
 assert.ok(editor.includes('markShiftAttendance(date,person)'))
 assert.ok(editor.includes('unmarkShiftAttendance(date,person.employeeId,person.source)'), 'Cancel attendance must use owner/employee source')
 assert.ok(!editor.includes('window.confirm('),
@@ -180,10 +196,10 @@ assert.ok(page.includes('id="shift-selected-detail"')&&page.includes('selectedNa
  'Selected-day detail must show actual published attendance names')
 assert.ok(page.includes('selectedOpening?.eventTitle')&&page.includes('shift-event-indicator'),
  'Travelers must see scheduled activities and a mobile event marker')
-assert.ok(page.includes('selectedStatus===\'open\'')&&page.includes('休館')&&page.includes('未公告'),
- 'Only announced opening dates may show traveler-facing shift rosters')
+assert.ok(page.includes('selectedStatus===\'open\'')&&page.includes('休館')&&!page.includes('未公告'),
+ 'Public calendar must show unconfigured dates as closed without an unannounced state')
 assert.ok(page.includes('opening?.open?members.get(date)||[]:[]'),
- 'Closed and unannounced days must not display roster names')
+ 'Closed days must not display roster names')
 assert.ok(css.includes('grid-template-columns:repeat(7,minmax(0,1fr))'),
  'Public four-week calendar needs seven fixed weekday columns')
 assert.ok(css.includes('.shift-selected-detail')&&css.includes('.shift-day.is-selected'),
@@ -249,8 +265,10 @@ try{
  assert.equal((publicHtml.match(/aria-pressed="/g)||[]).length,28)
  assert.ok(publicHtml.includes('shift-calendar-weekdays'))
  assert.ok(publicHtml.includes('shift-selected-detail'))
- assert.ok(publicHtml.includes('休館')&&publicHtml.includes('未公告'))
+ assert.ok(publicHtml.includes('休館')&&!publicHtml.includes('未公告'))
  assert.ok(publicHtml.includes('當日資訊'))
+ assert.equal((publicHtml.match(/shift-day is-closed/g)||[]).length,28,
+  'All 28 unconfigured visitor dates must render as closed by default')
  const {default:ShiftManagement}=await vite.ssrLoadModule('/src/pages/admin/ShiftManagement.tsx')
  const employeeHtml=renderToStaticMarkup(createElement(MemoryRouter,null,
   createElement(ShiftManagement,{access:{kind:'employee',active:true,displayName:'試班狐姬',permissions:[]}})))
