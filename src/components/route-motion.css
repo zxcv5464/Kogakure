@@ -6,6 +6,11 @@
 .route-stage .home-verse{animation:quietRise 1.32s cubic-bezier(.22,.65,.25,1) .79s both}
 .route-stage .home-blurb{animation:quietRise 1.35s cubic-bezier(.22,.65,.25,1) 1.2s both}
 .route-stage .home-content>.primary-link{animation:quietRise 1.08s cubic-bezier(.22,.65,.25,1) 1.65s both}
+/* The announcement board joins the existing homepage reveal rather than
+   appearing instantly during the logo intro or behind the route curtain.
+   Animate the stable shell only: asynchronously updated news rows must not
+   restart the homepage transition. */
+.route-stage .home-content>.home-news{animation:quietRise 1.1s cubic-bezier(.22,.65,.25,1) 1.9s both}
 .route-stage .home-note{animation:quietRise .95s ease-out 1.85s both}
 .route-stage .coming-panel{animation:quietRise 1.25s cubic-bezier(.22,.65,.25,1) .22s both}
 .route-stage .coming-panel>svg{animation:quietRise .9s ease-out .44s both}
@@ -17,11 +22,14 @@
    not remount the route (which causes a second Supabase request on menu). */
 .route-stage.intro-waiting :is(
  .home-image,.coming-photo,.home-logo,.home-verse,.home-blurb,
- .home-content>.primary-link,.home-note,.coming-panel,
+ .home-content>.primary-link,.home-content>.home-news,.home-note,.coming-panel,
  .coming-panel>svg,.coming-panel h1,.coming-panel .gold-rule,
  .coming-panel>p:first-of-type,.coming-panel .coming-tag,
  .coming-panel .coming-explain,.coming-panel .primary-link
 ){animation-play-state:paused}
+/* Pause only the homepage's first-arrival content while switching routes,
+   matching the existing pause for the other public sections. */
+.route-stage.is-covering .home-content>.home-news{animation-play-state:paused}
 /* House rules and tea menu share the same gentle easing as staff.
    Animate content groups rather than every sentence to preserve readability.
    Sections inserted after the async menu fetch reveal when they actually mount. */

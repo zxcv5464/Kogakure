@@ -11,6 +11,8 @@ const paths=[
  'src/components/HomeAnnouncements.tsx',
  'src/components/home-announcements.css',
  'src/pages/home-page.css',
+ 'src/components/route-motion.css',
+ 'src/index.css',
  'src/pages/admin/AnnouncementManagement.tsx',
  'src/pages/admin/announcement-management.css',
  'src/pages/AdminPage.tsx',
@@ -19,7 +21,7 @@ const paths=[
  'supabase/migrations/20261115_27_site_announcements.sql',
  'scripts/prepare-pages.mjs',
 ]
-const [home,board,boardStyles,homeStyles,adminEditor,adminStyles,admin,modules,api,migration,routes]=
+const [home,board,boardStyles,homeStyles,motion,baseStyles,adminEditor,adminStyles,admin,modules,api,migration,routes]=
  await Promise.all(paths.map(path=>readFile(path,'utf8')))
 assert.ok(home.includes('<HomeAnnouncements/>')&&home.includes('<Link className="primary-link"'),
  'The new board must coexist with the original branded homepage and CTA')
@@ -30,6 +32,16 @@ assert.ok(board.includes("role=\"tablist\"")&&
  board.includes('setInterval(onFocus,45000)')&&
  board.includes('visibilitychange')&&board.includes('Escape'),
  'Public announcements must offer categories, accessible full details and live refresh')
+assert.ok(motion.includes('.route-stage .home-content>.home-news{animation:quietRise')&&
+ motion.includes('.route-stage.is-covering .home-content>.home-news{animation-play-state:paused}')&&
+ motion.includes('.home-content>.primary-link,.home-content>.home-news,.home-note'),
+ 'Home announcement board must fade in after call-to-action and pause behind intro')
+assert.ok(baseStyles.includes('select,textarea):focus')&&
+ baseStyles.includes('outline:none!important')&&
+ baseStyles.includes(':focus-visible')&&
+ !baseStyles.includes('#94d7cc')&&
+ baseStyles.includes('button:focus-visible,a:focus-visible'),
+ 'Text inputs, selects and textareas must not show the browser blue focus border')
 assert.ok(boardStyles.includes('.home-news')&&boardStyles.includes('.home-news-dialog')&&
  boardStyles.includes('@media(max-width:570px)')&&homeStyles.includes('.home-news-list'),
  'Responsive board must be part of homepage composition')

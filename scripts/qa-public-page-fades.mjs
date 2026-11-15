@@ -20,6 +20,10 @@ for (const selector of [
 ]) {
  assert.ok(motion.includes(selector), 'Missing fade selector: ' + selector)
 }
+assert.ok(motion.includes('.route-stage .home-content>.home-news{animation:quietRise')&&
+ motion.includes('.route-stage.is-covering .home-content>.home-news{animation-play-state:paused}')&&
+ motion.includes('.home-content>.primary-link,.home-content>.home-news,.home-note'),
+ 'Home notice board must use the same intro-safe, curtain-safe fade as homepage artwork')
 assert.ok(motion.includes('--public-reveal-ease:cubic-bezier(.22,.65,.25,1)'), 'Fade pacing must match staff page')
 assert.ok(motion.includes(':is(.is-covering,.intro-waiting)'), 'Entrance must pause behind curtain and site intro')
 assert.ok(motion.includes('animation-play-state:paused'), 'Covered entrance must pause')
