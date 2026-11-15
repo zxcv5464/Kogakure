@@ -6,7 +6,7 @@ import {shiftVenueDate,validVenueDate,venueDate} from '../../lib/taipei-date'
 import './orders-management.css'
 
 const statusName:Record<TeaOrderStatus,string>={
- pending:'待接單',preparing:'製作中',completed:'已完成',cancelled:'已取消',
+ pending:'待處理',preparing:'製作中',completed:'已完成',cancelled:'已取消',
 }
 const dateText=(s:string)=>new Intl.DateTimeFormat('zh-TW',{
  timeZone:'Asia/Taipei',month:'2-digit',day:'2-digit',
@@ -92,7 +92,6 @@ export default function OrdersManagement(){
  const completedAmount=orders.filter(x=>x.status==='completed').reduce((sum,x)=>sum+x.totalGil,0)
  const tabs: {id:Filter;text:string}[]=[
   {id:'active',text:'待處理'},
-  {id:'pending',text:'待接單'},
   {id:'preparing',text:'製作中'},
   {id:'completed',text:'已完成'},
   {id:'cancelled',text:'已取消'},
@@ -102,7 +101,7 @@ export default function OrdersManagement(){
   <header className="tea-order-admin-header">
    <div><p className="eyebrow">KOGAKURE · TEA BANQUET</p>
     <h1>茶宴訂單管理</h1>
-    <p>旅人送出的茶宴點單，請確認供應、製作進度與館內收款。</p>
+    <p>旅人送出的茶宴點單，請確認供應、製作進度與館內收款。「待處理」整合未接單及製作中訂單。</p>
    </div>
    <button type="button" onClick={()=>void refresh()} disabled={!!saving}>
     <RefreshCw size={16}/>更新訂單
@@ -126,7 +125,7 @@ export default function OrdersManagement(){
    </div>
   </div>
   <div className="tea-order-admin-stats" aria-label="訂單狀態統計">
-   <div><strong>{stats.pending}</strong><span>待接單</span></div>
+   <div><strong>{stats.pending}</strong><span>待處理</span></div>
    <div><strong>{stats.preparing}</strong><span>製作中</span></div>
    <div><strong>{stats.completed}</strong><span>已完成</span></div>
    <div><strong>{stats.cancelled}</strong><span>已取消</span></div>
