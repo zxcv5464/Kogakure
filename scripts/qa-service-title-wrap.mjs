@@ -21,7 +21,7 @@ try{
  const {ServiceTitle}=await vite.ssrLoadModule('/src/pages/ServicesPage.tsx')
  const title='循狐火，探尋心中之願'
  const html=renderToStaticMarkup(createElement(ServiceTitle,{title}))
- assert.ok(html.includes('>循狐火，</span><span class="services-title-clause">探尋心中之願</span>'),
+ assert.ok(html.includes('>循狐火，</span><wbr/><span class="services-title-clause">探尋心中之願</span>'),
   'Divination title should split after the comma into two meaningful clauses')
  assert.equal(renderToStaticMarkup(createElement(ServiceTitle,{title:'沒有標點的長標題'})),
   '沒有標點的長標題','Admin titles without punctuation remain unmodified')
@@ -120,9 +120,19 @@ try{
    assert.ok(clause.rect.width<=result.headingWidth+2,
     'Chinese clause exceeds heading width at '+width+'px')
   }
+  // If a normal viewport accommodates the whole heading, that is fine:
+  // never force a line break just to satisfy a test. Deliberately narrow the
+  // available text column to verify where it will break when necessary.
   if(width===320){
-   assert.ok(result.parts[1].rect.y>result.parts[0].rect.y+2,
-    'Mobile divination headline should wrap between phrases, not within a phrase')
+   await evaluate("document.querySelector('#divination-title').style.maxWidth='210px'")
+   await sleep(130)
+   const forced=await evaluate(`(()=>{
+    const parts=[...document.querySelectorAll('#divination-title .services-title-clause')]
+    return parts.map(node=>({y:node.getBoundingClientRect().y,width:node.getBoundingClientRect().width}))
+   })()`)
+   assert.ok(forced[1].y>forced[0].y+2,
+    'At a narrow content width, the service headline should wrap between complete phrases')
+   await evaluate("document.querySelector('#divination-title').style.maxWidth=''")
   }
  }
  console.log('PASS: public divination service title remains readable and never leaves one Chinese character alone at 320,360,390,430,768,1440px')
