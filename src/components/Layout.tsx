@@ -3,6 +3,7 @@ import { Link, NavLink, useLocation } from 'react-router-dom'
 import { Home, UsersRound, CalendarDays, UtensilsCrossed, Grid2X2, X, AtSign, ArrowUpRight, Compass, Sparkles, CalendarCheck2 } from 'lucide-react'
 import { asset } from '../lib/paths'
 import { prefetchStaffPage } from '../lib/prefetch'
+import SiteBgm from './SiteBgm'
 
 const links = [
  {to:'/',label:'首頁'},
@@ -93,6 +94,7 @@ export default function Layout({children}:{children:React.ReactNode}){
     </Link>
     <nav ref={desktopNav} className="desktop-nav" aria-label="主要導覽">{links.map(({to,label})=><NavLink key={to} to={to} end={to==='/'} onMouseEnter={to==='/staff'?prefetchStaffPage:undefined} onFocus={to==='/staff'?prefetchStaffPage:undefined} onTouchStart={to==='/staff'?prefetchStaffPage:undefined} className={({isActive})=>isActive?'active':''}>{label}</NavLink>)}<span className={'nav-slider'+(indicator.ready?' is-ready':'')} style={{left:indicator.left,width:indicator.width}} aria-hidden="true"/></nav>
     <a className="social-header" target="_blank" rel="noopener noreferrer" href="https://www.threads.com/@kogakure_ffxiv" aria-label="狐隱 Threads"><AtSign size={19}/></a>
+    <SiteBgm/>
    </div>
   </header>
   <main>{children}</main>
@@ -101,7 +103,7 @@ export default function Layout({children}:{children:React.ReactNode}){
     <div><div className="footer-brand">狐隱 <span>KOGAKURE</span></div><p>世有百鬼，夜有萬境。循狐而入，借湯忘憂。</p></div>
     <div className="footer-side"><span>FFXIV · 利維坦 · 白銀鄉 6-7</span><a href="https://www.threads.com/@kogakure_ffxiv" target="_blank" rel="noopener noreferrer">官方 Threads <ArrowUpRight size={15}/></a></div>
    </div>
-   <div className="copyright">本網站為 Final Fantasy XIV 玩家 RP 店鋪非官方網站。</div>
+   <div className="copyright">本網站為 Final Fantasy XIV 玩家 RP 店鋪非官方網站。<span className="site-bgm-credit">背景音樂：<a href="https://bgmer.net/music/456" target="_blank" rel="noopener noreferrer">みやびごころ · BGMer</a></span></div>
   </footer>
 
   {moreOpen&&<>
