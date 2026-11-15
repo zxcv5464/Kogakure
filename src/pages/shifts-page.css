@@ -15,6 +15,24 @@
 .shift-toolbar button:disabled{opacity:.5;cursor:wait}
 .shift-message{padding:18px;background:rgba(45,33,53,.75);border:1px solid rgba(204,172,130,.36);border-radius:5px;text-align:center;color:#dfc49f;line-height:1.6}
 .shift-message.is-error{color:#f1b5b0}
+/* First visit: paint the entire calendar immediately and reveal live values
+   in place. Unknown dates are NOT treated as closed days until fetched. */
+.shift-calendar-shell[aria-busy="true"]{min-height:720px}
+.shift-day.is-loading,.shift-day.is-loading.is-closed{
+ background:rgba(43,39,49,.7);border-color:rgba(185,165,150,.23);
+ opacity:1;transform:none;cursor:wait;
+}
+.shift-day.is-loading.is-past{opacity:.88}
+.shift-day.is-loading .shift-day-date{opacity:.58}
+.shift-day.is-loading .shift-status.is-loading{
+ background:rgba(165,147,141,.11);border-color:rgba(187,165,145,.28);
+ color:#c5b7ac;
+}
+.shift-day.is-loading .shift-day-muted{color:#aa9fa0}
+.shift-day.is-loading:hover{transform:none}
+.shift-detail-state.is-loading{background:rgba(165,147,141,.09);color:#c6b7a4}
+.shift-detail-pending{min-height:150px}
+
 .shift-calendar-shell{padding:clamp(12px,2vw,23px);border:1px solid rgba(216,175,126,.39);border-radius:10px;background:linear-gradient(155deg,rgba(46,35,51,.9),rgba(19,18,29,.98));box-shadow:0 18px 50px rgba(0,0,0,.2)}
 .shift-calendar-heading{display:flex;justify-content:space-between;align-items:end;gap:15px;flex-wrap:wrap}
 .shift-calendar-heading>div:first-child>span{font:.68rem Georgia,serif;color:#bfa07d;letter-spacing:.19em}
