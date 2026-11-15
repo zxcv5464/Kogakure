@@ -32,7 +32,7 @@ assert.ok(accounting.includes('<DailyPayrollSection')&&
 assert.ok(ui.includes('當日營業額・員工分薪')&&
  ui.includes('建立當日分薪清單')&&ui.includes('確認已發薪')&&
  ui.includes('其他已登錄收入')&&ui.includes('已完成茶宴')&&
- ui.includes('分薪紀錄'),
+ ui.includes('分薪清單'),
  'Expose calculations, immutable salary confirmation and revenue components')
 assert.ok(ui.includes('window.confirm(')&&ui.includes('onLedgerChanged()'),
  'Confirmation must be explicit, with ledger refresh after payout')
