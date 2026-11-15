@@ -1,0 +1,60 @@
+/* Daily turnover and frozen staff-payroll module, shared gold / dark palette. */
+.daily-payroll{margin:23px 0;padding:clamp(16px,2.4vw,25px);border:1px solid rgba(222,182,129,.37);border-radius:9px;background:linear-gradient(155deg,#2b2835 0%,#1f212b 85%);color:#efddc4}
+.daily-payroll-header{display:flex;gap:16px;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;margin-bottom:14px}
+.daily-payroll-header p{font:.68rem Georgia,serif;letter-spacing:.16em;color:#c4a482;margin:0 0 7px}
+.daily-payroll-header h2{font:600 clamp(1.1rem,2.3vw,1.36rem) 'Noto Serif TC',serif;margin:0 0 7px;color:#f2d7ad}
+.daily-payroll-header small{font-size:.77rem;line-height:1.7;color:#c3b4a6}
+.daily-payroll-date{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.daily-payroll-date button,.daily-payroll-date label{display:flex;align-items:center;justify-content:center;gap:6px;min-height:39px;padding:8px;border:1px solid rgba(215,182,129,.33);background:#1c202a;color:#e0c69f;border-radius:5px}
+.daily-payroll-date button{cursor:pointer}
+.daily-payroll-date button:disabled{opacity:.46;cursor:not-allowed}
+.daily-payroll-date input{width:140px;min-width:0;border:none;outline:none;background:transparent;color:#efdfc8;font-size:.78rem;font-family:inherit;color-scheme:dark}
+.daily-payroll-explain{font-size:.78rem;line-height:1.85;color:#ccbaa9;padding:11px 14px;margin:0 0 18px;border-left:2px solid rgba(212,174,119,.67);background:rgba(21,19,30,.35)}
+.daily-payroll-explain strong{color:#f1cf9d}
+.daily-payroll-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:24px}
+.daily-payroll-metrics>div{min-width:0;padding:14px 13px;border:1px solid rgba(210,172,125,.22);border-radius:6px;background:#1d202b;display:grid;align-content:space-between;gap:10px}
+.daily-payroll-metrics small{font-size:.72rem;line-height:1.6;color:#c1b0a5}
+.daily-payroll-metrics small svg{vertical-align:middle;margin-right:4px}
+.daily-payroll-metrics strong{font:600 clamp(.96rem,1.8vw,1.22rem) Georgia,serif;font-variant-numeric:tabular-nums;overflow-wrap:anywhere;color:#ead2af}
+.daily-payroll-metrics .is-total{border-color:rgba(226,190,139,.52);background:linear-gradient(145deg,#4a3a39,#2c2933)}
+.daily-payroll-metrics .is-total strong{color:#f6d39e}
+.daily-payroll-roster-heading{display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap;border-top:1px solid rgba(215,179,126,.2);padding-top:21px}
+.daily-payroll-roster-heading h3{display:flex;align-items:center;gap:7px;color:#f0d5ab;font:600 1.04rem 'Noto Serif TC',serif;margin:0 0 7px}
+.daily-payroll-roster-heading p{margin:0;max-width:610px;color:#beab9b;line-height:1.75;font-size:.75rem}
+.daily-payroll-roster-heading .is-create{display:inline-flex;align-items:center;gap:8px;min-height:42px;padding:10px 14px;border:1px solid #d9b889;background:#d6b384;color:#231e24;font-size:.81rem;font-weight:700;border-radius:5px;cursor:pointer}
+.daily-payroll-roster-heading .is-create:disabled{opacity:.43;cursor:not-allowed}
+.daily-payroll-members{display:grid;gap:8px;margin-top:14px}
+.daily-payroll-member{display:grid;grid-template-columns:minmax(0,1fr) minmax(130px,auto) minmax(110px,auto);align-items:center;gap:11px;padding:12px 13px;border:1px solid rgba(210,170,116,.24);border-radius:5px;background:#20232d}
+.daily-payroll-member>div{display:flex;align-items:center;gap:10px;min-width:0}
+.daily-payroll-member>div>strong{font:.87rem 'Noto Serif TC',serif;color:#f1d8b4;overflow-wrap:anywhere}
+.daily-payroll-member-number{color:#a99a8b;font:.73rem Georgia,serif}
+.daily-payroll-amount{color:#e4c99f;font:600 .99rem Georgia,serif;font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
+.daily-payroll-member button{display:inline-flex;gap:6px;align-items:center;justify-content:center;min-height:37px;padding:7px 11px;border-radius:5px;font:.76rem inherit;cursor:pointer}
+.daily-payroll-member button.is-pay{background:#d6b384;color:#231e24;border:1px solid #d6b384}
+.daily-payroll-member button.is-paid{background:rgba(76,125,81,.18);border:1px solid rgba(134,211,146,.27);color:#bbd9c0}
+.daily-payroll-member button:disabled{cursor:not-allowed;opacity:.74}
+.daily-payroll-pending{font-size:.75rem;color:#b9a697;text-align:center}
+.daily-payroll-snapshot{display:flex;flex-wrap:wrap;gap:7px 15px;justify-content:space-between;border-top:1px solid rgba(215,178,126,.18);padding:13px 0 0;font-size:.76rem;color:#e0c8a2;margin-top:11px}
+.daily-payroll-message{display:flex;align-items:flex-start;gap:8px;padding:10px 13px;margin:12px 0;font-size:.79rem;line-height:1.7;border-radius:5px}
+.daily-payroll-message.is-error{color:#ffb4b0;border:1px solid rgba(255,139,139,.36);background:rgba(139,56,64,.12)}
+.daily-payroll-message.is-success{color:#bfe4bf;border:1px solid rgba(131,211,148,.28);background:rgba(57,120,67,.14)}
+.daily-payroll-message.is-warning{color:#f2d4a9;border:1px solid rgba(217,180,103,.35);background:rgba(160,113,38,.1)}
+.daily-payroll-no-staff,.daily-payroll-loading{padding:23px 12px;text-align:center;color:#c3b4a8;font-size:.81rem;border:1px dashed rgba(208,171,119,.25);border-radius:5px;margin:13px 0}
+.daily-payroll-footnote{font-size:.75rem;line-height:1.85;color:#b7aa9c;margin:12px 0 0}
+.daily-payroll :is(button,input):focus-visible{outline:2px solid #e5c18c;outline-offset:3px}
+@media(max-width:1100px){.daily-payroll-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:640px){
+ .daily-payroll{padding:14px 11px}
+ .daily-payroll-header{gap:12px}
+ .daily-payroll-date{width:100%}
+ .daily-payroll-date label{flex:1;min-width:0}
+ .daily-payroll-date input{width:100%}
+ .daily-payroll-metrics{gap:7px}
+ .daily-payroll-metrics>div{padding:10px 9px}
+ .daily-payroll-metrics strong{font-size:1rem}
+ .daily-payroll-roster-heading .is-create{width:100%;justify-content:center}
+ .daily-payroll-member{grid-template-columns:minmax(0,1fr) auto;gap:7px;padding:11px 9px}
+ .daily-payroll-member button,.daily-payroll-pending{grid-column:1/-1;justify-self:stretch}
+ .daily-payroll-amount{font-size:.9rem}
+}
+@media(prefers-reduced-motion:reduce){.daily-payroll *{scroll-behavior:auto}}
