@@ -17,6 +17,8 @@ export const demoStaff: Staff[] = [
   services:['占卜'],
   published:true,
   bookingVisible:true,
+  bookingAllowedPlanIds:null,
+  bookingAllowJoint:true,
   sortOrder:1,
  },
  {
@@ -33,6 +35,8 @@ export const demoStaff: Staff[] = [
   services:['接待'],
   published:true,
   bookingVisible:true,
+  bookingAllowedPlanIds:null,
+  bookingAllowJoint:true,
   sortOrder:2,
  },
 ]
