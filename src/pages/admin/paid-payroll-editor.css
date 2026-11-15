@@ -1,0 +1,19 @@
+.paid-payroll-editor{display:grid;min-width:0;gap:6px;flex:1 1 100%}
+.paid-payroll-toolbar{display:flex;flex-wrap:wrap;gap:7px}
+.paid-payroll-toolbar button{display:inline-flex;align-items:center;justify-content:center;gap:5px;min-height:33px;padding:7px 9px;border:1px solid rgba(217,183,132,.42);color:#e6c8a5;border-radius:5px;background:#332b35;font-size:.74rem;cursor:pointer}
+.paid-payroll-fields{display:grid;gap:11px;margin-top:5px;padding:13px;border:1px solid rgba(228,183,129,.4);border-radius:7px;background:#24232d}
+.paid-payroll-fields>strong{font-size:.81rem;color:#f1d4a8}
+.paid-payroll-fields label{display:grid;gap:6px;color:#d9c3a8;font-size:.76rem}
+.paid-payroll-fields :is(input,textarea){width:100%;max-width:100%;min-width:0;box-sizing:border-box;border:1px solid rgba(213,176,126,.36);border-radius:5px;background:#151a23;padding:9px;color:#f0e0cc;font:inherit}
+.paid-payroll-fields p{margin:0;color:#baaa9e;font-size:.73rem;line-height:1.7}
+.paid-payroll-fields p.paid-payroll-error{color:#ffc3bb}
+.paid-payroll-actions{display:flex;gap:7px;flex-wrap:wrap}
+.paid-payroll-actions button{display:inline-flex;gap:6px;align-items:center;justify-content:center;padding:8px 10px;border:1px solid rgba(218,183,135,.42);border-radius:5px;background:#3e343b;color:#f1dcbb;font-size:.75rem;cursor:pointer}
+.paid-payroll-actions button.is-delete{border-color:rgba(231,137,136,.49);color:#f7c4bd;background:#64343b}
+.paid-payroll-actions button:disabled,.paid-payroll-toolbar button:disabled{opacity:.44;cursor:not-allowed}
+.paid-payroll-success{color:#c5e4be;font-size:.74rem}
+.paid-payroll-history{margin-top:16px;border-top:1px solid rgba(218,181,128,.25);padding-top:13px;display:grid;gap:9px}
+.paid-payroll-history h4{margin:0;font-size:.85rem;color:#edd0ab}
+.paid-payroll-history-row{border:1px solid rgba(217,183,128,.2);border-radius:5px;padding:10px 12px;display:grid;gap:5px;font-size:.75rem;color:#d5c2b1;line-height:1.65}
+.paid-payroll-history-row strong{color:#f0d3b3}
+@media(max-width:640px){.paid-payroll-actions button{flex:1}.paid-payroll-toolbar button{width:100%}}

@@ -45,10 +45,11 @@ assert.ok(dateSource.includes("timeZone:TAIPEI_TZ")&&dateSource.includes("Asia/T
  'Local date must not use UTC day conversion around Taiwan midnight')
 assert.ok(dashboard.includes('accountingSummary')&&dashboard.includes('saveAccountingEntry')&&
  dashboard.includes('deleteAccountingEntry')&&!dashboard.includes('exportCsv')&&
- dashboard.includes('刪除收支紀錄')&&dashboard.includes('accounting-delete-manager')&&
+ !dashboard.includes('accounting-delete-manager')&&
+ dashboard.includes('刪除紀錄')&&dashboard.includes('PaidPayrollRecordEditor')&&
  dashboard.includes("entry.reference.startsWith('PAYROLL:')")&&
  dashboard.includes('input type="date"')&&dashboard.includes('input type="month"'),
- 'Finance module must expose a deletion manager for manual records and protect paid payroll, alongside four filters')
+ 'Finance module must keep inline editing/deletion while showing paid payroll correction controls'
 assert.ok(accounting.includes("rpc('get_accounting_period_sales'")&&
  dashboard.includes('fetchAccountingPeriodSales(period)')&&
  dashboard.includes('mergedAccountingSummary(entries,sales)')&&
@@ -162,6 +163,6 @@ try{
  assert.ok(ui.includes('帳務管理')&&ui.includes('新增收支紀錄')&&
  !ui.includes('匯出 CSV')&&ui.includes('單日')&&ui.includes('當週')&&ui.includes('月份')&&
  ui.includes('營業收入（試算）')&&ui.includes('完成訂單不代表已收款')&&
- ui.includes('刪除收支紀錄'))
- console.log('PASS: delegated finance ledger, four reporting periods, explicit deletion, no CSV export and Taipei week boundaries')
+ !ui.includes('刪除收支紀錄'))
+ console.log('PASS: inline journal deletion restored, separate audited paid-salary corrections, four period filters')
 }finally{await vite.close()}

@@ -2,9 +2,10 @@ import {useCallback,useEffect,useMemo,useRef,useState} from 'react'
 import {CalendarDays,CheckCircle2,ChevronLeft,ChevronRight,RefreshCw,RotateCcw,Trash2,UsersRound,Wallet} from 'lucide-react'
 import {
  calculateEqualPayroll,confirmPeriodPayrollPaid,createPeriodPayroll,fetchPeriodPayrollReport,
- payrollPeriodWindow,recalculatePeriodPayroll,resetPeriodPayroll,
+ payrollPeriodWindow,recalculatePeriodPayroll,resetPeriodPayroll,fetchPaidPayrollAudit,
 } from '../../lib/daily-payroll'
-import type {PayrollAllocation,PayrollPeriodMode,PeriodPayrollReport} from '../../lib/daily-payroll'
+import type {PayrollAllocation,PayrollPeriodMode,PeriodPayrollReport,PaidPayrollAudit} from '../../lib/daily-payroll'
+import PaidPayrollRecordEditor from './PaidPayrollRecordEditor'
 import {shiftVenueDate,validVenueDate,validVenueMonth,venueDate} from '../../lib/taipei-date'
 import './daily-payroll.css'
 
@@ -22,6 +23,7 @@ export default function DailyPayrollSection({
  const [mode,setMode]=useState<PayrollPeriodMode>('day')
  const [date,setDate]=useState(selectedDate)
  const [data,setData]=useState<PeriodPayrollReport|null>(null)
+ const [audit,setAudit]=useState<PaidPayrollAudit[]>([])
  const [loading,setLoading]=useState(true)
  const [working,setWorking]=useState(false)
  const [error,setError]=useState('')
@@ -33,16 +35,16 @@ export default function DailyPayrollSection({
  const load=useCallback(async()=>{
   const request=++requestRef.current
   try{
-   const next=await fetchPeriodPayrollReport(mode,date)
-   if(request===requestRef.current){setData(next);setError('')}
+   const [next,history]=await Promise.all([fetchPeriodPayrollReport(mode,date),fetchPaidPayrollAudit(mode,date)])
+   if(request===requestRef.current){setData(next);setAudit(history);setError('')}
   }catch(e){
    if(request===requestRef.current){
-    setData(null);setError(e instanceof Error?e.message:'此期間營業額暫時無法讀取')
+    setData(null);setAudit([]);setError(e instanceof Error?e.message:'此期間營業額暫時無法讀取')
    }
   }finally{if(request===requestRef.current)setLoading(false)}
  },[mode,date])
  useEffect(()=>{
-  setLoading(true);setData(null);setError('');setNotice('')
+  setLoading(true);setData(null);setAudit([]);setError('');setNotice('')
   void load()
   return()=>{requestRef.current++}
  },[load,refreshToken])
@@ -186,11 +188,23 @@ export default function DailyPayrollSection({
           disabled={working||paid} onClick={()=>void pay(person as PayrollAllocation)}>
           {paid?<><CheckCircle2 size={15}/>已發薪</>:<><Wallet size={15}/>確認已發薪</>}
          </button>:<span className="daily-payroll-pending">試算額</span>}
+        {frozen&&paid&&<PaidPayrollRecordEditor
+         mode={mode} date={date} employeeId={person.id} employeeName={person.name}
+         amountGil={person.amountGil} disabled={working||loading}
+         onChanged={()=>{void load();onLedgerChanged()}}/>}
        </div>
       })}
      </div>}
     {!frozen&&preview.length>0&&<p className="daily-payroll-footnote">分配總額 {money(preview.reduce((sum,x)=>sum+x.amountGil,0))}，平均分給 {preview.length} 位出勤人員；尾數依名單順序補 1 Gil。</p>}
-    <p className="daily-payroll-footnote">「建立清單」不會發送遊戲貨幣。只有在 FFXIV 實際交付 Gil，並按下「確認已發薪」後，才會記入實際發薪日的帳務支出。已建立期間不可與其他分薪期間重疊。</p>
+    <p className="daily-payroll-footnote">「建立清單」不會發送遊戲貨幣。只有在 FFXIV 實際交付 Gil，並按下「確認已發薪」後，才會記入實際發薪日的帳務支出。已建立期間不可與其他分薪期間重疊。修改或刪除已發薪資料時，請核對實際支付情形並填寫原因。</p>
+    {audit.length>0&&<section className="paid-payroll-history" aria-label="已發薪調整歷史">
+     <h4>已發薪調整歷史 · {audit.length} 筆</h4>
+     {audit.map(entry=><article key={entry.id} className="paid-payroll-history-row">
+      <strong>{entry.action==='delete'?'刪除':'修改'} · {entry.employeeName} · {new Date(entry.createdAt).toLocaleString('zh-TW',{timeZone:'Asia/Taipei'})}</strong>
+      <span>{money(entry.previousGil)} {entry.action==='delete'?'→ 已刪除':('→ '+money(entry.updatedGil??0))}</span>
+      <span>原因：{entry.reason}</span>
+     </article>)}
+    </section>}
    </>}
  </section>
 }

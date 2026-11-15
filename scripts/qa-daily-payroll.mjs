@@ -18,8 +18,10 @@ const files=[
  'supabase/migrations/20261115_21_owner_attendance_payroll.sql',
  'supabase/migrations/20261115_23_period_payroll.sql',
  'supabase/migrations/20261115_24_payroll_reset_recalculate.sql',
+ 'supabase/migrations/20261115_25_paid_payroll_corrections.sql',
+ 'src/pages/admin/PaidPayrollRecordEditor.tsx',
 ]
-const [orders,accounting,ui,helper,styles,ledgerStyles,sql,ownerSql,periodSql,resetSql]=
+const [orders,accounting,ui,helper,styles,ledgerStyles,sql,ownerSql,periodSql,resetSql,correctionSql,paidEditor]=
  await Promise.all(files.map(path=>readFile(path,'utf8')))
 assert.ok(orders.includes("{id:'active',text:'待處理'}"),
  'Keep the existing pending+preparing queue')
@@ -79,6 +81,25 @@ assert.ok(ui.includes("changeSnapshot('reset')")&&
  resetSql.includes('pg_catalog.pg_advisory_xact_lock')&&
  !resetSql.includes('delete from public.accounting_entries'),
  'Reset and recalculate must be protected against paid snapshots and atomic with rollback')
+assert.ok(accounting.includes('PaidPayrollRecordEditor')&&
+ !accounting.includes('accounting-delete-manager')&&
+ ui.includes('fetchPaidPayrollAudit')&&ui.includes('PaidPayrollRecordEditor')&&
+ ui.includes('已發薪調整歷史')&&
+ helper.includes("rpc('manage_paid_payroll'")&&
+ helper.includes('parsePayrollReference')&&
+ correctionSql.includes('public.payroll_correction_audit')&&
+ correctionSql.includes("p_action='edit'")&&
+ correctionSql.includes("p_action='delete'")&&
+ correctionSql.includes('v_pay.paid_at is null')&&
+ correctionSql.includes('delete from public.accounting_entries')&&
+ correctionSql.includes('delete from public.payroll_allocations')&&
+ correctionSql.includes('private.payroll_period_range(p_mode,p_anchor)')&&
+ correctionSql.includes('pg_catalog.pg_advisory_xact_lock')&&
+ correctionSql.includes('revoke all on function public.manage_paid_payroll')&&
+ correctionSql.includes('to authenticated')&&
+ paidEditor.includes('調整原因')&&paidEditor.includes("void run('delete')")&&
+ paidEditor.includes("void run('edit')"),
+ 'Paid correction/delete requires reason, atomic ledger sync, and durable audit')
 assert.ok(styles.includes('.daily-payroll-salary-basis')&&
  styles.includes('@media(max-width:640px)')&&
  ledgerStyles.includes('.accounting-payroll-locked'),
@@ -145,6 +166,13 @@ try{
   'Same owner account cannot be paid twice')
  assert.ok(ui.includes('婆婆／管理員出勤')&&ui.includes("person.source==='owner'"),
   'The payroll UI should identify owner/admin and explain that they share pay')
+ assert.deepEqual(payroll.parsePayrollReference('PAYROLL:2026-11-15:50dc0795-9064-4969-8914-fcf5e224627d'),{
+  mode:'day',date:'2026-11-15',employeeId:'50dc0795-9064-4969-8914-fcf5e224627d',
+ })
+ assert.deepEqual(payroll.parsePayrollReference('PAYROLL:week:2026-11-09:50dc0795-9064-4969-8914-fcf5e224627d'),{
+  mode:'week',date:'2026-11-09',employeeId:'50dc0795-9064-4969-8914-fcf5e224627d',
+ })
+ assert.equal(payroll.parsePayrollReference('NOTPAYROLL:2026-11-15:x'),null)
  assert.deepEqual(payroll.payrollPeriodWindow('week','2026-11-15'),{start:'2026-11-09',end:'2026-11-16'})
  assert.deepEqual(payroll.payrollPeriodWindow('month','2026-11-15'),{start:'2026-11-01',end:'2026-12-01'})
  assert.throws(()=>payroll.calculateEqualPayroll(-1,employees))
@@ -169,5 +197,5 @@ try{
  !html.includes('當日營業額・員工分薪')&&
  html.includes('選擇當日營業額與分薪日期'),
  'Dashboard must render a selectable daily payroll section even on first paint')
- console.log('PASS: salary-only UI, safe unpaid reset/recalculation, immutable paid snapshots, and ledger deletion controls')
+ console.log('PASS: salary corrections and deletion audited, inline ledger actions, safe unpaid reset and 3 periods')
 }finally{await vite.close()}

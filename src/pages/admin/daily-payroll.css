@@ -77,3 +77,6 @@
  .daily-payroll-amount{font-size:.9rem}
 }
 @media(prefers-reduced-motion:reduce){.daily-payroll *{scroll-behavior:auto}}
+
+.daily-payroll-member>.paid-payroll-editor{grid-column:1/-1}
+.daily-payroll-member>.paid-payroll-editor .paid-payroll-toolbar{justify-content:flex-end}

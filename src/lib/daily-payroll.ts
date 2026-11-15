@@ -225,3 +225,57 @@ export async function recalculatePeriodPayroll(mode:PayrollPeriodMode,date:strin
  if(!Number.isSafeInteger(Number(data))||Number(data)<1)
   throw new Error('重新計算未成功，原分薪清單應保持不變')
 }
+
+/** Validated references for legacy paid day salaries and period salaries. */
+export function parsePayrollReference(reference:string):
+ {mode:PayrollPeriodMode;date:string;employeeId:string}|null{
+ const uuid='([0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12})'
+ const legacy=new RegExp('^PAYROLL:(\\d{4}-\\d{2}-\\d{2}):'+uuid+'$','i').exec(reference)
+ const modern=new RegExp('^PAYROLL:(day|week|month):(\\d{4}-\\d{2}-\\d{2}):'+uuid+'$','i').exec(reference)
+ const mode=(modern?.[1] as PayrollPeriodMode|undefined)||'day'
+ const date=modern?.[2]||legacy?.[1]
+ const id=modern?.[3]||legacy?.[2]
+ if(!date||!id||!validVenueDate(date))return null
+ return {mode,date,employeeId:id}
+}
+export type PaidPayrollAction='edit'|'delete'
+export type PaidPayrollAudit={
+ id:string;date:string;mode:PayrollPeriodMode;employeeId:string;employeeName:string
+ action:PaidPayrollAction;previousGil:number;updatedGil:number|null
+ reason:string;createdAt:string
+}
+export async function managePaidPayroll(
+ mode:PayrollPeriodMode,date:string,employeeId:string,action:PaidPayrollAction,
+ amountGil:number|null,reason:string,
+):Promise<void>{
+ payrollPeriodWindow(mode,date)
+ if(!/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(employeeId))
+  throw new Error('員工編號無效')
+ if(action!=='edit'&&action!=='delete')throw new Error('不支援此操作')
+ const clean=reason.trim()
+ if(clean.length<3||clean.length>240)throw new Error('調整原因需為 3～240 字')
+ if(action==='edit'&&(!Number.isSafeInteger(amountGil)||amountGil===null||amountGil<0||amountGil>1_000_000_000))
+  throw new Error('校正金額須為 0～1,000,000,000 Gil')
+ const {error}=await db().rpc('manage_paid_payroll',{
+  p_mode:mode,p_anchor:date,p_employee_id:employeeId,p_action:action,
+  p_new_amount:action==='edit'?amountGil:null,p_reason:clean,
+ })
+ if(error)throw new Error(error.message||'已發薪資料變更失敗')
+}
+export async function fetchPaidPayrollAudit(
+ mode:PayrollPeriodMode,date:string,
+):Promise<PaidPayrollAudit[]>{
+ const range=payrollPeriodWindow(mode,date)
+ const {data,error}=await db().from('payroll_correction_audit')
+  .select('id,pay_date,period_mode,employee_id,employee_name,action,previous_gil,updated_gil,reason,created_at')
+  .eq('pay_date',range.start).eq('period_mode',mode)
+  .order('created_at',{ascending:false}).limit(150)
+ if(error)throw new Error('讀取已發薪調整紀錄失敗：'+error.message)
+ return (data||[]).map(row=>({
+  id:row.id,date:row.pay_date,mode:row.period_mode as PayrollPeriodMode,
+  employeeId:row.employee_id,employeeName:row.employee_name,
+  action:row.action as PaidPayrollAction,previousGil:gil(row.previous_gil),
+  updatedGil:row.updated_gil===null?null:gil(row.updated_gil),
+  reason:row.reason,createdAt:row.created_at,
+ }))
+}
