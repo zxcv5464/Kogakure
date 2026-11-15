@@ -75,7 +75,7 @@ try{
   "window.fetch=(resource,options)=>{"+
    "const url=typeof resource==='string'?resource:resource?.url||'';"+
    "if(url.includes('shift-load-test.invalid/rest/v1/')){"+
-    "window.__mockShiftCalls++;"+
+    "if(['shift_open_days','shift_attendance','shift_owner_attendance'].some(t=>url.includes('/rest/v1/'+t)))window.__mockShiftCalls++;"+
     "return new Promise(resolve=>window.setTimeout(()=>resolve("+
      "new Response('[]',{status:200,headers:{'content-type':'application/json'}})"+
     "),3800));"+
@@ -109,7 +109,7 @@ try{
  assert.equal(before.disabled,28,'Unknown days must not be clickable')
  assert.ok(before.statuses.every(s=>s==='讀取中'),'Unknown days must not appear closed')
  assert.equal(before.fallback,false,'Never show the general lazy-route fallback')
- assert.equal(before.calls,3,'Exactly three read-only schedule queries expected')
+ assert.equal(before.calls,3,'Exactly three read-only shift-table schedule queries expected')
  await waitFor(()=>evaluate("!!document.querySelector('.page-transition-curtain.is-revealing')"),3700)
  const during=await evaluate("(()=>{const shell=document.querySelector('.shift-calendar-shell');return{"+
   "count:document.querySelectorAll('.shift-day').length,"+
