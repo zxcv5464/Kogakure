@@ -34,6 +34,12 @@ jobs:
         env:
           VITE_OFFLINE_PREVIEW: 'true'
         run: node scripts/qa-tea-orders.mjs
+      - name: Verify tea menu and booking first-paint readiness, query deduplication and safe submits
+        env:
+          VITE_OFFLINE_PREVIEW: 'true'
+        run: node scripts/qa-menu-booking-load-performance.mjs
+      - name: Verify real first-visit menu and booking while published data is delayed
+        run: node scripts/qa-menu-booking-cold-visit.mjs
       - name: Verify first shift visit paints all dates before slow Supabase responses
         run: node scripts/qa-shift-cold-first-paint.mjs
       - name: Verify public shifts load without repeated queries or long row animations
