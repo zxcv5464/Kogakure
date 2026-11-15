@@ -3,7 +3,8 @@ import {Link} from 'react-router-dom'
 import {ArrowUpRight,Camera, Droplets, MoonStar, Sparkles} from 'lucide-react'
 import ServicePhotoGallery from '../components/ServicePhotoGallery'
 import {configured} from '../lib/config'
-import {fetchServiceContents,previewServices} from '../lib/service-content'
+import {previewServices} from '../lib/service-content'
+import {loadPublicServices,peekPublicServices} from '../lib/public-services'
 import type {ServiceEntry} from '../lib/service-content'
 import './services-page.css'
 
@@ -14,15 +15,25 @@ function serviceIcon(service:ServiceEntry){
  return Sparkles
 }
 export default function ServicesPage(){
- const [entries,setEntries]=useState<ServiceEntry[]>(configured?[]:previewServices)
- const [loading,setLoading]=useState(configured)
+ // Returning visitors reuse the latest published entries immediately. A
+ // stale snapshot remains visible while the next request refreshes it.
+ const [entries,setEntries]=useState<ServiceEntry[]>(()=>configured?(peekPublicServices()??[]):previewServices)
+ const [loading,setLoading]=useState(()=>configured&&peekPublicServices()===null)
  const [error,setError]=useState('')
  useEffect(()=>{
   if(!configured)return
   let active=true
-  fetchServiceContents().then(rows=>{if(active){setEntries(rows);setError('')}})
-   .catch(err=>{if(active)setError(err instanceof Error?err.message:'服務內容暫時無法讀取')})
-   .finally(()=>{if(active)setLoading(false)})
+  const snapshot=peekPublicServices()
+  if(snapshot!==null){
+   setEntries(snapshot);setLoading(false)
+  }else setLoading(true)
+  loadPublicServices().then(rows=>{
+   if(active){setEntries(rows);setError('')}
+  }).catch(err=>{
+   if(active)setError(err instanceof Error?err.message:'服務內容暫時無法讀取')
+  }).finally(()=>{
+   if(active)setLoading(false)
+  })
   return()=>{active=false}
  },[])
  return <div className="services-page">
@@ -44,7 +55,7 @@ export default function ServicesPage(){
    {loading&&<p className="services-state" role="status">狐火引路中，正在開啟館內服務卷軸…</p>}
    {error&&<p className="services-state is-error" role="alert">服務內容暫時無法讀取：{error}。請稍後重新整理。</p>}
    {!loading&&!error&&entries.length===0&&<p className="services-state">館內服務介紹仍在籌備中，敬請期待。</p>}
-   {!loading&&!error&&entries.map((service,index)=>{
+   {!loading&&entries.map((service,index)=>{
     const Icon=serviceIcon(service)
     const number=String(index+1).padStart(2,'0')
     return <section className="services-feature" id={service.slug} key={service.id} aria-labelledby={service.slug+'-title'}>
