@@ -100,11 +100,13 @@ export default function Layout({children,onRegisterBgm}:{children:React.ReactNod
      <span><strong>狐隱</strong><small>KOGAKURE</small></span>
     </Link>
     <nav ref={desktopNav} className="desktop-nav" aria-label="主要導覽">{links.map(({to,label})=><NavLink key={to} to={to} end={to==='/'} onMouseEnter={to==='/staff'?prefetchStaffPage:to==='/shifts'?prefetchShiftsPage:to==='/services'?prefetchServicesPage:to==='/menu'?prefetchMenuPage:to==='/booking'?prefetchBookingPage:undefined} onFocus={to==='/staff'?prefetchStaffPage:to==='/shifts'?prefetchShiftsPage:to==='/services'?prefetchServicesPage:to==='/menu'?prefetchMenuPage:to==='/booking'?prefetchBookingPage:undefined} onTouchStart={to==='/staff'?prefetchStaffPage:to==='/shifts'?prefetchShiftsPage:to==='/services'?prefetchServicesPage:to==='/menu'?prefetchMenuPage:to==='/booking'?prefetchBookingPage:undefined} onPointerDown={to==='/shifts'?prefetchShiftsPage:to==='/services'?prefetchServicesPage:to==='/menu'?prefetchMenuPage:to==='/booking'?prefetchBookingPage:undefined} className={({isActive})=>isActive?'active':''}>{label}</NavLink>)}<span className={'nav-slider'+(indicator.ready?' is-ready':'')} style={{left:indicator.left,width:indicator.width}} aria-hidden="true"/></nav>
-    <div className="header-socials" aria-label="狐隱社群入口">
-     <a className="social-header" target="_blank" rel="noopener noreferrer" href="https://www.threads.com/@kogakure_ffxiv" aria-label="狐隱 Threads" title="官方 Threads"><AtSign size={19}/></a>
-     <a className="social-header" target="_blank" rel="noopener noreferrer" href={DISCORD_INVITE} aria-label="狐隱 Discord" title="加入狐隱 Discord"><DiscordMark/></a>
+    <div className="header-actions">
+     <div className="header-socials" aria-label="狐隱社群入口">
+      <a className="social-header" target="_blank" rel="noopener noreferrer" href="https://www.threads.com/@kogakure_ffxiv" aria-label="狐隱 Threads" title="官方 Threads"><AtSign size={19}/></a>
+      <a className="social-header" target="_blank" rel="noopener noreferrer" href={DISCORD_INVITE} aria-label="狐隱 Discord" title="加入狐隱 Discord"><DiscordMark/></a>
+     </div>
+     <SiteBgm onRegisterStart={onRegisterBgm}/>
     </div>
-    <SiteBgm onRegisterStart={onRegisterBgm}/>
    </div>
   </header>
   <main>{children}</main>

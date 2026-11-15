@@ -1,5 +1,5 @@
 import {useCallback,useEffect,useRef,useState} from 'react'
-import {Music2,Play,Volume2,VolumeX} from 'lucide-react'
+import {Music2,VolumeX} from 'lucide-react'
 import './site-bgm.css'
 
 // The official BGMer recording of the selected "みやびごころ" track.
@@ -71,13 +71,12 @@ export default function SiteBgm({onRegisterStart}:{onRegisterStart?:(start:()=>v
    aria-hidden="true"/>
   <button type="button"
    className={'site-bgm-toggle'+(playing?' is-playing':'')+(playback==='blocked'?' is-blocked':'')}
-   aria-label={playing?'停止背景音樂':'播放背景音樂'}
+   aria-label={playing?'關閉背景音樂':'開啟背景音樂'}
    aria-pressed={playing}
    title={'背景音樂：みやびごころ · '+status}
    onClick={toggle}>
-   {playing?<Volume2 size={17}/>:enabled?<Play size={16}/>:<VolumeX size={17}/>}
-   <span className="site-bgm-text"><strong>BGM</strong><small>{status}</small></span>
-   {playing&&<span className="site-bgm-note" aria-hidden="true"><Music2 size={12}/></span>}
+   {playback==='off'?<VolumeX size={19} strokeWidth={1.8} aria-hidden="true"/>:
+    <Music2 size={19} strokeWidth={1.8} aria-hidden="true"/>}
   </button>
  </div>
 }

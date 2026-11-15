@@ -68,7 +68,9 @@ assert.ok(introCss.includes('.entry-intro.is-preparing :is(')&&
  'First paint must hide all entrance layers until the logo is ready')
 assert.ok(intro.includes("phase==='preparing'?' is-preparing'"),
  'The CSS preparation state must actually be applied to the initial intro')
-assert.ok(intro.includes('進入狐隱<ArrowRight')&&intro.includes('onClick={enterInn}'),
+assert.ok(intro.includes('進入狐隱<ArrowRight')&&intro.includes('onClick={enterInn}')&&
+ !intro.includes('<Music2')&&
+ !intro.includes('ArrowRight,Music2'),
  'The original logo page must show just 進入狐隱 on the enter-and-play button')
 assert.ok(!intro.includes('進入狐隱・開始播放音樂'),
  'Long music activation wording should be removed from the intro button')
@@ -102,8 +104,15 @@ assert.ok(introCss.includes('@media(prefers-reduced-motion:reduce)')&&
  'Visitors with reduced motion must retain access to the entry button')
 assert.ok(transition.includes('<SceneBackdrop introReady={introReady} />'),
  'Site background and route transitions must keep using the existing reveal state')
-assert.ok(css.includes('@media(max-width:850px)')&&introCss.includes('@media(max-width:570px)'),
- 'Keep mobile music controls and responsive logo entry')
+assert.ok(css.includes('width:40px;height:40px')&&
+ css.includes('border-radius:50%')&&
+ !css.includes('.site-bgm-text')&&
+ player.includes('aria-pressed={playing}')&&
+ player.includes('開啟背景音樂')&&player.includes('關閉背景音樂')&&
+ layout.includes('className="header-actions"')&&
+ layout.includes('className="header-socials"')&&
+ introCss.includes('@media(max-width:570px)'),
+ 'Compact top-right BGM button must match social icons without crowding navigation')
 
 const vite=await createServer({server:{middlewareMode:true,hmr:false},appType:'custom'})
 try{
@@ -113,7 +122,7 @@ try{
  assert.equal((markup.match(/<audio\b/g)||[]).length,1,
   'There must be precisely one persistent public audio element')
  assert.ok(markup.includes('loop=""')||markup.includes(' loop'))
- assert.ok(markup.includes('BGM')&&markup.includes('背景音樂'))
+ assert.ok(markup.includes('site-bgm-toggle')&&markup.includes('背景音樂'))
  assert.ok(markup.includes('bgmer.net/wp-content/uploads/2025/04/456_BPM80.mp3'))
  console.log('PASS: original logo click starts one looping BGM player; no separate audio screen; mobile, keyboard, stop/restart and attribution intact')
 }finally{await vite.close()}

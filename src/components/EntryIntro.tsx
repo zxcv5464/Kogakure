@@ -1,5 +1,5 @@
 import {useEffect,useRef,useState} from 'react'
-import {ArrowRight,Music2} from 'lucide-react'
+import {ArrowRight} from 'lucide-react'
 import {asset} from '../lib/paths'
 import './entry-intro.css'
 
@@ -113,7 +113,7 @@ export default function EntryIntro({onEnter,onReveal}:{onEnter?:()=>void;onRevea
    <span className="intro-divider" aria-hidden="true"/>
    <span id="intro-motto" className="intro-motto">循狐而入，借湯忘憂。</span>
    <button type="button" className="intro-entry-action"
-    disabled={phase!=='ready'} onClick={enterInn}><Music2 size={17} strokeWidth={1.7}/>進入狐隱<ArrowRight size={17} strokeWidth={1.7}/></button>
+    disabled={phase!=='ready'} onClick={enterInn}>進入狐隱<ArrowRight size={17} strokeWidth={1.7}/></button>
    <small className="intro-music-note">入館後可於頁首隨時關閉或重新播放 BGM</small>
   </div>
  </div>

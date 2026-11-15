@@ -22,8 +22,10 @@ assert.ok(layout.includes('className="header-socials"')&&
 assert.ok(layout.includes('官方 Discord')&&layout.includes('className="mobile-extra-link mobile-social-link"'),
  'Mobile more menu must contain a Discord entry matching Threads')
 assert.ok(css.includes('.header-socials{display:flex')&&
- css.includes('@media(max-width:850px){.header-socials{display:none}}'),
- 'Social icons must sit side by side on desktop and not disrupt mobile header')
+ css.includes('@media(max-width:850px){.header-socials{display:none}}')&&
+ css.includes('.header-inner>.header-actions')&&
+ layout.includes('<SiteBgm onRegisterStart={onRegisterBgm}/>'),
+ 'Social icons and compact BGM must share the right-side action group without disrupting navigation')
 assert.ok(layout.includes('target="_blank" rel="noopener noreferrer"'),
  'External social links need secure tab handling')
 
