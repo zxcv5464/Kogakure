@@ -109,9 +109,9 @@ try{
  assert.equal(menuPending.queries,2,'Menu needs one read per published table')
  await waitFor(()=>evalJS("!!document.querySelector('.page-transition-curtain.is-quick.is-revealing')"),2500)
  const menuRevealMs=await evalJS("performance.now()")-menuClick
- assert.ok(menuRevealMs<1800,'Cold menu route should reveal before 1.8 seconds, not await slow Supabase: '+Math.round(menuRevealMs)+'ms')
+ assert.ok(menuRevealMs<1100,'Cold menu route should reveal before 1.1 seconds, not await slow Supabase: '+Math.round(menuRevealMs)+'ms')
  const menuDuration=await evalJS("getComputedStyle(document.querySelector('.page-transition-curtain')).transitionDuration")
- assert.equal(menuDuration,'0.41s','Quick menu reveal CSS must match the 410ms transition timer')
+ assert.equal(menuDuration,'0.26s','Quick menu reveal CSS must match the 260ms transition timer')
  assert.equal(await evalJS("!!document.querySelector('.tea-menu-loading-stage')"),true,
   'The curtain must reveal a visible menu header and stable loading area before backend responds')
  await waitFor(()=>evalJS("!document.querySelector('.tea-menu-loading-stage')"),8000)
@@ -137,9 +137,9 @@ try{
  assert.equal(bookingPending.calls,3,'Three booking read-only calls must be deduplicated')
  await waitFor(()=>evalJS("!!document.querySelector('.page-transition-curtain.is-quick.is-revealing')"),2500)
  const bookingRevealMs=await evalJS("performance.now()")-bookingClick
- assert.ok(bookingRevealMs<1800,'Cold booking route should reveal before 1.8 seconds, not await slow Supabase: '+Math.round(bookingRevealMs)+'ms')
+ assert.ok(bookingRevealMs<1100,'Cold booking route should reveal before 1.1 seconds, not await slow Supabase: '+Math.round(bookingRevealMs)+'ms')
  const bookingDuration=await evalJS("getComputedStyle(document.querySelector('.page-transition-curtain')).transitionDuration")
- assert.equal(bookingDuration,'0.41s','Quick booking reveal CSS must match the 410ms transition timer')
+ assert.equal(bookingDuration,'0.26s','Quick booking reveal CSS must match the 260ms transition timer')
  assert.equal(await evalJS("!!document.querySelector('.booking-loading-stage')"),true,
   'The booking title must be revealed before all three queries settle')
  await waitFor(()=>evalJS("!document.querySelector('.booking-loading-stage')"),8500)
