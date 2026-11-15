@@ -28,7 +28,7 @@ function reply(req:Request,status:number,value:Record<string,unknown>){
  return new Response(JSON.stringify(value),{status,headers:cors(req)})
 }
 function validatedPermissions(value:unknown):string[]|null{
- if(!Array.isArray(value)||value.length>4||
+ if(!Array.isArray(value)||value.length>allowedPermissions.size||
   !value.every(x=>typeof x==='string'&&allowedPermissions.has(x)))return null
  return [...new Set(value)]
 }
