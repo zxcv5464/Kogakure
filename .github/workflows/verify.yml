@@ -42,6 +42,10 @@ jobs:
         env:
           VITE_OFFLINE_PREVIEW: 'true'
         run: node scripts/qa-service-content.mjs
+      - name: Verify shared public background music and mobile playback controls
+        env:
+          VITE_OFFLINE_PREVIEW: 'true'
+        run: node scripts/qa-site-bgm.mjs
       - name: Verify services and shifts reveal shared rotating venue photography
         run: node scripts/qa-public-scene-backdrops.mjs
       - name: Verify public page fade pacing and curtain handling
