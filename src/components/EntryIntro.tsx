@@ -3,11 +3,13 @@ import {ArrowRight,Music2} from 'lucide-react'
 import {asset} from '../lib/paths'
 import './entry-intro.css'
 
-type Phase='enter'|'ready'|'clear'|'reveal'|'done'
+type Phase='preparing'|'enter'|'ready'|'clear'|'reveal'|'done'
 // The logo, wordmark and motto arrive first; let the button finish fading in.
 const HOLD_MS=1650
 const CLEAR_MS=180
 const REVEAL_MS=480
+// Cold-cache visitors should see the same sequence as returning visitors.
+const LOGO_LOAD_TIMEOUT_MS=3200
 
 export function shouldPlay():boolean{
  if(typeof window==='undefined')return false
@@ -19,9 +21,44 @@ export function shouldPlay():boolean{
 export default function EntryIntro({onEnter,onReveal}:{onEnter?:()=>void;onReveal?:()=>void}){
  const [phase,setPhase]=useState<Phase>(()=>{
   if(!shouldPlay())return 'done'
-  return window.matchMedia('(prefers-reduced-motion: reduce)').matches?'ready':'enter'
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches?'ready':'preparing'
  })
  const entryButton=useRef<HTMLButtonElement>(null)
+ const logoImage=useRef<HTMLImageElement>(null)
+
+ // On a cold first visit, CSS animations used to run before logo-intro.webp
+ // finished downloading/decoding. Start the whole sequence only after the
+ // logo can paint. Two frames commit the hidden initial state first, so CSS
+ // animations actually run instead of jumping to their finished appearance.
+ useEffect(()=>{
+  if(phase!=='preparing')return
+  let active=true
+  let released=false
+  let frameOne=0,frameTwo=0
+  const image=logoImage.current
+  const release=()=>{
+   if(!active||released)return
+   released=true
+   frameOne=window.requestAnimationFrame(()=>{
+    frameTwo=window.requestAnimationFrame(()=>{
+     if(active)setPhase('enter')
+    })
+   })
+  }
+  const fallback=window.setTimeout(release,LOGO_LOAD_TIMEOUT_MS)
+  const settle=()=>{window.clearTimeout(fallback);release()}
+  if(image?.decode)void image.decode().then(settle,settle)
+  else if(!image||image.complete)settle()
+  else{image.addEventListener('load',settle);image.addEventListener('error',settle)}
+  return()=>{
+   active=false
+   window.clearTimeout(fallback)
+   window.cancelAnimationFrame(frameOne)
+   window.cancelAnimationFrame(frameTwo)
+   image?.removeEventListener('load',settle)
+   image?.removeEventListener('error',settle)
+  }
+ },[phase])
 
  useEffect(()=>{
   if(phase==='done')return
@@ -71,11 +108,11 @@ export default function EntryIntro({onEnter,onReveal}:{onEnter?:()=>void;onRevea
  }
 
  if(phase==='done')return null
- return <div className={'entry-intro'+(phase==='clear'?' is-clearing':phase==='reveal'?' is-revealing':'')}
+ return <div className={'entry-intro'+(phase==='preparing'?' is-preparing':phase==='clear'?' is-clearing':phase==='reveal'?' is-revealing':'')}
   role="dialog" aria-modal="true" aria-labelledby="intro-wordmark" aria-describedby="intro-motto">
   <div className="intro-brand">
    <div className="intro-seal" aria-hidden="true">
-    <img src={asset('images/brand/logo-intro.webp')} alt="" width="300" height="300" fetchPriority="high" decoding="async"/>
+    <img ref={logoImage} src={asset('images/brand/logo-intro.webp')} alt="" width="300" height="300" fetchPriority="high" decoding="async"/>
    </div>
    <span id="intro-wordmark" className="intro-wordmark">KOGAKURE</span>
    <span className="intro-divider" aria-hidden="true"/>
