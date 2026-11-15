@@ -1,4 +1,4 @@
-import {useEffect,useState} from 'react'
+import {Fragment,useEffect,useState} from 'react'
 import {Link} from 'react-router-dom'
 import {ArrowUpRight,Camera, Droplets, MoonStar, Sparkles} from 'lucide-react'
 import ServicePhotoGallery from '../components/ServicePhotoGallery'
@@ -23,7 +23,7 @@ export function ServiceTitle({title}:{title:string}){
  if(!clauses||clauses.length<2||clauses.some(part=>[...part].length>8))
   return <>{title}</>
  return <>{clauses.map((clause,index)=>
-  <span className="services-title-clause" key={index}>{clause}</span>
+  <Fragment key={index}>{index>0&&<wbr/>}<span className="services-title-clause">{clause}</span></Fragment>
  )}</>
 }
 
