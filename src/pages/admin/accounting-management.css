@@ -1,0 +1,69 @@
+.accounting-admin{min-width:0;color:#eadfce;padding-bottom:64px}
+.accounting-admin-header{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.accounting-admin-header .eyebrow{margin:0 0 8px;letter-spacing:.16em;color:#c5a67d;font-size:.7rem}
+.accounting-admin-header h1{font:600 clamp(1.45rem,2.6vw,1.86rem) 'Noto Serif TC',serif;margin:0 0 9px;color:#f1dab4}
+.accounting-admin-header p:last-child{font-size:.82rem;color:#bdb1a7;margin:0;line-height:1.8}
+.accounting-header-actions{display:flex;gap:8px;flex-wrap:wrap}
+.accounting-header-actions button{display:flex;align-items:center;gap:8px;min-height:42px;padding:9px 13px;border-radius:5px;border:1px solid rgba(216,177,119,.37);background:#262630;color:#e6cfad;font-size:.8rem}
+.accounting-header-actions button:disabled{opacity:.45;cursor:not-allowed}
+.accounting-admin-tip{display:flex;gap:9px;align-items:flex-start;margin:20px 0 14px;padding:12px 14px;border:1px solid rgba(216,180,129,.28);background:rgba(214,168,106,.06);border-radius:7px;line-height:1.8;font-size:.78rem;color:#d9c9b4}
+.accounting-admin-tip svg{flex:0 0 auto;margin-top:3px;color:#dcb886}
+.accounting-period{display:flex;align-items:center;flex-wrap:wrap;gap:11px;margin:17px 0 20px;padding:13px 15px;background:#252630;border:1px solid rgba(216,180,129,.26);border-radius:8px}
+.accounting-period-modes{display:flex;gap:5px;flex-wrap:wrap}
+.accounting-period button{min-height:40px;padding:8px 13px;border:1px solid rgba(221,183,137,.26);border-radius:5px;color:#d5c1a7;background:#22232e;font-size:.79rem}
+.accounting-period button.is-active{background:#d7b687;color:#261f27;border-color:#d7b687;font-weight:700}
+.accounting-period>label{display:flex;align-items:center;gap:8px;color:#d9bc92;font-size:.8rem}
+.accounting-period input{min-height:40px;padding:8px;border-radius:5px;min-width:142px;max-width:185px;border:1px solid rgba(218,181,130,.31);background:#171c26;color:#eee0cd;color-scheme:dark;font:inherit}
+.accounting-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:19px 0 26px}
+.accounting-summary>div{min-width:0;display:grid;gap:11px;padding:18px 16px;border-radius:8px;border:1px solid rgba(211,179,140,.25);background:linear-gradient(155deg,#2b2935,#1e202a)}
+.accounting-summary span{display:flex;align-items:center;gap:7px;font-size:.77rem;color:#c7b3a2}
+.accounting-summary strong{font:600 clamp(1rem,1.7vw,1.34rem) Georgia,serif;color:#f3d2a2;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.accounting-summary .is-negative strong{color:#f0aaa6}
+.accounting-notice{margin:12px 0;display:flex;align-items:flex-start;gap:9px;font-size:.82rem;line-height:1.8;padding:12px 14px;border-radius:6px;overflow-wrap:anywhere}
+.accounting-notice.is-error{border:1px solid rgba(226,131,131,.43);color:#ffc5c1;background:rgba(122,44,53,.17)}
+.accounting-notice.is-success{border:1px solid rgba(139,219,151,.36);color:#c3eac8;background:rgba(50,110,69,.14)}
+.accounting-workspace{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(285px,.9fr);align-items:start;gap:20px}
+.accounting-list-panel,.accounting-editor{border:1px solid rgba(219,180,126,.28);border-radius:8px;background:#21232e;min-width:0;padding:18px}
+.accounting-list-heading{display:flex;gap:12px;align-items:start;justify-content:space-between;flex-wrap:wrap;margin-bottom:15px}
+.accounting-list-heading h2,.accounting-editor-heading h2{font:600 1.1rem 'Noto Serif TC',serif;color:#efd7b0;margin:0 0 6px}
+.accounting-list-heading small{color:#b7a9a0;font-size:.73rem}
+.accounting-kind-filter{display:flex;gap:5px}
+.accounting-kind-filter button{min-height:35px;padding:7px 10px;border-radius:4px;background:#1c1d27;border:1px solid rgba(220,181,132,.3);color:#d5bba0;font-size:.76rem}
+.accounting-kind-filter button.is-active{background:#d3af7c;color:#26202a;border-color:#d3af7c}
+.accounting-empty{margin:0;padding:45px 10px;text-align:center;font-size:.83rem;color:#baa899;line-height:1.8;border:1px dashed rgba(220,181,130,.28);border-radius:6px}
+.accounting-entry-list{display:grid;gap:11px;max-height:850px;overflow:auto;overscroll-behavior:contain;padding-right:3px}
+.accounting-entry{min-width:0;display:grid;gap:7px;padding:15px;border:1px solid rgba(214,180,129,.2);border-radius:7px;background:linear-gradient(145deg,#2c2934,#23242f)}
+.accounting-entry-top,.accounting-entry-top>div{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.accounting-entry-top{justify-content:space-between}
+.accounting-entry-kind{padding:3px 8px;border-radius:30px;border:1px solid rgba(135,212,147,.36);font-size:.7rem;color:#b5e7bf}
+.accounting-entry-kind.is-expense{border-color:rgba(232,142,135,.39);color:#f2b6ad}
+.accounting-entry-date{color:#b9a69a;font-size:.76rem}
+.accounting-entry-top strong{font:600 .97rem Georgia,serif;color:#b8e3bc;font-variant-numeric:tabular-nums}
+.accounting-entry-top strong.is-expense{color:#eeb5a9}
+.accounting-entry h3{font:600 .94rem 'Noto Serif TC',serif;margin:3px 0 0;color:#efd7b6}
+.accounting-entry>p{margin:0;line-height:1.7;color:#d3beb0;font-size:.79rem;overflow-wrap:anywhere}
+.accounting-entry>small{color:#baaca1;overflow-wrap:anywhere}
+.accounting-entry footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding-top:10px;margin-top:4px;border-top:1px solid rgba(217,183,128,.16)}
+.accounting-entry footer small{font-size:.72rem;color:#9f9994}
+.accounting-entry footer>div{display:flex;gap:7px}
+.accounting-entry footer button{display:flex;align-items:center;gap:5px;padding:7px 9px;border:1px solid rgba(221,183,125,.3);border-radius:4px;color:#ddbf98;background:rgba(40,33,47,.7);font-size:.74rem}
+.accounting-entry footer button.is-danger{border-color:rgba(232,123,125,.36);color:#eeb1a8}
+.accounting-entry footer button:disabled{opacity:.4;cursor:not-allowed}
+.accounting-editor{position:sticky;top:18px}
+.accounting-editor-heading{display:flex;align-items:start;justify-content:space-between;gap:12px;margin-bottom:17px}
+.accounting-editor-heading p{font:.7rem Georgia,serif;letter-spacing:.12em;color:#bfa17f;margin:0 0 7px}
+.accounting-editor-heading button{display:grid;place-items:center;width:36px;height:36px;border:1px solid rgba(220,178,130,.33);background:#282530;color:#e7c69c;border-radius:5px}
+.accounting-fields{border:0;margin:0;padding:0;display:grid;gap:13px}
+.accounting-fields>label{display:grid;gap:7px;font-size:.77rem;color:#d4be9e}
+.accounting-fields :is(input,select,textarea){display:block;min-width:0;width:100%;min-height:42px;padding:10px 11px;border-radius:5px;background:#151a24;border:1px solid rgba(214,176,125,.34);color:#f1ddc0;font:inherit;font-size:.82rem}
+.accounting-fields textarea{resize:vertical;line-height:1.6}
+.accounting-fields input[type=date]{color-scheme:dark}
+.accounting-editor-actions{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:19px}
+.accounting-editor-actions button{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:10px 13px;min-height:43px;border-radius:5px;font-size:.81rem}
+.accounting-editor-actions button[type=submit]{background:#d8b789;border:1px solid #d8b789;color:#231e27;font-weight:700}
+.accounting-editor-actions .is-reset{background:#282632;border:1px solid rgba(215,174,120,.37);color:#e7c69d}
+.accounting-editor-actions button:disabled{opacity:.48;cursor:not-allowed}
+.accounting-editor-hint{color:#b4a59b;font-size:.73rem;line-height:1.8;margin:15px 0 0}
+.accounting-admin :is(button,input,select,textarea):focus-visible{outline:2px solid #eccb99;outline-offset:2px}
+@media(max-width:1150px){.accounting-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.accounting-workspace{grid-template-columns:minmax(0,1fr)}.accounting-editor{position:static}}
+@media(max-width:560px){.accounting-summary{gap:8px}.accounting-summary>div{padding:13px 10px}.accounting-list-panel,.accounting-editor{padding:13px}.accounting-period{padding:11px}.accounting-period>label{width:100%}.accounting-period input{flex:1;max-width:unset}.accounting-entry-list{max-height:none}}
