@@ -3,9 +3,9 @@ import type {FormEvent} from 'react'
 import {ArrowDownLeft,ArrowUpRight,CalendarDays,CheckCircle2,Download,FilePenLine,Plus,RefreshCw,Save,Trash2,TriangleAlert,Wallet,X} from 'lucide-react'
 import {
  accountingCsv,accountingSummary,deleteAccountingEntry,fetchAccountingEntries,
- saveAccountingEntry,validateAccountingInput,
+ fetchAccountingPeriodSales,mergedAccountingSummary,saveAccountingEntry,validateAccountingInput,
 } from '../../lib/accounting'
-import type {AccountingEntry,AccountingInput,AccountingKind,AccountingPeriod} from '../../lib/accounting'
+import type {AccountingEntry,AccountingInput,AccountingKind,AccountingPeriod,AccountingSalesSummary} from '../../lib/accounting'
 import {validVenueDate,validVenueMonth,venueDate} from '../../lib/taipei-date'
 import {useAdminEditGuard} from './AdminEditGuard'
 import DailyPayrollSection from './DailyPayrollSection'
@@ -30,6 +30,7 @@ export default function AccountingManagement(){
  const [date,setDate]=useState(()=>venueDate())
  const [month,setMonth]=useState(()=>venueDate().slice(0,7))
  const [entries,setEntries]=useState<AccountingEntry[]>([])
+ const [sales,setSales]=useState<AccountingSalesSummary|null>(null)
  const [loading,setLoading]=useState(true)
  const [error,setError]=useState('')
  const [notice,setNotice]=useState('')
@@ -55,19 +56,27 @@ export default function AccountingManagement(){
  const refresh=useCallback(async()=>{
   const request=++serial.current
   try{
-   const data=await fetchAccountingEntries(period)
-   if(request===serial.current){setEntries(data);setError('')}
+   const [data,completed]=await Promise.all([fetchAccountingEntries(period),fetchAccountingPeriodSales(period)])
+   if(request===serial.current){setEntries(data);setSales(completed);setError('')}
   }catch(e){
-   if(request===serial.current)setError(e instanceof Error?e.message:'帳務資料暫時無法讀取')
+   if(request===serial.current){setSales(null);setError(e instanceof Error?e.message:'帳務與訂單統計暫時無法讀取')}
   }finally{if(request===serial.current)setLoading(false)}
  },[period])
  useEffect(()=>{
-  setLoading(true);setError('');setEntries([])
+  setLoading(true);setError('');setEntries([]);setSales(null)
   void refresh()
   return()=>{serial.current++}
  },[refresh])
- const summary=useMemo(()=>accountingSummary(entries),[entries])
+ const journalSummary=useMemo(()=>accountingSummary(entries),[entries])
+ const summary=useMemo(()=>sales===null?null:mergedAccountingSummary(entries,sales),[entries,sales])
  const visible=useMemo(()=>entries.filter(row=>kindFilter==='all'||row.kind===kindFilter),[entries,kindFilter])
+ // Poll aggregate results; staff may complete an order in another session.
+ useEffect(()=>{
+  const update=()=>{if(document.visibilityState==='visible'&&!busy)void refresh()}
+  const timer=window.setInterval(update,30000)
+  window.addEventListener('focus',update)
+  return()=>{window.clearInterval(timer);window.removeEventListener('focus',update)}
+ },[refresh,busy])
 
  function discardChanges():boolean{
   if(busy)return false
@@ -103,7 +112,7 @@ export default function AccountingManagement(){
    await refresh()
    setPayrollRefreshKey(value=>value+1)
    resetForm()
-   setNotice('帳務紀錄已儲存。收入與支出只根據正式登錄的 Gil 計算。')
+   setNotice('帳務紀錄已儲存。已完成茶宴業績與實際收款分別統計，避免重複計算。')
   }catch(e){setError(e instanceof Error?e.message:'帳務儲存失敗')}
   finally{setBusy(false)}
  }
@@ -132,7 +141,7 @@ export default function AccountingManagement(){
    <div><p className="eyebrow">KOGAKURE · LEDGER</p><h1>帳務管理</h1>
     <p>以 Gil 記錄館內實際收付，並連動已完成茶宴訂單試算每日營業額及員工平均分薪。</p></div>
    <div className="accounting-header-actions">
-    <button type="button" disabled={busy||loading} onClick={()=>{setLoading(true);void refresh()}}><RefreshCw size={16}/>重新整理</button>
+    <button type="button" disabled={busy||loading} onClick={()=>{setLoading(true);void refresh();setPayrollRefreshKey(x=>x+1)}}><RefreshCw size={16}/>重新整理</button>
     <button type="button" disabled={loading||!entries.length} onClick={exportCsv}><Download size={16}/>匯出 CSV</button>
    </div>
   </header>
@@ -150,18 +159,24 @@ export default function AccountingManagement(){
    </label>
    <button type="button" onClick={()=>{const today=venueDate();setDate(today);setMonth(today.slice(0,7));setMode('day')}}>查看今日</button>
   </div>
-  <div className="accounting-summary" aria-label="帳務收支統計">
-   <div><span><ArrowDownLeft size={17}/>收入</span><strong>{money(summary.income)}</strong></div>
-   <div><span><ArrowUpRight size={17}/>支出</span><strong>{money(summary.expense)}</strong></div>
-   <div className={summary.balance<0?'is-negative':''}><span><Wallet size={17}/>結餘</span><strong>{summary.balance<0?'-':''}{money(Math.abs(summary.balance))}</strong></div>
-   <div><span>明細筆數</span><strong>{summary.count} 筆</strong></div>
+  <div className="accounting-summary" aria-label="帳務收支與已完成茶宴統計" aria-busy={loading}>
+   <div><span><ArrowDownLeft size={17}/>營業收入（試算）</span><strong>{summary?money(summary.income):loading?'讀取中…':'—'}</strong>
+    <small>已完成茶宴 {summary?money(summary.completedGil):'—'}＋其他收入 {summary?money(summary.otherIncome):'—'}</small></div>
+   <div><span><ArrowUpRight size={17}/>支出（已登錄）</span><strong>{summary?money(summary.expense):loading?'讀取中…':'—'}</strong>
+    <small>包含已確認發放的員工薪資</small></div>
+   <div className={summary&&summary.balance<0?'is-negative':''}><span><Wallet size={17}/>營業結餘（試算）</span>
+    <strong>{summary?(summary.balance<0?'-':'')+money(Math.abs(summary.balance)):loading?'讀取中…':'—'}</strong>
+    <small>營業收入減已登錄支出，非實際現金餘額</small></div>
+   <div><span>統計筆數</span><strong>{summary?summary.count+' 筆':loading?'讀取中…':'—'}</strong>
+    <small>已完成茶宴 {summary?.completedCount??'—'} 筆＋帳務 {summary?.ledgerCount??'—'} 筆</small></div>
   </div>
+  <p className="accounting-summary-footnote">依選定期間的訂單建立日期（台灣時間）統計「已完成」茶宴；待處理與已取消訂單不計入。<strong>完成訂單不代表已收款。</strong>已登錄實收 {money(journalSummary.income)}，其中「茶宴收入」不再重複加進營業額。</p>
   {error&&<p role="alert" className="accounting-notice is-error"><TriangleAlert size={17}/>{error}</p>}
   {notice&&<p role="status" className="accounting-notice is-success"><CheckCircle2 size={17}/>{notice}</p>}
   <DailyPayrollSection selectedDate={mode==='day'?date:venueDate()} refreshToken={payrollRefreshKey} onLedgerChanged={()=>{void refresh()}}/>
   <div className="accounting-workspace">
    <div className="accounting-list-panel">
-    <div className="accounting-list-heading"><div><h2>收支紀錄</h2><small>依日期由新至舊排列 · {visible.length} 筆</small></div>
+    <div className="accounting-list-heading"><div><h2>收支紀錄</h2><small>手動收支 {visible.length} 筆{sales&&kindFilter!=='expense'?' · 已完成茶宴 '+sales.completedCount+' 筆':''}</small></div>
      <div className="accounting-kind-filter">
       <button type="button" className={kindFilter==='all'?'is-active':''} onClick={()=>setKindFilter('all')}>全部</button>
       <button type="button" className={kindFilter==='income'?'is-active':''} onClick={()=>setKindFilter('income')}>收入</button>
@@ -170,8 +185,16 @@ export default function AccountingManagement(){
     </div>
     {loading?<p className="accounting-empty" role="status">正在整理帳務資料…</p>:
      error&&!entries.length?<p className="accounting-empty">帳務資料未能載入，請重新整理。</p>:
-     !visible.length?<p className="accounting-empty">這個日期範圍目前沒有符合條件的收支紀錄。</p>:
+     !visible.length&&(!sales?.completedCount||kindFilter==='expense')?<p className="accounting-empty">這個日期範圍目前沒有符合條件的收支紀錄。</p>:
      <div className="accounting-entry-list">
+      {sales&&sales.completedCount>0&&kindFilter!=='expense'&&
+       <article className="accounting-entry is-order-summary">
+        <div className="accounting-entry-top"><div><span className="accounting-entry-kind">已完成茶宴 · 自動同步</span></div>
+         <strong>＋{money(sales.completedGil)}</strong></div>
+        <h3>已完成茶宴訂單彙總</h3>
+        <p>所選日期範圍內共 {sales.completedCount} 筆已完成訂單，按訂單建立日期統計。此為營業額，並非實際收款紀錄。</p>
+        <footer><small>訂單金額與狀態由茶宴訂單管理同步，無需重複登錄「茶宴收入」。</small></footer>
+       </article>}
       {visible.map(entry=><article className="accounting-entry" key={entry.id}>
        <div className="accounting-entry-top"><div><span className={'accounting-entry-kind is-'+entry.kind}>{entry.kind==='income'?'收入':'支出'}</span><span className="accounting-entry-date">{entry.date}</span></div>
         <strong className={entry.kind==='expense'?'is-expense':''}>{entry.kind==='income'?'+':'−'}{money(entry.amountGil)}</strong>

@@ -1,6 +1,6 @@
 import {configured} from './config'
 import {supabase} from './supabase'
-import {validVenueDate,validVenueMonth,venueMonthRange} from './taipei-date'
+import {shiftVenueDate,validVenueDate,validVenueMonth,venueMonthRange} from './taipei-date'
 
 export type AccountingKind='income'|'expense'
 export type AccountingEntry={
@@ -9,6 +9,12 @@ export type AccountingEntry={
 }
 export type AccountingInput=Omit<AccountingEntry,'id'|'createdAt'|'updatedAt'>
 export type AccountingPeriod={mode:'day'|'month'|'all';value:string}
+export type AccountingSalesSummary={completedCount:number;completedGil:number}
+export type AccountingOverview={
+ income:number;expense:number;balance:number;count:number
+ completedCount:number;completedGil:number;otherIncome:number
+ ledgerCount:number;recordedReceipts:number
+}
 type Row={
  id:string;entry_date:string;kind:AccountingKind;category:string
  amount_gil:number;description:string;reference:string
@@ -58,6 +64,21 @@ export async function fetchAccountingEntries(period:AccountingPeriod):Promise<Ac
  }
  throw new Error('帳務明細筆數超過單次處理上限，請改選月份或日期')
 }
+/** Return protected aggregate totals, not individual guest orders. */
+export async function fetchAccountingPeriodSales(period:AccountingPeriod):Promise<AccountingSalesSummary>{
+ const month=scopedRows(period)
+ const start=period.mode==='day'?period.value:month?.start??null
+ const end=period.mode==='day'?shiftVenueDate(period.value,1):month?.end??null
+ const {data,error}=await db().rpc('get_accounting_period_sales',{p_start:start,p_end:end})
+ if(error)throw new Error(error.message||'無法讀取已完成茶宴營業額')
+ const row=Array.isArray(data)?data[0]:data
+ if(!row)throw new Error('已完成訂單統計沒有回應')
+ const completedCount=Number(row.completed_orders),completedGil=Number(row.total_gil)
+ if(!Number.isSafeInteger(completedCount)||completedCount<0||
+  !Number.isSafeInteger(completedGil)||completedGil<0)
+  throw new Error('已完成訂單統計金額超出可處理範圍')
+ return {completedCount,completedGil}
+}
 function payload(entry:AccountingInput){
  const problem=validateAccountingInput(entry)
  if(problem)throw new Error(problem)
@@ -82,6 +103,19 @@ export function accountingSummary(rows:AccountingEntry[]){
  const income=rows.filter(x=>x.kind==='income').reduce((s,x)=>s+x.amountGil,0)
  const expense=rows.filter(x=>x.kind==='expense').reduce((s,x)=>s+x.amountGil,0)
  return {income,expense,balance:income-expense,count:rows.length}
+}
+/** Same gross revenue definition as daily payroll. Completion is not payment. */
+export function mergedAccountingSummary(rows:AccountingEntry[],sales:AccountingSalesSummary):AccountingOverview{
+ const journal=accountingSummary(rows)
+ const otherIncome=rows.filter(x=>x.kind==='income'&&x.category!=='茶宴收入')
+  .reduce((sum,x)=>sum+x.amountGil,0)
+ const income=sales.completedGil+otherIncome
+ if(!Number.isSafeInteger(income)||!Number.isSafeInteger(income-journal.expense))
+  throw new Error('帳務總額超出可計算範圍')
+ return {income,expense:journal.expense,balance:income-journal.expense,
+  count:journal.count+sales.completedCount,
+  completedCount:sales.completedCount,completedGil:sales.completedGil,
+  otherIncome,ledgerCount:journal.count,recordedReceipts:journal.income}
 }
 /** Prevent spreadsheet formula execution when an exported note starts with
  * =, +, -, @ or controls/whitespace before one of those characters. */

@@ -16,6 +16,9 @@
 .accounting-period input{min-height:40px;padding:8px;border-radius:5px;min-width:142px;max-width:185px;border:1px solid rgba(218,181,130,.31);background:#171c26;color:#eee0cd;color-scheme:dark;font:inherit}
 .accounting-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:19px 0 26px}
 .accounting-summary>div{min-width:0;display:grid;gap:11px;padding:18px 16px;border-radius:8px;border:1px solid rgba(211,179,140,.25);background:linear-gradient(155deg,#2b2935,#1e202a)}
+.accounting-summary small{font-size:.69rem;color:#ada297;line-height:1.6}
+.accounting-summary-footnote{margin:-13px 0 25px;font-size:.77rem;line-height:1.8;color:#c8b8a7}
+.accounting-summary-footnote strong{color:#e0bd8e}
 .accounting-summary span{display:flex;align-items:center;gap:7px;font-size:.77rem;color:#c7b3a2}
 .accounting-summary strong{font:600 clamp(1rem,1.7vw,1.34rem) Georgia,serif;color:#f3d2a2;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
 .accounting-summary .is-negative strong{color:#f0aaa6}
@@ -33,6 +36,8 @@
 .accounting-empty{margin:0;padding:45px 10px;text-align:center;font-size:.83rem;color:#baa899;line-height:1.8;border:1px dashed rgba(220,181,130,.28);border-radius:6px}
 .accounting-entry-list{display:grid;gap:11px;max-height:850px;overflow:auto;overscroll-behavior:contain;padding-right:3px}
 .accounting-entry{min-width:0;display:grid;gap:7px;padding:15px;border:1px solid rgba(214,180,129,.2);border-radius:7px;background:linear-gradient(145deg,#2c2934,#23242f)}
+.accounting-entry.is-order-summary{border-color:rgba(223,181,118,.46);background:linear-gradient(145deg,#353039,#292632)}
+.accounting-entry.is-order-summary .accounting-entry-kind{color:#eed3a1;border-color:rgba(223,181,118,.48)}
 .accounting-entry-top,.accounting-entry-top>div{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .accounting-entry-top{justify-content:space-between}
 .accounting-entry-kind{padding:3px 8px;border-radius:30px;border:1px solid rgba(135,212,147,.36);font-size:.7rem;color:#b5e7bf}

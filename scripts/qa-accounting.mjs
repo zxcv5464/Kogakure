@@ -17,8 +17,9 @@ const files=[
  'supabase/functions/manage-employee-accounts/index.ts',
  'src/lib/employee-accounts.ts',
  'scripts/prepare-pages.mjs',
+ 'supabase/migrations/20261115_22_accounting_period_sales.sql',
 ]
-const [modules,admin,layout,orders,tea,dateSource,accounting,dashboard,css,sql,delegation,edge,employeeApi,pages]=
+const [modules,admin,layout,orders,tea,dateSource,accounting,dashboard,css,sql,delegation,edge,employeeApi,pages,periodSql]=
  await Promise.all(files.map(path=>readFile(path,'utf8')))
 assert.ok(modules.includes("id: 'accounting'")&&modules.includes("title: '帳務管理'")&&
  modules.includes("status: 'available'")&&!modules.includes("title: '營業資訊'"),
@@ -46,6 +47,27 @@ assert.ok(dashboard.includes('accountingSummary')&&dashboard.includes('saveAccou
  dashboard.includes('deleteAccountingEntry')&&dashboard.includes('accountingCsv')&&
  dashboard.includes('input type="date"')&&dashboard.includes('input type="month"'),
  'Finance module must support CRUD, summary, daily/monthly filters and CSV')
+assert.ok(accounting.includes("rpc('get_accounting_period_sales'")&&
+ dashboard.includes('fetchAccountingPeriodSales(period)')&&
+ dashboard.includes('mergedAccountingSummary(entries,sales)')&&
+ dashboard.includes('營業收入（試算）')&&dashboard.includes('已完成茶宴訂單彙總')&&
+ dashboard.includes('統計筆數'),
+ 'Selected-period cards must include all completed tea sales and ledger data')
+for(const term of [
+ 'private.accounting_period_completed_tea_sales',
+ 'public.get_accounting_period_sales',
+ "has_backoffice_permission('accounting.manage')",
+ "o.status='completed'",
+ "at time zone 'Asia/Taipei'",
+ 'security definer',
+ 'security invoker',
+ 'grant execute on function public.get_accounting_period_sales(date,date) to authenticated',
+]){
+ assert.ok(periodSql.includes(term),'Missing secured sales aggregate: '+term)
+}
+assert.ok(!periodSql.includes('grant select on public.tea_orders to authenticated')&&
+ periodSql.includes('revoke all on function public.get_accounting_period_sales(date,date) from public,anon'),
+ 'Finance users should not receive guest order details')
 assert.ok(css.includes('.accounting-summary')&&css.includes('@media(max-width:560px)'),
  'Ledger needs responsive dark-gold presentation')
 for(const piece of [
@@ -111,6 +133,17 @@ try{
  const expense={...example,id:'def',kind:'expense',amountGil:1200,category:'餐點材料'}
  const total=ledger.accountingSummary([example,expense])
  assert.deepEqual(total,{income:5000,expense:1200,balance:3800,count:2})
+ assert.deepEqual(ledger.mergedAccountingSummary([example,expense],{completedCount:2,completedGil:45000}),{
+  income:45000,expense:1200,balance:43800,count:4,completedCount:2,
+  completedGil:45000,otherIncome:0,ledgerCount:2,recordedReceipts:5000,
+ },'Manual tea receipts must not duplicate completed tea sales')
+ assert.deepEqual(ledger.mergedAccountingSummary(
+  [example,{...example,category:'湯浴收入',amountGil:3500},expense],
+  {completedCount:2,completedGil:45000},
+ ),{
+  income:48500,expense:1200,balance:47300,count:5,completedCount:2,
+  completedGil:45000,otherIncome:3500,ledgerCount:3,recordedReceipts:8500,
+ },'Non-tea income should add to completed tea sales')
  assert.equal(ledger.validateAccountingInput({...example,amountGil:-1})!==null,true)
  assert.equal(ledger.validateAccountingInput({...example,amountGil:5000}),null)
  assert.ok(ledger.accountingCsv([example]).includes("'=HYPERLINK"),
@@ -123,6 +156,7 @@ try{
  const {AdminEditGuardProvider}=await vite.ssrLoadModule('/src/pages/admin/AdminEditGuard.tsx')
  const ui=renderToStaticMarkup(createElement(AdminEditGuardProvider,null,createElement(AccountingManagement)))
  assert.ok(ui.includes('帳務管理')&&ui.includes('新增收支紀錄')&&
- ui.includes('匯出 CSV')&&ui.includes('單日')&&ui.includes('月份'))
+ ui.includes('匯出 CSV')&&ui.includes('單日')&&ui.includes('月份')&&
+ ui.includes('營業收入（試算）')&&ui.includes('完成訂單不代表已收款'))
  console.log('PASS: delegated finance ledger, 3 reporting periods, CSV safety, Gil totals and Taiwan-date tea order filtering')
 }finally{await vite.close()}
