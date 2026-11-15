@@ -1,76 +1,87 @@
-import { useEffect, useState } from 'react'
-import { asset } from '../lib/paths'
+import {useEffect,useRef,useState} from 'react'
+import {ArrowRight,Music2} from 'lucide-react'
+import {asset} from '../lib/paths'
 import './entry-intro.css'
 
-type Phase = 'enter' | 'clear' | 'reveal' | 'done'
-const INTRO_KEY = 'kogakure-intro-v3'
-// Let the emblem and motto linger before the page is uncovered.
-const HOLD_MS = 1280
-const CLEAR_MS = 180
-const REVEAL_MS = 480
+type Phase='enter'|'ready'|'clear'|'reveal'|'done'
+const HOLD_MS=1080
+const CLEAR_MS=180
+const REVEAL_MS=480
 
-export function shouldPlay(): boolean {
- if (typeof window === 'undefined') return false
- if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false
- if (window.location.pathname.replace(/\/+$/, '').endsWith('/admin')) return false
- // For visual QA; normal visitors see the intro once per browser tab session.
- if (new URLSearchParams(window.location.search).get('intro') === '1') return true
- try { return window.sessionStorage.getItem(INTRO_KEY) !== 'seen' }
- catch { return true }
+export function shouldPlay():boolean{
+ if(typeof window==='undefined')return false
+ // A fresh document needs an actual music-start gesture each time. Internal
+ // SPA navigation never re-renders the logo entrance, only a new visit does.
+ return !/^\/admin(?:\/|$)/.test(window.location.pathname.replace(/\/+$/,''))
 }
 
-export default function EntryIntro({ onReveal }: { onReveal?: () => void }) {
- const [phase, setPhase] = useState<Phase>(() => shouldPlay() ? 'enter' : 'done')
+export default function EntryIntro({onEnter,onReveal}:{onEnter?:()=>void;onReveal?:()=>void}){
+ const [phase,setPhase]=useState<Phase>(()=>{
+  if(!shouldPlay())return 'done'
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches?'ready':'enter'
+ })
+ const entryButton=useRef<HTMLButtonElement>(null)
 
- useEffect(() => {
-  if (phase === 'done') return
-  const site = document.querySelector<HTMLElement>('.site')
-  const previousOverflow = document.body.style.overflow
-  const previousAriaHidden = site?.getAttribute('aria-hidden')
-  const wasInert = site?.hasAttribute('inert') ?? false
-
-  document.body.style.overflow = 'hidden'
-  site?.setAttribute('inert', '')
-  site?.setAttribute('aria-hidden', 'true')
-
-  return () => {
-   document.body.style.overflow = previousOverflow
-   if (!wasInert) site?.removeAttribute('inert')
-   if (site && previousAriaHidden === null) site.removeAttribute('aria-hidden')
-   else if (site && typeof previousAriaHidden === 'string') site.setAttribute('aria-hidden', previousAriaHidden)
+ useEffect(()=>{
+  if(phase==='done')return
+  const site=document.querySelector<HTMLElement>('.site')
+  const previousOverflow=document.body.style.overflow
+  const previousAriaHidden=site?.getAttribute('aria-hidden')
+  const wasInert=site?.hasAttribute('inert')??false
+  document.body.style.overflow='hidden'
+  site?.setAttribute('inert','')
+  site?.setAttribute('aria-hidden','true')
+  return()=>{
+   document.body.style.overflow=previousOverflow
+   if(!wasInert)site?.removeAttribute('inert')
+   if(site&&previousAriaHidden===null)site.removeAttribute('aria-hidden')
+   else if(site&&typeof previousAriaHidden==='string')site.setAttribute('aria-hidden',previousAriaHidden)
   }
- }, [phase === 'done'])
+ },[phase==='done'])
 
- useEffect(() => {
-  if (phase !== 'enter') return
-  try { window.sessionStorage.setItem(INTRO_KEY, 'seen') } catch { /* private browsing may block storage */ }
-  const timer = window.setTimeout(() => setPhase('clear'), HOLD_MS)
-  return () => window.clearTimeout(timer)
- }, [phase])
+ useEffect(()=>{
+  if(phase!=='enter')return
+  const timer=window.setTimeout(()=>setPhase('ready'),HOLD_MS)
+  return()=>window.clearTimeout(timer)
+ },[phase])
 
- useEffect(() => {
-  if (phase !== 'clear') return
-  // Fade out the artwork while the solid background still covers the page.
-  const timer = window.setTimeout(() => { setPhase('reveal'); onReveal?.() }, CLEAR_MS)
-  return () => window.clearTimeout(timer)
- }, [phase])
+ useEffect(()=>{
+  if(phase==='ready')entryButton.current?.focus({preventScroll:true})
+ },[phase])
 
- useEffect(() => {
-  if (phase !== 'reveal') return
-  const timer = window.setTimeout(() => setPhase('done'), REVEAL_MS + 60)
-  return () => window.clearTimeout(timer)
- }, [phase])
+ useEffect(()=>{
+  if(phase!=='clear')return
+  const timer=window.setTimeout(()=>{setPhase('reveal');onReveal?.()},CLEAR_MS)
+  return()=>window.clearTimeout(timer)
+ },[phase])
 
- if (phase === 'done') return null
+ useEffect(()=>{
+  if(phase!=='reveal')return
+  const timer=window.setTimeout(()=>setPhase('done'),REVEAL_MS+60)
+  return()=>window.clearTimeout(timer)
+ },[phase])
 
- return <div className={'entry-intro' + (phase === 'clear' ? ' is-clearing' : phase === 'reveal' ? ' is-revealing' : '')} role="status" aria-label="正在進入狐隱" aria-live="off">
-  <div className="intro-brand" aria-hidden="true">
-   <div className="intro-seal">
-    <img src={asset('images/brand/logo-intro.webp')} alt="" width="300" height="300" fetchPriority="high" decoding="async" />
+ function enterInn(){
+  if(phase!=='ready')return
+  // Start sound directly inside this real click/tap activation, before any
+  // fade timer or route transition. There is no second BGM gateway.
+  onEnter?.()
+  setPhase('clear')
+ }
+
+ if(phase==='done')return null
+ return <div className={'entry-intro'+(phase==='clear'?' is-clearing':phase==='reveal'?' is-revealing':'')}
+  role="dialog" aria-modal="true" aria-labelledby="intro-wordmark" aria-describedby="intro-motto">
+  <div className="intro-brand">
+   <div className="intro-seal" aria-hidden="true">
+    <img src={asset('images/brand/logo-intro.webp')} alt="" width="300" height="300" fetchPriority="high" decoding="async"/>
    </div>
-   <span className="intro-wordmark">KOGAKURE</span>
-   <span className="intro-divider" />
-   <span className="intro-motto">循狐而入，借湯忘憂。</span>
+   <span id="intro-wordmark" className="intro-wordmark">KOGAKURE</span>
+   <span className="intro-divider" aria-hidden="true"/>
+   <span id="intro-motto" className="intro-motto">循狐而入，借湯忘憂。</span>
+   {phase==='ready'&&<button ref={entryButton} type="button" className="intro-entry-action"
+    onClick={enterInn}><Music2 size={17} strokeWidth={1.7}/>進入狐隱・開始播放音樂<ArrowRight size={17} strokeWidth={1.7}/></button>}
+   {phase==='ready'&&<small className="intro-music-note">入館後可於頁首隨時關閉或重新播放 BGM</small>}
   </div>
  </div>
 }
