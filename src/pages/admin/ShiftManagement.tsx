@@ -7,7 +7,7 @@ import {fetchOwnPreferredShiftName,fetchShifts,listActiveShiftEmployees,markOwne
 import type {ShiftAttendance,ShiftCalendarData,ShiftEmployee,ShiftOpenDay} from '../../lib/shifts'
 import type {BackofficeAccess} from '../../lib/employee-accounts'
 import './shift-management.css'
-type ShiftKind='unannounced'|'open'|'closed'
+type ShiftKind='open'|'closed'
 type Notice={error:boolean;message:string}
 const empty:ShiftCalendarData={days:[],attendance:[]}
 
@@ -21,7 +21,7 @@ function ShiftDayEditor({date,weekday,today,day,staff,people,access,selfId,owner
  onRemove:(date:string,person:ShiftAttendance)=>Promise<void>
 }){
  const owner=access.kind==='owner'
- const savedKind:ShiftKind=day?(day.open?'open':'closed'):'unannounced'
+ const savedKind:ShiftKind=day?.open?'open':'closed'
  const [kind,setKind]=useState<ShiftKind>(savedKind)
  const [hours,setHours]=useState(day?.hours||'')
  const [note,setNote]=useState(day?.note||'')
@@ -38,21 +38,21 @@ function ShiftDayEditor({date,weekday,today,day,staff,people,access,selfId,owner
  return <article className={'shift-admin-day'+(date===today?' is-today':'')+(date<today?' is-past':'')} aria-label={date}>
   <header className="shift-admin-day-head">
    <span>週{weekday} <strong>{shiftDateLabel(date)}</strong> {date===today&&<em>今日</em>}</span>
-   <span className={'shift-admin-state is-'+savedKind}>{savedKind==='open'?'營業':savedKind==='closed'?'休館':'未公告'}</span>
+   <span className={'shift-admin-state is-'+savedKind}>{savedKind==='open'?'營業':'休館'}</span>
   </header>
   {owner?<div className="shift-admin-open-editor">
    <label>開店狀態<select value={kind} disabled={busy} onChange={e=>setKind(e.target.value as ShiftKind)}>
-    <option value="unannounced">未公告</option><option value="open">營業</option><option value="closed">休館</option>
+    <option value="open">營業</option><option value="closed">休館</option>
    </select></label>
    {kind==='open'&&<label>營業時段（可留空）<input value={hours} disabled={busy} maxLength={80}
     onChange={e=>setHours(e.target.value)} placeholder="例：21:00–24:00"/></label>}
    {kind==='open'&&<label>活動安排（選填）<input value={eventTitle} disabled={busy} maxLength={120}
     onChange={e=>setEventTitle(e.target.value)} placeholder="例：百鬼夜行・月下茶會"/></label>}
-   {kind!=='unannounced'&&<label>日期備註（可留空）<input value={note} disabled={busy} maxLength={240}
-    onChange={e=>setNote(e.target.value)} placeholder="例：今晚特別活動"/></label>}
+   <label>日期備註（可留空）<input value={note} disabled={busy} maxLength={240}
+    onChange={e=>setNote(e.target.value)} placeholder="例：今晚特別活動"/></label>
    <button type="button" className="shift-admin-save" disabled={busy||!hasEdits}
     onClick={()=>void onOpening(date,kind,hours,note,eventTitle)}><Save size={15}/>儲存開店設定</button>
-  </div>:<p className="shift-admin-day-hint">{open?day?.hours||'本日營業':savedKind==='closed'?'館方設定休館':'等待管理員公布開店日'}</p>}
+  </div>:<p className="shift-admin-day-hint">{open?day?.hours||'本日營業':'本日休館'}</p>}
   {day?.note&&<p className="shift-admin-note">{day.note}</p>}
   {!owner&&open&&day?.eventTitle&&<p className="shift-admin-event-detail"><Sparkles size={15}/>活動：{day.eventTitle}</p>}
   {open&&<div className="shift-admin-attendance">
@@ -289,7 +289,7 @@ export default function ShiftManagement({access}:{access:BackofficeAccess}){
    <div className="shift-calendar-legend" aria-label="營業狀態說明">
     <span><i className="is-open"/>營業</span>
     <span><i className="is-closed"/>休館</span>
-    <span><i className="is-unannounced"/>未公告</span>
+    
     <span><i className="is-today"/>今日</span>
    </div>
    <p className="shift-calendar-scroll-hint">手機可左右滑動月曆查看完整星期；點選任一日期編輯</p>
@@ -299,13 +299,13 @@ export default function ShiftManagement({access}:{access:BackofficeAccess}){
      {weeks.flatMap(week=>week.days).map((date,index)=>{
       const day=openings.get(date)
       const staff=byDate.get(date)||[]
-      const state:ShiftKind=!day?'unannounced':day.open?'open':'closed'
+      const state:ShiftKind=day?.open?'open':'closed'
       const visibleStaff=day?.open?staff:[]
       const month=Number(date.slice(5,7)),dayNumber=Number(date.slice(8,10))
       const isToday=date===today
       return <button type="button" key={date}
        className={'shift-calendar-cell is-'+state+(isToday?' is-today':'')+(date<today?' is-past':'')}
-       aria-label={date+' 週'+SHIFT_WEEKDAYS[index%7]+'，'+(state==='open'?'營業':state==='closed'?'休館':'未公告')+
+       aria-label={date+' 週'+SHIFT_WEEKDAYS[index%7]+'，'+(state==='open'?'營業':'休館')+
         (state==='open'?'，出勤'+visibleStaff.length+'位'+(day?.eventTitle?'，活動：'+day.eventTitle:''):'')+'，開啟當日安排'}
        aria-haspopup="dialog" aria-expanded={selectedDate===date}
        onClick={event=>showDay(date,event.currentTarget)}>
@@ -313,14 +313,14 @@ export default function ShiftManagement({access}:{access:BackofficeAccess}){
         <span className="shift-calendar-date"><small>{month}月</small><strong>{dayNumber}</strong></span>
         {isToday&&<span className="shift-calendar-today">今日</span>}
        </span>
-       <span className={'shift-calendar-status is-'+state}>{state==='open'?'營業':state==='closed'?'休館':'未公告'}</span>
+       <span className={'shift-calendar-status is-'+state}>{state==='open'?'營業':'休館'}</span>
        {state==='open'?<span className="shift-calendar-summary">
         {day?.hours&&<span className="shift-calendar-time"><Clock3 size={12}/>{day.hours}</span>}
         <span className="shift-calendar-count"><UsersRound size={13}/>{visibleStaff.length} 位出勤</span>
         {day?.eventTitle&&<span className="shift-calendar-event" title={day.eventTitle}>
          <Sparkles size={13}/><span>{day.eventTitle}</span>
         </span>}
-       </span>:<span className="shift-calendar-empty">{state==='closed'?'當日休館':'尚未設定開店日'}</span>}
+       </span>:<span className="shift-calendar-empty">當日休館</span>}
        <span className="shift-calendar-edit"><span>查看／安排</span><ChevronRight size={14}/></span>
       </button>
      })}
@@ -355,6 +355,6 @@ export default function ShiftManagement({access}:{access:BackofficeAccess}){
     </div>
    </section>
   </div>}
-  <p className="shift-admin-help">尚未公告的日期不代表營業；只有管理員設定「營業」的日子才可登記出勤。員工與正式管理員均可使用自訂出勤顯示名稱。名稱不影響帳號權限、登入名稱或密碼。</p>
+  <p className="shift-admin-help">未設定營業的日期預設為「休館」；只有管理員設定「營業」的日子才可登記出勤。員工與正式管理員均可使用自訂出勤顯示名稱。名稱不影響帳號權限、登入名稱或密碼。</p>
  </section>
 }
