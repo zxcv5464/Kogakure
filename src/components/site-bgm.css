@@ -16,3 +16,7 @@
 @media(max-width:850px){.site-bgm{margin-left:auto}.site-bgm-toggle{min-width:85px;padding:9px 11px}.site-bgm-text small{display:block}}
 @media(max-width:380px){.site-bgm-toggle{min-width:43px}.site-bgm-text small{display:none}}
 @media(prefers-reduced-motion:reduce){.site-bgm-toggle{transition:none}}
+
+.site-bgm-credit{display:block;margin-top:5px;color:#a8a19c;font-size:.72rem}
+.site-bgm-credit a{color:#c7aa85;text-decoration:underline;text-underline-offset:3px}
+.site-bgm-credit a:hover{color:#efd2a7}
