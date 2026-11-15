@@ -80,8 +80,13 @@ assert.ok(intro.includes("phase==='ready'")&&intro.includes("setPhase('ready')")
  'Wait for the original logo arrival before showing the entry button')
 assert.ok(!intro.includes('sessionStorage')&&!intro.includes('localStorage'),
  'Every fresh page visit should show the single logo entrance for audio activation')
-assert.ok(intro.includes('role="dialog" aria-modal="true"')&&intro.includes('entryButton.current?.focus('),
- 'Logo entry must be keyboard accessible')
+assert.ok(intro.includes('role="dialog" aria-modal="true"')&&
+ intro.includes('className="intro-entry-action"')&&intro.includes('type="button"'),
+ 'Logo entry must keep a keyboard-accessible button')
+assert.ok(!intro.includes('entryButton.current?.focus('),
+ 'Do not automatically focus the button and create an unwanted visible focus frame')
+assert.ok(!introCss.includes('#9ce4d5')&&introCss.includes('outline:2px solid rgba(220,180,121,.9)'),
+ 'Avoid pale-blue entry focus outlines; use a subdued warm gold keyboard focus ring')
 assert.ok(introCss.includes('.intro-entry-action')&&
  introCss.includes('.intro-entry-action:focus-visible'),
  'The enter-and-play control must be legible and keyboard focusable')
