@@ -20,9 +20,9 @@ assert.ok(!bookingCss.includes('animation:bookingReveal'), 'Do not override the 
 assert.ok(!bookingCss.includes('@keyframes bookingReveal'), 'Remove unused faster animation')
 assert.ok(bookingPage.includes("'--booking-delay':Math.min(index,8)*80+'ms'"),
  'Each card should stagger at the same 80ms interval as staff profiles')
-assert.ok(motion.includes('.route-stage .booking-hero-label{animation:quietRise 1.18s var(--public-reveal-ease) .54s both}'),
+assert.ok(motion.includes('.route-stage .booking-hero-label{animation:quietRise .74s var(--public-reveal-ease) .19s both}'),
  'Subtitle should reveal between heading and verse')
-assert.ok(motion.includes('.route-stage .booking-hero-verse{animation:quietRise 1.28s var(--public-reveal-ease) .72s both}'),
+assert.ok(motion.includes('.route-stage .booking-hero-verse{animation:quietRise .82s var(--public-reveal-ease) .26s both}'),
  'Intro should follow the same cadence as the staff page')
 assert.ok(motion.includes('.route-stage .booking-legend{animation:quietRise .88s var(--public-reveal-ease) .42s both}'),
  'Booking status legend should precede cards')
