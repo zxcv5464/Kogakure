@@ -21,7 +21,7 @@ assert.ok(get(files[0]).includes("className={'shared-scroll-cue'")&&
  get(files[0]).includes('new MutationObserver(schedule)')&&
  get(files[0]).includes("area.addEventListener('scroll',schedule")&&
  get(files[0]).includes('area.scrollBy(')&&
- get(files[0]).includes("'prefers-reduced-motion: reduce'")&&
+ get(files[0]).includes("'(prefers-reduced-motion: reduce)'")&&
  get(files[0]).includes("direction==='right'")&&
  get(files[0]).includes('tabIndex={hasMore?0:-1}')&&
  get(files[0]).includes('disabled={!hasMore}'),
