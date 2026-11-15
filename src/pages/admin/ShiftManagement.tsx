@@ -3,7 +3,7 @@ import {Link} from 'react-router-dom'
 import {CalendarDays,CheckCircle2,ExternalLink,RefreshCw,Save,UsersRound,AlertCircle,X} from 'lucide-react'
 import {supabase} from '../../lib/supabase'
 import {useRollingShiftWeeks,shiftDateLabel,SHIFT_WEEKDAYS} from '../../lib/shift-calendar'
-import {fetchShifts,listActiveShiftEmployees,markOwnerShiftAttendance,markShiftAttendance,setShiftOpening,unmarkShiftAttendance} from '../../lib/shifts'
+import {fetchShifts,listActiveShiftEmployees,markOwnerShiftAttendance,markShiftAttendance,renameOwnShiftAttendance,setShiftOpening,unmarkShiftAttendance} from '../../lib/shifts'
 import type {ShiftAttendance,ShiftCalendarData,ShiftEmployee,ShiftOpenDay} from '../../lib/shifts'
 import type {BackofficeAccess} from '../../lib/employee-accounts'
 import './shift-management.css'
@@ -11,12 +11,13 @@ type ShiftKind='unannounced'|'open'|'closed'
 type Notice={error:boolean;message:string}
 const empty:ShiftCalendarData={days:[],attendance:[]}
 
-function ShiftDayEditor({date,weekday,today,day,staff,people,access,selfId,ownerName,busy,onOpening,onMark,onMarkOwn,onRemove}:{
+function ShiftDayEditor({date,weekday,today,day,staff,people,access,selfId,ownerName,employeeShiftName,busy,onOpening,onMark,onMarkOwn,onRename,onRemove}:{
  date:string;weekday:string;today:string;day:ShiftOpenDay|undefined;staff:ShiftAttendance[]
- people:ShiftEmployee[];access:BackofficeAccess;selfId:string;ownerName:string;busy:boolean
+ people:ShiftEmployee[];access:BackofficeAccess;selfId:string;ownerName:string;employeeShiftName:string;busy:boolean
  onOpening:(date:string,kind:ShiftKind,hours:string,note:string)=>Promise<void>
  onMark:(date:string,person:ShiftEmployee)=>Promise<void>
  onMarkOwn:(date:string,name:string)=>Promise<void>
+ onRename:(date:string,person:ShiftAttendance,name:string)=>Promise<void>
  onRemove:(date:string,person:ShiftAttendance)=>Promise<void>
 }){
  const owner=access.kind==='owner'
@@ -29,6 +30,8 @@ function ShiftDayEditor({date,weekday,today,day,staff,people,access,selfId,owner
  const hasEdits=kind!==savedKind||hours!==(day?.hours||'')||note!==(day?.note||'')
  const chosen=people.find(person=>person.id===member)
  const mine=staff.find(x=>x.employeeId===selfId&&x.source===(owner?'owner':'employee'))
+ const myDisplayName=owner?ownerName:employeeShiftName
+ const nameChanged=Boolean(mine&&myDisplayName.trim()!==mine.name)
  const open=day?.open===true
  const submitted=new Set(staff.map(x=>x.employeeId))
  return <article className={'shift-admin-day'+(date===today?' is-today':'')+(date<today?' is-past':'')} aria-label={date}>
@@ -57,9 +60,14 @@ function ShiftDayEditor({date,weekday,today,day,staff,people,access,selfId,owner
      onClick={()=>void onRemove(date,person)}><X size={15}/></button>}
    </li>)}</ul>:<p>目前尚無館員填寫出勤。</p>}
    {date>=today&&<button type="button" className="shift-admin-self"
-    disabled={busy||!selfId||(owner&&!mine&&!ownerName.trim())}
-    onClick={()=>void (mine?onRemove(date,mine):owner?onMarkOwn(date,ownerName):onMark(date,{id:selfId,name:access.kind==='employee'?access.displayName:''}))}>
+    disabled={busy||!selfId||(!mine&&!myDisplayName.trim())}
+    onClick={()=>void (mine?onRemove(date,mine):owner?onMarkOwn(date,myDisplayName):onMark(date,{id:selfId,name:myDisplayName}))}>
     {mine?'取消我的出勤':'＋ 我會在這天出勤'}
+   </button>}
+   {date>=today&&mine&&nameChanged&&<button type="button" className="shift-admin-rename"
+    disabled={busy||!selfId||!myDisplayName.trim()||myDisplayName.trim().length>100}
+    onClick={()=>void onRename(date,mine,myDisplayName)}>
+    <Save size={15}/>儲存我的出勤名稱
    </button>}
    {owner&&<div className="shift-admin-add-person">
     <select value={member} disabled={busy} aria-label={date+' 選擇出勤員工'} onChange={e=>setMember(e.target.value)}>
@@ -79,6 +87,7 @@ export default function ShiftManagement({access}:{access:BackofficeAccess}){
  const [calendar,setCalendar]=useState<ShiftCalendarData>(empty)
  const [people,setPeople]=useState<ShiftEmployee[]>([])
  const [selfId,setSelfId]=useState('')
+ const [employeeShiftName,setEmployeeShiftName]=useState(()=>access.kind==='employee'?access.displayName:'')
  const [ownerName,setOwnerName]=useState(()=>{
   try{return window.localStorage.getItem('kogakure-shift-owner-display-name')||'婆婆'}
   catch{return '婆婆'}
@@ -102,7 +111,12 @@ export default function ShiftManagement({access}:{access:BackofficeAccess}){
    .then(([data,employees,auth])=>{
     if(!active)return
     setCalendar(data);setPeople(employees)
-    setSelfId(auth?.data.user?.id||'')
+    const signedInId=auth?.data.user?.id||''
+    setSelfId(signedInId)
+    if(access.kind==='employee'){
+     try{setEmployeeShiftName(window.localStorage.getItem('kogakure-shift-employee-name:'+signedInId)||access.displayName)}
+     catch{setEmployeeShiftName(access.displayName)}
+    }
     setError('')
    })
    .catch(e=>{if(active)setError(e instanceof Error?e.message:'出勤資料暫時無法讀取')})
@@ -123,7 +137,24 @@ export default function ShiftManagement({access}:{access:BackofficeAccess}){
   return run(()=>setShiftOpening(date,kind,hours,note),'已更新 '+date+' 的營業狀態。')
  }
  function mark(date:string,person:ShiftEmployee){
-  return run(()=>markShiftAttendance(date,person),'已登記 '+person.name+' 在 '+date+' 出勤。')
+  return run(async()=>{
+   await markShiftAttendance(date,person)
+   if(!owner&&person.id===selfId){
+    try{window.localStorage.setItem('kogakure-shift-employee-name:'+selfId,person.name.trim())}catch{/* Preference only. */}
+   }
+  },'已登記 '+person.name.trim()+' 在 '+date+' 出勤。')
+ }
+ function rename(date:string,person:ShiftAttendance,name:string){
+  const label=name.trim()
+  if(!label||label.length>100){
+   setNotice({error:true,message:'出勤顯示名稱需填寫 1～100 字'})
+   return Promise.resolve()
+  }
+  return run(async()=>{
+   await renameOwnShiftAttendance(date,person.source,label)
+   const key=person.source==='owner'?'kogakure-shift-owner-display-name':'kogakure-shift-employee-name:'+selfId
+   try{window.localStorage.setItem(key,label)}catch{/* Preference only. */}
+  },'已將 '+date+' 的出勤顯示名稱更新為「'+label+'」。')
  }
  function markOwn(date:string,name:string){
   const label=name.trim()
@@ -147,7 +178,7 @@ export default function ShiftManagement({access}:{access:BackofficeAccess}){
  return <section className="shift-admin admin-page">
   <header className="shift-admin-heading">
    <div><p className="eyebrow">KOGAKURE · FOUR-WEEK DUTY ROSTER</p><h1>值班排班管理</h1>
-    <p>{owner?'設定館內營業日期與時段，也能替自己報班、管理其他員工出勤。':'在已公布的營業日登記自己的出勤，旅人可於前台查看出勤名單。'}</p>
+    <p>{owner?'設定館內營業日期與時段，也能替自己報班、管理其他員工出勤。':'在已公布的營業日登記自己的出勤，還可以自訂公開顯示名稱。'}</p>
    </div>
    <div className="shift-admin-tools">
     <Link to="/shifts" target="_blank" rel="noopener noreferrer"><ExternalLink size={16}/>查看前台</Link>
@@ -161,6 +192,12 @@ export default function ShiftManagement({access}:{access:BackofficeAccess}){
     onChange={e=>setOwnerName(e.target.value)} placeholder="例：婆婆"/>
    <small>用管理員帳號直接報班，不需要另建員工帳號。名稱會顯示在前台值班名單；登記時會記住此名稱。</small>
   </div>}
+  {!owner&&<div className="shift-admin-owner-identity">
+   <label htmlFor="shift-employee-duty-name">我的出勤顯示名稱</label>
+   <input id="shift-employee-duty-name" value={employeeShiftName} maxLength={100} disabled={busy}
+    onChange={e=>setEmployeeShiftName(e.target.value)} placeholder="例：狐姬・紫月"/>
+   <small>可自訂與登入帳號不同的公開名稱。新增報班會使用這個名稱；已登記的日期請點該日「儲存我的出勤名稱」更新，不會更動員工帳號或密碼。</small>
+  </div>}
   {notice&&<p className={'shift-admin-message'+(notice.error?' is-error':'')} role={notice.error?'alert':'status'}>
    {notice.error?<AlertCircle size={18}/>:<CheckCircle2 size={18}/>} {notice.message}</p>}
   {error&&<p className="shift-admin-message is-error" role="alert">{error}</p>}
@@ -171,10 +208,10 @@ export default function ShiftManagement({access}:{access:BackofficeAccess}){
      <h2>{shiftDateLabel(week.start)} — {shiftDateLabel(week.end)}</h2></div>
     <div className="shift-admin-day-list">{week.days.map((date,i)=><ShiftDayEditor key={date}
      date={date} weekday={SHIFT_WEEKDAYS[i]} today={today} day={openings.get(date)}
-     staff={byDate.get(date)||[]} people={people} access={access} selfId={selfId} ownerName={ownerName}
-     busy={busy} onOpening={saveOpening} onMark={mark} onMarkOwn={markOwn} onRemove={remove}/>)}</div>
+     staff={byDate.get(date)||[]} people={people} access={access} selfId={selfId} ownerName={ownerName} employeeShiftName={employeeShiftName}
+     busy={busy} onOpening={saveOpening} onMark={mark} onMarkOwn={markOwn} onRename={rename} onRemove={remove}/>)}</div>
    </section>)}
   </div>}
-  <p className="shift-admin-help">尚未公告的日期不代表營業；只有管理員設定「營業」的日子才可登記出勤。館員使用員工帳號顯示名稱，正式管理員可設定自己的出勤名稱；登入資訊不會在前台公開。</p>
+  <p className="shift-admin-help">尚未公告的日期不代表營業；只有管理員設定「營業」的日子才可登記出勤。員工與正式管理員均可使用自訂出勤顯示名稱。名稱不影響帳號權限、登入名稱或密碼。</p>
  </section>
 }
