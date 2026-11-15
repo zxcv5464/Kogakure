@@ -56,3 +56,8 @@
 .shift-admin-owner-identity small{color:#bba995;font-size:.75rem;line-height:1.75}
 @media(max-width:950px){.shift-admin-owner-identity{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.shift-admin-owner-identity small{grid-column:1/-1}}
 @media(max-width:580px){.shift-admin-owner-identity{grid-template-columns:minmax(0,1fr);padding:14px}.shift-admin-owner-identity small{grid-column:auto}}
+
+/* Keep renaming a shift distinct from cancelling its attendance record. */
+.shift-admin-rename{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:39px;margin-top:8px;padding:9px 14px;border:1px solid rgba(189,210,159,.49);border-radius:4px;background:rgba(59,80,59,.22);color:#e1ddb8;font:inherit;font-size:.8rem;cursor:pointer}
+.shift-admin-rename:hover:not(:disabled){border-color:#d7cba1;background:rgba(84,105,70,.27)}
+.shift-admin-rename:disabled{opacity:.48;cursor:not-allowed}
