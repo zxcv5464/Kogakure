@@ -1,6 +1,6 @@
 import {configured} from './config'
 import {supabase} from './supabase'
-import {shiftVenueDate,validVenueDate,validVenueMonth,venueMonthRange} from './taipei-date'
+import {shiftVenueDate,validVenueDate,validVenueMonth,venueMonthRange,venueWeekRange} from './taipei-date'
 
 export type AccountingKind='income'|'expense'
 export type AccountingEntry={
@@ -8,7 +8,7 @@ export type AccountingEntry={
  description:string;reference:string;createdAt:string;updatedAt:string
 }
 export type AccountingInput=Omit<AccountingEntry,'id'|'createdAt'|'updatedAt'>
-export type AccountingPeriod={mode:'day'|'month'|'all';value:string}
+export type AccountingPeriod={mode:'day'|'week'|'month'|'all';value:string}
 export type AccountingSalesSummary={completedCount:number;completedGil:number}
 export type AccountingOverview={
  income:number;expense:number;balance:number;count:number
@@ -41,9 +41,9 @@ const rowToEntry=(row:Row):AccountingEntry=>({
  reference:row.reference,createdAt:row.created_at,updatedAt:row.updated_at,
 })
 function scopedRows(period:AccountingPeriod){
- if(period.mode==='day'&&!validVenueDate(period.value))throw new Error('日期格式不正確')
+ if((period.mode==='day'||period.mode==='week')&&!validVenueDate(period.value))throw new Error('日期格式不正確')
  if(period.mode==='month'&&!validVenueMonth(period.value))throw new Error('月份格式不正確')
- return period.mode==='month'?venueMonthRange(period.value):null
+ return period.mode==='month'?venueMonthRange(period.value):period.mode==='week'?venueWeekRange(period.value):null
 }
 export async function fetchAccountingEntries(period:AccountingPeriod):Promise<AccountingEntry[]>{
  const month=scopedRows(period)

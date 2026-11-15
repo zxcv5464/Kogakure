@@ -16,8 +16,9 @@ const files=[
  'src/pages/admin/accounting-management.css',
  'supabase/migrations/20261115_18_accounting_sales_payroll.sql',
  'supabase/migrations/20261115_21_owner_attendance_payroll.sql',
+ 'supabase/migrations/20261115_23_period_payroll.sql',
 ]
-const [orders,accounting,ui,helper,styles,ledgerStyles,sql,ownerSql]=
+const [orders,accounting,ui,helper,styles,ledgerStyles,sql,ownerSql,periodSql]=
  await Promise.all(files.map(path=>readFile(path,'utf8')))
 assert.ok(orders.includes("{id:'active',text:'待處理'}"),
  'Keep the existing pending+preparing queue')
@@ -31,7 +32,7 @@ assert.ok(accounting.includes('<DailyPayrollSection')&&
  accounting.includes("entry.reference.startsWith('PAYROLL:')"),
  'Accounting should display daily sales and protect paid-salary entries')
 assert.ok(ui.includes('當日營業額・員工分薪')&&
- ui.includes('建立當日分薪清單')&&ui.includes('確認已發薪')&&
+ ui.includes('modeName[mode]')&&ui.includes('確認已發薪')&&
  ui.includes('其他已登錄收入')&&ui.includes('已完成茶宴')&&
  ui.includes('分薪清單'),
  'Expose calculations, immutable salary confirmation and revenue components')
@@ -53,6 +54,15 @@ assert.ok(ownerSql.includes('from public.shift_attendance')&&
  'Payroll preview and frozen allocations must use the same deduplicated owner+employee roster')
 assert.ok(helper.includes("x.category!=='茶宴收入'"),
  'Do not double-count manually recorded tea receipts')
+assert.ok(ui.includes("week:'當週'")&&ui.includes("month:'當月'")&&
+ helper.includes("rpc('create_period_payroll'")&&helper.includes("rpc('confirm_period_payroll_paid'")&&
+ helper.includes('fetchPeriodPayrollReport')&&
+ periodSql.includes('period_mode')&&periodSql.includes('pay_date < v_end')&&
+ periodSql.includes('p.period_end > v_start')&&
+ periodSql.includes('pg_catalog.pg_advisory_xact_lock')&&
+ periodSql.includes('private.create_period_payroll')&&
+ periodSql.includes('private.confirm_period_payroll_paid'),
+ 'Daily/week/month payroll requires server-side overlap validation, frozen shares and atomic payout')
 assert.ok(styles.includes('.daily-payroll-metrics')&&
  styles.includes('@media(max-width:640px)')&&
  ledgerStyles.includes('.accounting-payroll-locked'),
@@ -119,6 +129,8 @@ try{
   'Same owner account cannot be paid twice')
  assert.ok(ui.includes('婆婆／管理員出勤')&&ui.includes("person.source==='owner'"),
   'The payroll UI should identify owner/admin and explain that they share pay')
+ assert.deepEqual(payroll.payrollPeriodWindow('week','2026-11-15'),{start:'2026-11-09',end:'2026-11-16'})
+ assert.deepEqual(payroll.payrollPeriodWindow('month','2026-11-15'),{start:'2026-11-01',end:'2026-12-01'})
  assert.throws(()=>payroll.calculateEqualPayroll(-1,employees))
  const entry=(kind,category,amountGil)=>({kind,category,amountGil})
  const ledger=[
@@ -140,5 +152,5 @@ try{
  assert.ok(html.includes('帳務管理')&&html.includes('當日營業額・員工分薪')&&
  html.includes('選擇當日營業額與分薪日期'),
  'Dashboard must render a selectable daily payroll section even on first paint')
- console.log('PASS: unified 待處理, owner/admin and employee equal-share payroll, immutable payout and accounting integration')
+ console.log('PASS: day/week/month frozen payroll, owner inclusion, overlap lock and audited Gil payouts')
 }finally{await vite.close()}

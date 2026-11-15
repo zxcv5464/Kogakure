@@ -29,3 +29,11 @@ export function venueMonthRange(month:string):{start:string;end:string}{
  const next=m===12?String(year+1)+'-01':year+'-'+String(m+1).padStart(2,'0')
  return {start:month+'-01',end:next+'-01'}
 }
+
+/** Weeks start on Monday in the venue timezone. End is exclusive. */
+export function venueWeekRange(value:string):{start:string;end:string}{
+ if(!validVenueDate(value))throw new Error('請選擇有效的營業日期')
+ const weekday=new Date(value+'T12:00:00+08:00').getUTCDay()
+ const start=shiftVenueDate(value,-((weekday+6)%7))
+ return {start,end:shiftVenueDate(start,7)}
+}

@@ -4,6 +4,13 @@
 .daily-payroll-header p{font:.68rem Georgia,serif;letter-spacing:.16em;color:#c4a482;margin:0 0 7px}
 .daily-payroll-header h2{font:600 clamp(1.1rem,2.3vw,1.36rem) 'Noto Serif TC',serif;margin:0 0 7px;color:#f2d7ad}
 .daily-payroll-header small{font-size:.77rem;line-height:1.7;color:#c3b4a6}
+.daily-payroll-period-toolbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:11px 15px;margin:2px 0 11px}
+.daily-payroll-period-modes{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.daily-payroll-period-modes button{min-height:39px;border:1px solid rgba(215,182,129,.33);background:#1c202a;color:#e0c69f;border-radius:5px;padding:8px 13px;font-size:.79rem;cursor:pointer}
+.daily-payroll-period-modes button.is-active{background:#d6b384;border-color:#d6b384;color:#241e26;font-weight:700}
+.daily-payroll-period-modes button:disabled{opacity:.5;cursor:not-allowed}
+.daily-payroll-period-caption{margin:0 0 13px;font-size:.76rem;color:#cbb9a7;line-height:1.75}
+.daily-payroll-period-caption strong{color:#e8ca9e}
 .daily-payroll-date{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .daily-payroll-date button,.daily-payroll-date label{display:flex;align-items:center;justify-content:center;gap:6px;min-height:39px;padding:8px;border:1px solid rgba(215,182,129,.33);background:#1c202a;color:#e0c69f;border-radius:5px}
 .daily-payroll-date button{cursor:pointer}
@@ -46,6 +53,9 @@
 @media(max-width:640px){
  .daily-payroll{padding:14px 11px}
  .daily-payroll-header{gap:12px}
+ .daily-payroll-period-toolbar{align-items:stretch}
+ .daily-payroll-period-modes{width:100%}
+ .daily-payroll-period-modes button{flex:1}
  .daily-payroll-date{width:100%}
  .daily-payroll-date label{flex:1;min-width:0}
  .daily-payroll-date input{width:100%}

@@ -44,9 +44,9 @@ assert.ok(orders.includes('已完成訂單金額')&&orders.includes('不代表�
 assert.ok(dateSource.includes("timeZone:TAIPEI_TZ")&&dateSource.includes("Asia/Taipei"),
  'Local date must not use UTC day conversion around Taiwan midnight')
 assert.ok(dashboard.includes('accountingSummary')&&dashboard.includes('saveAccountingEntry')&&
- dashboard.includes('deleteAccountingEntry')&&dashboard.includes('accountingCsv')&&
+ dashboard.includes('deleteAccountingEntry')&&!dashboard.includes('exportCsv')&&
  dashboard.includes('input type="date"')&&dashboard.includes('input type="month"'),
- 'Finance module must support CRUD, summary, daily/monthly filters and CSV')
+ 'Finance module must support CRUD and four period filters without CSV export')
 assert.ok(accounting.includes("rpc('get_accounting_period_sales'")&&
  dashboard.includes('fetchAccountingPeriodSales(period)')&&
  dashboard.includes('mergedAccountingSummary(entries,sales)')&&
@@ -123,6 +123,8 @@ try{
   start:'2026-11-15T00:00:00+08:00',
   end:'2026-11-16T00:00:00+08:00',
  })
+ assert.deepEqual(date.venueWeekRange('2026-11-15'),{start:'2026-11-09',end:'2026-11-16'})
+ assert.deepEqual(date.venueWeekRange('2026-11-16'),{start:'2026-11-16',end:'2026-11-23'})
  assert.deepEqual(date.venueMonthRange('2026-12'),{
   start:'2026-12-01',end:'2027-01-01',
  })
@@ -156,7 +158,7 @@ try{
  const {AdminEditGuardProvider}=await vite.ssrLoadModule('/src/pages/admin/AdminEditGuard.tsx')
  const ui=renderToStaticMarkup(createElement(AdminEditGuardProvider,null,createElement(AccountingManagement)))
  assert.ok(ui.includes('帳務管理')&&ui.includes('新增收支紀錄')&&
- ui.includes('匯出 CSV')&&ui.includes('單日')&&ui.includes('月份')&&
+ !ui.includes('匯出 CSV')&&ui.includes('單日')&&ui.includes('當週')&&ui.includes('月份')&&
  ui.includes('營業收入（試算）')&&ui.includes('完成訂單不代表已收款'))
- console.log('PASS: delegated finance ledger, 3 reporting periods, CSV safety, Gil totals and Taiwan-date tea order filtering')
+ console.log('PASS: delegated finance ledger, four reporting periods, explicit deletion, no CSV export and Taipei week boundaries')
 }finally{await vite.close()}

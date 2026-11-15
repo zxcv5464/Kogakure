@@ -1,7 +1,7 @@
 import {configured} from './config'
 import {supabase} from './supabase'
-import {validVenueDate} from './taipei-date'
-import {fetchAccountingEntries} from './accounting'
+import {shiftVenueDate,validVenueDate,venueMonthRange,venueWeekRange} from './taipei-date'
+import {fetchAccountingEntries,fetchAccountingPeriodSales} from './accounting'
 import type {AccountingEntry} from './accounting'
 
 export type SalesSummary={completedCount:number;completedGil:number}
@@ -129,4 +129,81 @@ export async function confirmPayrollPaid(date:string,employeeId:string):Promise<
   throw new Error('員工編號不正確')
  const {error}=await db().rpc('confirm_payroll_paid',{p_day:date,p_employee_id:employeeId})
  if(error)throw new Error(error.message||'標記發薪失敗')
+}
+
+/** Weekly periods are Monday–Sunday, monthly periods are calendar months.
+ * Existing day payrolls remain immutable and reserve their dates. */
+export type PayrollPeriodMode='day'|'week'|'month'
+export type PayrollOverlap={mode:PayrollPeriodMode;start:string;end:string}
+export type PeriodPayrollReport=DailyPayrollReport&{
+ periodMode:PayrollPeriodMode;periodEnd:string;overlaps:PayrollOverlap[]
+}
+export function payrollPeriodWindow(mode:PayrollPeriodMode,date:string):{start:string;end:string}{
+ dateCheck(date)
+ if(mode==='day')return {start:date,end:shiftVenueDate(date,1)}
+ if(mode==='week')return venueWeekRange(date)
+ if(mode==='month')return venueMonthRange(date.slice(0,7))
+ throw new Error('請選擇有效的分薪週期')
+}
+export async function fetchPeriodPayrollReport(mode:PayrollPeriodMode,date:string):Promise<PeriodPayrollReport>{
+ const period=payrollPeriodWindow(mode,date)
+ const accountingPeriod=mode==='month'?{mode,value:period.start.slice(0,7)}:{mode,value:date}
+ const [sales,ledger,rosterResult,allocationResult,overlapResult]=await Promise.all([
+  fetchAccountingPeriodSales(accountingPeriod),
+  fetchAccountingEntries(accountingPeriod),
+  db().rpc('get_accounting_payroll_period_roster',{p_mode:mode,p_anchor:date}),
+  db().from('payroll_allocations')
+   .select('pay_date,period_mode,period_end,employee_id,employee_name,member_type,revenue_gil,employee_count,amount_gil,paid_at,accounting_entry_id,created_at')
+   .eq('pay_date',period.start).eq('period_mode',mode)
+   .order('employee_name',{ascending:true}),
+  db().from('payroll_allocations')
+   .select('pay_date,period_mode,period_end')
+   .lt('pay_date',period.end).gt('period_end',period.start)
+   .limit(300),
+ ])
+ if(rosterResult.error)throw new Error('無法讀取出勤名單：'+rosterResult.error.message)
+ if(allocationResult.error)throw new Error('無法讀取分薪清單：'+allocationResult.error.message)
+ if(overlapResult.error)throw new Error('無法核對其他期間的分薪清單：'+overlapResult.error.message)
+ type RosterRow={employee_id:string;employee_name:string;member_type:string;sort_index:number}
+ type AllocationRow={pay_date:string;employee_id:string;employee_name:string;member_type:string;revenue_gil:number;employee_count:number;amount_gil:number;paid_at:string|null;accounting_entry_id:string|null;created_at:string}
+ type OverlapRow={pay_date:string;period_end:string;period_mode:PayrollPeriodMode}
+ const roster=((rosterResult.data||[]) as RosterRow[]).map(row=>({
+  id:row.employee_id,name:row.employee_name,source:row.member_type==='owner'?'owner' as const:'employee' as const,
+  sortIndex:Number(row.sort_index),
+ }))
+ const allocations=((allocationResult.data||[]) as AllocationRow[]).map(item=>({
+  date:item.pay_date,id:item.employee_id,name:item.employee_name,source:item.member_type==='owner'?'owner' as const:'employee' as const,
+  amountGil:gil(item.amount_gil),revenueGil:gil(item.revenue_gil),employeeCount:Number(item.employee_count),
+  paidAt:item.paid_at,accountingEntryId:item.accounting_entry_id,createdAt:item.created_at,
+ }))
+ const found=new Map<string,PayrollOverlap>()
+ for(const item of (overlapResult.data||[]) as OverlapRow[]){
+  if(item.pay_date===period.start&&item.period_mode===mode)continue
+  const key=item.period_mode+':'+item.pay_date
+  found.set(key,{mode:item.period_mode,start:item.pay_date,end:item.period_end})
+ }
+ const manualOtherIncomeGil=sumNonTeaIncome(ledger)
+ const revenueGil=sales.completedGil+manualOtherIncomeGil
+ if(!Number.isSafeInteger(revenueGil))throw new Error('期間營業額超出可計算範圍')
+ return {
+  date:period.start,periodMode:mode,periodEnd:period.end,
+  sales,manualOtherIncomeGil,manualReceiptGil:sumRecordedReceipts(ledger),revenueGil,
+  roster,allocations,overlaps:[...found.values()].sort((a,b)=>a.start.localeCompare(b.start)),
+ }
+}
+export async function createPeriodPayroll(mode:PayrollPeriodMode,date:string):Promise<void>{
+ payrollPeriodWindow(mode,date)
+ const {data,error}=await db().rpc('create_period_payroll',{p_mode:mode,p_anchor:date})
+ if(error)throw new Error(error.message||'建立分薪清單失敗')
+ if(!Number.isSafeInteger(Number(data))||Number(data)<1)
+  throw new Error('分薪清單未建立，請重新整理核對')
+}
+export async function confirmPeriodPayrollPaid(mode:PayrollPeriodMode,date:string,employeeId:string):Promise<void>{
+ payrollPeriodWindow(mode,date)
+ if(!/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(employeeId))
+  throw new Error('員工編號不正確')
+ const {error}=await db().rpc('confirm_period_payroll_paid',{
+  p_mode:mode,p_anchor:date,p_employee_id:employeeId,
+ })
+ if(error)throw new Error(error.message||'登錄發薪失敗')
 }
