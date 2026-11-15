@@ -5,17 +5,15 @@ import AdminLayout from './components/AdminLayout'
 import EntryIntro, { shouldPlay } from './components/EntryIntro'
 import PageTransition from './components/PageTransition'
 import StaffLoading from './components/StaffLoading'
-import MenuLoading from './components/MenuLoading'
-import BookingLoading from './components/BookingLoading'
 import { HomePage, OtherPage } from './pages/OtherPages'
 import AboutPage from './pages/AboutPage'
 import ShiftsPage from './pages/ShiftsPage'
+import MenuPage from './pages/MenuPage'
+import BookingPage from './pages/BookingPage'
 import ServicesPage from './pages/ServicesPage'
 
 const AdminPage = lazy(() => import('./pages/AdminPage'))
 const StaffPage = lazy(() => import('./pages/StaffPage'))
-const MenuPage = lazy(() => import('./pages/MenuPage'))
-const BookingPage = lazy(() => import('./pages/BookingPage'))
 
 // The administration route is deliberately separate from the public shell.
 // This keeps its interface and loading state independent of public animations.
@@ -37,7 +35,7 @@ function PublicApp() {
   <Layout onRegisterBgm={registerBgm}>
    <PageTransition introReady={introReady}>
     {location => (
-     <Suspense fallback={location.pathname === '/staff' ? <StaffLoading /> : location.pathname === '/menu' ? <MenuLoading /> : location.pathname === '/booking' ? <BookingLoading /> : <div className="empty-staff">正在載入頁面…</div>}>
+     <Suspense fallback={location.pathname === '/staff' ? <StaffLoading /> : <div className="empty-staff">正在載入頁面…</div>}>
       <Routes location={location}>
        <Route path="/" element={<HomePage />} />
        <Route path="/about" element={<AboutPage />} />
