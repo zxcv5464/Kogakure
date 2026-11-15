@@ -42,6 +42,10 @@ jobs:
         env:
           VITE_OFFLINE_PREVIEW: 'true'
         run: node scripts/qa-shift-roster.mjs
+      - name: Verify cached service navigation and offscreen image efficiency
+        env:
+          VITE_OFFLINE_PREVIEW: 'true'
+        run: node scripts/qa-service-load-performance.mjs
       - name: Verify editable services, polaroid keepsake, guarded admin CRUD and storage policy
         env:
           VITE_OFFLINE_PREVIEW: 'true'
