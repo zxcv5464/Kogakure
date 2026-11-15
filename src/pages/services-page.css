@@ -123,15 +123,23 @@
  object-fit: cover;
  object-position: center;
 }
-/* 霧隱漸現 × 月影交融: soften the outgoing photo into mist while the
-   fully decoded next photo gradually appears. Preserve admin crop framing. */
+/* 狐門揭幕: a shoji-door opening from the center, rather than the
+   shared scenery's soft crossfade. Decoded next photo opens above the
+   uncut previous photo; the service image crop remains untouched. */
 .services-photo-slides{position:absolute;inset:0;overflow:hidden;background:#211d2a;isolation:isolate}
-.services-photo-slide{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;opacity:0;filter:blur(8px);transition:opacity 1500ms cubic-bezier(.42,0,.2,1),filter 1500ms cubic-bezier(.42,0,.2,1);pointer-events:none}
-.services-photo-slide.is-visible{opacity:1;filter:blur(0)}
-/* A nearly invisible moonlit wash ties together the two photographs. */
-.services-photo-slides::after{content:'';position:absolute;z-index:1;inset:0;background:linear-gradient(140deg,rgba(149,114,177,.055),transparent 55%),linear-gradient(180deg,transparent 74%,rgba(19,14,30,.12));pointer-events:none}
+.services-photo-slide{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;opacity:0;clip-path:inset(0 50% 0 50%);z-index:0;pointer-events:none}
+.services-photo-slide.is-visible{opacity:1;clip-path:inset(0 0 0 0);z-index:2}
+.services-photo-slide.is-previous{opacity:1;clip-path:inset(0 0 0 0);z-index:1}
+.services-photo-slide.is-revealing{transition:clip-path 1450ms cubic-bezier(.62,0,.12,1)}
+/* Two restrained fox-gold seams travel outward along the opening edges. */
+.services-photo-shoji-edges{position:absolute;z-index:3;inset:0;overflow:hidden;pointer-events:none}
+.services-photo-shoji-edges i{position:absolute;top:0;bottom:0;width:1px;background:linear-gradient(to bottom,transparent 5%,rgba(224,191,142,.45) 24%,rgba(247,214,170,.67) 50%,rgba(224,191,142,.32) 78%,transparent 97%);box-shadow:0 0 9px 1px rgba(201,156,111,.13);opacity:0}
+.services-photo-shoji-edges i:first-child{animation:servicesShogiLeft 1450ms cubic-bezier(.62,0,.12,1) both}
+.services-photo-shoji-edges i:last-child{animation:servicesShogiRight 1450ms cubic-bezier(.62,0,.12,1) both}
+@keyframes servicesShogiLeft{0%{left:50%;opacity:0}12%{opacity:.6}85%{opacity:.4}100%{left:0;opacity:0}}
+@keyframes servicesShogiRight{0%{left:50%;opacity:0}12%{opacity:.6}85%{opacity:.4}100%{left:100%;opacity:0}}
 .services-photo-counter{position:absolute;z-index:3;top:20px;right:21px;padding:5px 9px;border:1px solid rgba(222,186,143,.24);border-radius:3px;background:rgba(20,16,28,.59);color:#f1d7b5;font: .7rem Georgia,'Times New Roman',serif;letter-spacing:.13em;font-variant-numeric:tabular-nums}
-@media(prefers-reduced-motion:reduce){.services-photo-slide{transition:none;filter:none}}
+@media(prefers-reduced-motion:reduce){.services-photo-slide.is-revealing{transition:none}.services-photo-shoji-edges{display:none}}
 @media(max-width:480px){.services-photo-counter{top:12px;right:12px;font-size:.66rem}}
 
 .services-photo-placeholder {

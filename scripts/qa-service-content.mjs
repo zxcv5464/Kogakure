@@ -81,10 +81,14 @@ for(const phrase of [
  'services-photo-slide',
  "photos.length>1",
 ])assert.ok(gallery.includes(phrase),'Timed service slideshow missing: '+phrase)
-assert.ok(css.includes('.services-photo-slide.is-visible')&&css.includes('transition:opacity 1500ms')
- &&css.includes('filter:blur(8px)')&&css.includes('filter:blur(0)')
- &&css.includes('prefers-reduced-motion:reduce')&&css.includes('transition:none;filter:none'),
- 'Service gallery needs misty moonlight crossfade with reduced-motion accessibility')
+assert.ok(css.includes('.services-photo-slide.is-visible')&&css.includes('.services-photo-slide.is-previous')
+ &&css.includes('transition:clip-path 1450ms')&&css.includes('clip-path:inset(0 50% 0 50%)')
+ &&css.includes('servicesShogiLeft')&&css.includes('servicesShogiRight')
+ &&css.includes('prefers-reduced-motion:reduce')&&css.includes('transition:none'),
+ 'Service gallery needs center-opening shoji reveal, retained outgoing photo and reduced-motion accessibility')
+assert.ok(gallery.includes('previous:Layer|null')&&gallery.includes('previous:null,revealing:false')
+ &&gallery.includes('window.clearTimeout(transitionTimer)')&&gallery.includes('services-photo-shoji-edges'),
+ 'The previous image must stay visible behind each fully decoded shoji reveal')
 for(const term of ['multiple disabled={busy','function choosePhotos','function movePhoto','function removePhoto',
  'maxServicePhotos=12','for(const photo of photoSlots)','const record={...draft,paragraphs,details,imageUrls,imageUrl:imageUrls[0]||null,imageCrops:photoSlots.map(photo=>photo.crop)}','const uploadedPaths:string[]=[]']){
  assert.ok(admin.includes(term)||lib.includes(term),'Service photo editor lacks: '+term)
