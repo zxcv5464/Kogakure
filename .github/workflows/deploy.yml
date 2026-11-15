@@ -52,6 +52,8 @@ jobs:
         env:
           VITE_OFFLINE_PREVIEW: 'true'
         run: node scripts/qa-site-bgm.mjs
+      - name: Verify cold first-visit logo fade and enter-button animation in Chromium
+        run: node scripts/qa-entry-intro-first-load.mjs
       - name: Verify shared rotating scene backgrounds on services and shifts
         run: node scripts/qa-public-scene-backdrops.mjs
       - name: Verify rolling four-week opening dates and employee duty roster
