@@ -51,10 +51,10 @@ assert.ok(layout.includes("to==='/menu'?prefetchMenuPage")&&
 assert.ok(transition.includes('MENU_PAGE_READY_EVENT')&&
  transition.includes('BOOKING_PAGE_READY_EVENT'),
  'Keep the existing curtain but release it after initial page paint')
-assert.ok(motion.includes('.route-stage .tea-menu-section{animation:quietRise .54s')&&
- motion.includes('.route-stage .tea-menu-summary{animation:quietRise .56s')&&
- motion.includes('.route-stage .booking-profile{animation:staffReveal .64s'),
- 'Extra 1.2–2.8 second stagger delays must be shortened without removing fade effects')
+assert.ok(motion.includes('.route-stage .tea-menu-section{animation:quietRise .85s')&&
+ motion.includes('.route-stage .tea-menu-summary{animation:quietRise .88s')&&
+ motion.includes('.route-stage .booking-profile{animation:staffReveal 1.1s'),
+ 'Tea and booking should follow the same deliberate staged fades as other public pages')
 assert.ok(menuCss.includes('.tea-menu-loading-stage{')&&
  bookingCss.includes('.booking-loading-stage{'),
  'Loading surfaces should occupy stable space within their respective pages')
