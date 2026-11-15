@@ -60,6 +60,10 @@ jobs:
         run: node scripts/qa-entry-intro-first-load.mjs
       - name: Verify shared rotating scene backgrounds on services and shifts
         run: node scripts/qa-public-scene-backdrops.mjs
+      - name: Verify completed-order turnover and equal staff salary ledger
+        env:
+          VITE_OFFLINE_PREVIEW: 'true'
+        run: node scripts/qa-daily-payroll.mjs
       - name: Verify owner accounting ledger, date-scoped tea orders and CSV safety
         env:
           VITE_OFFLINE_PREVIEW: 'true'
