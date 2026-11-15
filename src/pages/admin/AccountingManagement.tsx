@@ -8,6 +8,7 @@ import {
 import type {AccountingEntry,AccountingInput,AccountingKind,AccountingPeriod} from '../../lib/accounting'
 import {validVenueDate,validVenueMonth,venueDate} from '../../lib/taipei-date'
 import {useAdminEditGuard} from './AdminEditGuard'
+import DailyPayrollSection from './DailyPayrollSection'
 import './accounting-management.css'
 
 const categories:Record<AccountingKind,string[]>={
@@ -126,7 +127,7 @@ export default function AccountingManagement(){
  return <section className="accounting-admin admin-page">
   <header className="accounting-admin-header">
    <div><p className="eyebrow">KOGAKURE · LEDGER</p><h1>帳務管理</h1>
-    <p>以 Gil 記錄館內實際收付，依月份或營業日期核對收入、支出與結餘。</p></div>
+    <p>以 Gil 記錄館內實際收付，並連動已完成茶宴訂單試算每日營業額及員工平均分薪。</p></div>
    <div className="accounting-header-actions">
     <button type="button" disabled={busy||loading} onClick={()=>{setLoading(true);void refresh()}}><RefreshCw size={16}/>重新整理</button>
     <button type="button" disabled={loading||!entries.length} onClick={exportCsv}><Download size={16}/>匯出 CSV</button>
@@ -154,6 +155,7 @@ export default function AccountingManagement(){
   </div>
   {error&&<p role="alert" className="accounting-notice is-error"><TriangleAlert size={17}/>{error}</p>}
   {notice&&<p role="status" className="accounting-notice is-success"><CheckCircle2 size={17}/>{notice}</p>}
+  <DailyPayrollSection selectedDate={mode==='day'?date:venueDate()} onLedgerChanged={()=>{void refresh()}}/>
   <div className="accounting-workspace">
    <div className="accounting-list-panel">
     <div className="accounting-list-heading"><div><h2>收支紀錄</h2><small>依日期由新至舊排列 · {visible.length} 筆</small></div>
@@ -175,10 +177,11 @@ export default function AccountingManagement(){
        {entry.description&&<p>{entry.description}</p>}
        {entry.reference&&<small>參考單號：{entry.reference}</small>}
        <footer><small>登錄時間 {timestamp(entry.createdAt)}</small>
+        {entry.reference.startsWith('PAYROLL:')?<span className="accounting-payroll-locked"><CheckCircle2 size={15}/>分薪已發放 · 鎖定紀錄</span>:
         <div>
          <button type="button" disabled={busy} onClick={()=>edit(entry)}><FilePenLine size={15}/>編輯</button>
          <button type="button" disabled={busy} className="is-danger" onClick={()=>void remove(entry)}><Trash2 size={15}/>刪除</button>
-        </div>
+        </div>}
        </footer>
       </article>)}
      </div>}
