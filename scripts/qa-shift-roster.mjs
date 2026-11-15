@@ -55,7 +55,7 @@ for(const term of [
 assert.ok(!sql.includes('drop table')&&!sql.includes('delete from public.employee_accounts'))
 assert.ok(editor.includes('setShiftOpening(date,kind,hours,note)'))
 assert.ok(editor.includes('markShiftAttendance(date,person)'))
-assert.ok(editor.includes('unmarkShiftAttendance(date,person.employeeId)'))
+assert.ok(editor.includes('unmarkShiftAttendance(date,person.employeeId,person.source)'), 'Cancel attendance must use owner/employee source')
 assert.ok(editor.includes('date>=today'))
 assert.ok(page.includes('opening?.open?members.get(date)||[]:[]'))
 assert.ok(page.includes('status===\'open\''))
