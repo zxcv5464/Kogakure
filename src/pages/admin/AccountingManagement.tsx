@@ -279,11 +279,6 @@ export default function AccountingManagement(){
         <option value="order_receipt">已完成茶宴的收款（不重複計入營業額）</option>
        </select>
       </label>
-      <small className="accounting-payroll-explain">
-       {draft.isAdditionalRevenue
-        ?'手動收入會自動計入營業額；依選擇分薪或不分薪。'
-        :'這筆金額只記錄實際收款，已完成訂單的營業額不會再次計算。'}
-      </small>
       {draft.isAdditionalRevenue&&draft.payrollDistribution==='individual'&&
        <label>指定員工／管理員
         <select value={draft.payrollRecipientId||''}

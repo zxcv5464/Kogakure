@@ -79,28 +79,15 @@
 .accounting-paid-actions .paid-payroll-editor{width:100%}
 .accounting-entry footer:has(.accounting-paid-actions){align-items:flex-start}
 
-/* Salary routing: a single select, no checkbox or narrow-column overflow. */
-.accounting-payroll-setting{
- display:grid;grid-column:1/-1;min-width:0;width:100%;max-width:100%;
- box-sizing:border-box;gap:10px;padding:13px 14px;
- border:1px solid rgba(222,181,122,.38);border-radius:7px;
- background:rgba(182,135,75,.07);
-}
+/* Keep income payroll selection visually identical to standard form fields.
+ * display:contents makes the select and optional staff field normal grid rows. */
+.accounting-payroll-setting{display:contents}
 .accounting-payroll-setting>label{
- display:grid;gap:8px;min-width:0;width:100%;max-width:100%;
- box-sizing:border-box;color:#dbc9ae;font-size:.79rem;line-height:1.65;
-}
-.accounting-payroll-setting select{
- display:block;width:100%;min-width:0;max-width:100%;box-sizing:border-box;
- min-height:42px;padding:9px 11px;border:1px solid rgba(215,180,133,.38);
- border-radius:5px;background:#1c202a;color:#f4e2c4;font-size:.8rem;
+ display:grid;gap:7px;min-width:0;
+ font-size:.77rem;color:#d4be9e;
 }
 .accounting-payroll-setting>small{
  display:block;min-width:0;overflow-wrap:anywhere;
- font-size:.74rem;line-height:1.75;color:#bcb0a5;
+ color:#b4a59b;font-size:.73rem;line-height:1.7;
 }
 .accounting-payroll-setting .accounting-error{color:#ffb2ab}
-@media(max-width:600px){
- .accounting-payroll-setting{padding:12px;gap:9px}
- .accounting-payroll-setting>label{font-size:.77rem}
-}

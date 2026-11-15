@@ -56,7 +56,9 @@ assert.ok(!dashboard.includes('type="checkbox"')&&
  dashboard.includes("draft.isAdditionalRevenue?draft.payrollDistribution:'order_receipt'")&&
  dashboard.includes("value=\"order_receipt\"")&&
  dashboard.includes('這筆收入如何分薪？')&&
- css.includes('grid-column:1/-1')&&css.includes('box-sizing:border-box'),
+ css.includes('.accounting-payroll-setting{display:contents}')&&
+ !css.includes('background:rgba(182,135,75,.07)')&&
+ !dashboard.includes('accounting-payroll-explain'),
  'Income entry must use one responsive payroll select, with no oversized checkbox or duplicated turnover')
 assert.ok(accounting.includes("rpc('get_accounting_payroll_payees'")&&
  dashboard.includes('payrollDistribution')&&dashboard.includes('payrollRecipientId')&&
