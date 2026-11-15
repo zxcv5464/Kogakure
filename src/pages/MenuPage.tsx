@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { ClipboardList, Minus, Plus, RefreshCcw, Send, CircleCheck } from 'lucide-react'
 import { configured } from '../lib/config'
-import { fetchMenu, initialMenu, sortMenu } from '../lib/menu-catalog'
+import { initialMenu, sortMenu } from '../lib/menu-catalog'
+import {getCachedPublicMenu,loadPublicMenu} from '../lib/public-menu'
 import type { MenuCatalog } from '../lib/menu-catalog'
 import {submitTeaOrder} from '../lib/tea-orders'
 import { MENU_PAGE_READY_EVENT } from '../lib/route-events'
@@ -10,8 +11,8 @@ import MenuLoading from '../components/MenuLoading'
 import './menu-page.css'
 
 export default function MenuPage() {
- const [catalog,setCatalog] = useState<MenuCatalog>(initialMenu)
- const [mode,setMode] = useState<'loading'|'live'|'preview'>(configured ? 'loading' : 'preview')
+ const [catalog,setCatalog] = useState<MenuCatalog>(()=>configured?(getCachedPublicMenu()??initialMenu):initialMenu)
+ const [mode,setMode] = useState<'loading'|'live'|'preview'>(()=>configured?(getCachedPublicMenu()?'live':'loading'):'preview')
  const [error,setError] = useState('')
  const [quantities,setQuantities] = useState<Record<string,number>>({})
  const [guestName,setGuestName] = useState('')
@@ -26,7 +27,7 @@ export default function MenuPage() {
  useEffect(() => {
   if (!configured) return
   let alive = true
-  fetchMenu().then(data => {
+  loadPublicMenu().then(data => {
    if (!alive) return
    setCatalog(data)
    setError('')
@@ -39,11 +40,15 @@ export default function MenuPage() {
   return () => { alive = false }
  }, [])
 
- // Announce only when the real catalog or an explicitly labeled preview is ready.
- // The curtain can then reveal the actual menu instead of a transient loader.
- useEffect(() => {
-  if (mode !== 'loading') window.dispatchEvent(new Event(MENU_PAGE_READY_EVENT))
- }, [mode])
+ // A first visit should reveal the branded menu shell as soon as it paints.
+ // Live item prices remain hidden until the authoritative catalog resolves.
+ useEffect(()=>{
+  let one=0,two=0
+  one=window.requestAnimationFrame(()=>{
+   two=window.requestAnimationFrame(()=>window.dispatchEvent(new Event(MENU_PAGE_READY_EVENT)))
+  })
+  return()=>{window.cancelAnimationFrame(one);window.cancelAnimationFrame(two)}
+ },[])
 
  const sorted = useMemo(() => sortMenu(catalog),[catalog])
  // Do not flash sample content while the authoritative menu is loading.
@@ -97,8 +102,6 @@ export default function MenuPage() {
   finally{setSending(false)}
  }
 
- if (mode === 'loading') return <MenuLoading />
-
  return <div className="tea-menu-page">
   <header className="tea-menu-hero">
    <span className="tea-menu-brand">狐隱 · KOGAKURE</span>
@@ -108,6 +111,7 @@ export default function MenuPage() {
    <p className="tea-menu-verse">一盞清茶，一席甘味。願旅人於此，暫忘塵世喧囂。</p>
   </header>
   <div className="tea-menu-content">
+   {mode==='loading'&&<div className="tea-menu-loading-stage" aria-busy="true"><MenuLoading /></div>}
    {mode === 'preview' && <div className="tea-menu-status" role="status">
     <span>展示菜單</span>
     <p>{error ? '菜單資料庫尚未完成連接，以下為初版展示內容；即時價格及供應狀態請以館方確認為準。' : '目前為初版展示內容。待菜單資料庫設定完成後，將自動切換為館方即時維護的版本。'}</p>
