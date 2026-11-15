@@ -35,14 +35,14 @@ assert.ok(css.includes('.booking-footnote>span{display:block;text-wrap:balance;o
 assert.ok(css.includes('.booking-footnote>span+span{margin-top:.28em}'),
  'The two booking note sentences need a small visual separation')
 for (const part of [
- '.route-stage .booking-notice{animation:quietRise 1.28s var(--public-reveal-ease) 1.16s both}',
- '.route-stage .booking-notice+.booking-notice{animation-delay:1.34s}',
- '.route-stage .booking-footnote{animation:quietFade 1.12s ease-out 1.45s both}',
+ '.route-stage .booking-notice{animation:quietRise .82s var(--public-reveal-ease) .48s both}',
+ '.route-stage .booking-notice+.booking-notice{animation-delay:.56s}',
+ '.route-stage .booking-footnote{animation:quietFade .84s ease-out .6s both}',
  '.booking-legend,.booking-notice,.booking-profile,.booking-footnote){animation-play-state:paused}',
  '@media(prefers-reduced-motion:reduce){.route-stage,.route-stage *{animation:none!important}}',
 ]){
  assert.ok(motion.includes(part), 'No-staff fade / curtain / reduced-motion rule missing: ' + part)
 }
-assert.ok(motion.includes('.route-stage .booking-profile{animation:staffReveal 1.34s'),
+assert.ok(motion.includes('.route-stage .booking-profile{animation:staffReveal .92s'),
  'The regular staff-booking card animations must remain unchanged')
 console.log('PASS: full-height booking background, compact empty state, unified staged notice fades and curtain pause')
