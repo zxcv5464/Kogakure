@@ -60,6 +60,12 @@ jobs:
         run: node scripts/qa-entry-intro-first-load.mjs
       - name: Verify shared rotating scene backgrounds on services and shifts
         run: node scripts/qa-public-scene-backdrops.mjs
+      - name: Verify owner accounting ledger, date-scoped tea orders and CSV safety
+        env:
+          VITE_OFFLINE_PREVIEW: 'true'
+        run: |
+          node scripts/qa-accounting.mjs
+          node scripts/qa-tea-orders.mjs
       - name: Verify tea menu and booking public caches, safe first-paint UI and existing submission flows
         env:
           VITE_OFFLINE_PREVIEW: 'true'
