@@ -12,8 +12,9 @@ const paths=[
  'src/pages/admin/booking-management.css',
  'supabase/migrations/20261115_29_staff_booking_plan_joint_rules.sql',
  'supabase/migrations/20261115_30_booking_rule_trigger_execute.sql',
+ 'supabase/migrations/20261115_31_protect_booking_rule_fields.sql',
 ]
-const [types,staff,bookings,publicPage,admin,manual,staffAdmin,css,sql,grants]=
+const [types,staff,bookings,publicPage,admin,manual,staffAdmin,css,sql,grants,fieldGuard]=
  await Promise.all(paths.map(path=>readFile(path,'utf8')))
 for(const path of paths.filter(p=>/\.tsx?$/.test(p))){
  const ast=ts.createSourceFile(path,await readFile(path,'utf8'),
@@ -68,6 +69,12 @@ for(const item of [
 assert.ok(grants.includes('grant execute on function private.validate_staff_booking_rules(uuid) to authenticated')&&
  grants.includes('revoke execute on function private.validate_staff_booking_rules(uuid) from anon'),
  'Invoking the database rule trigger must work for authenticated booking managers without granting guest RPC access')
+assert.ok(fieldGuard.includes('private.protect_staff_booking_rule_fields')&&
+ fieldGuard.includes('staff_protect_booking_rule_fields')&&
+ fieldGuard.includes('new.booking_allowed_plan_ids is distinct from old.booking_allowed_plan_ids')&&
+ fieldGuard.includes('new.booking_allow_joint is distinct from old.booking_allow_joint')&&
+ fieldGuard.includes("current_user not in ('postgres','service_role')"),
+ 'Staff profile managers cannot bypass booking-specific rule edits through the general staff table')
 assert.ok(!sql.includes('delete from public.booking_requests')&&!sql.includes('drop table public.staff'),
  'Migration must preserve existing reservations and staff')
 const vite=await createServer({server:{middlewareMode:true,hmr:false},appType:'custom'})
