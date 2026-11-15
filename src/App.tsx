@@ -32,7 +32,7 @@ export default function App() {
 function PublicApp() {
  const [introReady, setIntroReady] = useState(() => !shouldPlay())
  return <>
-  <Layout>
+  <Layout introReady={introReady}>
    <PageTransition introReady={introReady}>
     {location => (
      <Suspense fallback={location.pathname === '/staff' ? <StaffLoading /> : location.pathname === '/menu' ? <MenuLoading /> : location.pathname === '/booking' ? <BookingLoading /> : <div className="empty-staff">正在載入頁面…</div>}>
