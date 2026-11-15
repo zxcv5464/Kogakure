@@ -1,7 +1,7 @@
 import {useCallback,useEffect,useMemo,useRef,useState} from 'react'
 import {CalendarDays,CheckCircle2,ChevronLeft,ChevronRight,RefreshCw,RotateCcw,Trash2,UsersRound,Wallet} from 'lucide-react'
 import {
- calculateEqualPayroll,confirmPeriodPayrollPaid,createPeriodPayroll,fetchPeriodPayrollReport,
+ confirmPeriodPayrollPaid,createPeriodPayroll,fetchPeriodPayrollReport,
  payrollPeriodWindow,recalculatePeriodPayroll,resetPeriodPayroll,fetchPaidPayrollAudit,
 } from '../../lib/daily-payroll'
 import type {PayrollAllocation,PayrollPeriodMode,PeriodPayrollReport,PaidPayrollAudit} from '../../lib/daily-payroll'
@@ -54,7 +54,7 @@ export default function DailyPayrollSection({
   window.addEventListener('focus',update)
   return()=>{window.clearInterval(timer);window.removeEventListener('focus',update)}
  },[load,working])
- const preview=useMemo(()=>data?calculateEqualPayroll(data.revenueGil,data.roster):[],[data])
+ const preview=useMemo(()=>data?data.previewShares:[],[data])
  const frozen=(data?.allocations.length??0)>0
  const blocked=!frozen&&(data?.overlaps.length??0)>0
  const paidCount=data?.allocations.filter(x=>x.paidAt!==null).length??0
@@ -74,7 +74,7 @@ export default function DailyPayrollSection({
  async function create(){
   if(working||!data||frozen||blocked||!data.roster.length||data.revenueGil<=0)return
   if(!window.confirm(
-   '確定依 '+currentLabel+' 已完成的茶宴訂單＋其他收入，共 '+money(data.revenueGil)+
+   '確定依 '+currentLabel+' 已完成茶宴與選定分薪的額外收入，共 '+money(data.revenueGil)+
    '，平均分配給 '+data.roster.length+' 位出勤人員？\n'+
    '建立後會固定該期間的分薪，與其他已分薪日期重疊時不能再分薪。'
   ))return
@@ -146,12 +146,18 @@ export default function DailyPayrollSection({
    </div>
   </div>
   <p className="daily-payroll-period-caption">目前查看：<strong>{modeName[mode]} · {currentLabel}</strong>。當週為週一至週日；期間內每個出勤帳號只計算一次。</p>
-  <p className="daily-payroll-explain">分薪依所選期間已完成茶宴訂單與其他已登錄收入計算；<strong>訂單完成不代表已實際收款</strong>，請核對後建立清單。</p>
+  <p className="daily-payroll-explain">已完成茶宴與選擇「平均分薪」的手動收入進入共同分配池；選擇「指定員工」的收入只加給該員工；「不分薪」仍計入館內營業額。<strong>訂單完成不代表已實際收款</strong>。</p>
   {error&&<p role="alert" className="daily-payroll-message is-error">{error}</p>}
   {notice&&<p role="status" className="daily-payroll-message is-success"><CheckCircle2 size={16}/>{notice}</p>}
   {loading&&!data?<p className="daily-payroll-loading" role="status">正在核對所選期間訂單、帳務與員工排班…</p>:
    data&&<>
-    <p className="daily-payroll-salary-basis">本期分薪基準 <strong>{money(data.revenueGil)}</strong> · {data.sales.completedCount} 筆已完成茶宴 · {data.roster.length} 位出勤人員（試算）</p>
+    <div className="daily-payroll-salary-basis">
+     <div>本期營業額 <strong>{money(data.operatingTurnoverGil)}</strong> · 已完成茶宴 {data.sales.completedCount} 筆</div>
+     <div>平均分薪池 <strong>{money(data.sharedPoolGil)}</strong> · 個別員工薪水 <strong>{money(data.personalIncomeGil)}</strong></div>
+     <div>本期員工薪資總額 <strong>{money(data.revenueGil)}</strong>
+      {data.excludedPayrollIncomeGil>0&&<small>（不分薪收入 {money(data.excludedPayrollIncomeGil)}）</small>}
+     </div>
+    </div>
     <div className="daily-payroll-roster-heading">
      <div><h3><UsersRound size={18}/>出勤人員薪資分配</h3>
       <p>{frozen?'該期間分薪清單已建立，金額為建立當時的固定快照。':'依所選期間的「值班排班」登記員工與婆婆／管理員出勤平均分配，同一帳號只計算一次。'}</p>

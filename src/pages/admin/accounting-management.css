@@ -78,3 +78,15 @@
 .accounting-paid-actions{display:grid;gap:7px;width:min(100%,370px)}
 .accounting-paid-actions .paid-payroll-editor{width:100%}
 .accounting-entry footer:has(.accounting-paid-actions){align-items:flex-start}
+
+/* Explicit payroll routing of manual additional income */
+.accounting-payroll-setting{display:grid;gap:11px;padding:14px 15px;border:1px solid rgba(222,181,122,.38);border-radius:7px;background:rgba(182,135,75,.07)}
+.accounting-payroll-setting>small{font-size:.74rem;line-height:1.75;color:#bcb0a5}
+.accounting-payroll-setting>label:not(.accounting-payroll-checkbox){display:grid;gap:7px;color:#dbc9ae;font-size:.79rem}
+.accounting-payroll-setting select{width:100%;max-width:100%;padding:9px 11px;min-height:39px;border:1px solid rgba(215,180,133,.38);border-radius:5px;background:#1c202a;color:#f4e2c4;font-size:.8rem}
+.accounting-payroll-checkbox{display:flex!important;align-items:center;gap:9px;cursor:pointer;font-size:.81rem;line-height:1.6}
+.accounting-payroll-checkbox input{accent-color:#d7b687;min-width:18px;min-height:18px;flex:0 0 auto}
+.accounting-payroll-checkbox strong{color:#f5d09a}
+.accounting-income-assignment{display:block;margin-top:7px;font-size:.73rem;color:#d5bb96;line-height:1.7}
+.accounting-payroll-setting .accounting-error{color:#ffb2ab}
+@media(max-width:600px){.accounting-payroll-setting{padding:12px 10px}}

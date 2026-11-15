@@ -19,9 +19,10 @@ const files=[
  'supabase/migrations/20261115_23_period_payroll.sql',
  'supabase/migrations/20261115_24_payroll_reset_recalculate.sql',
  'supabase/migrations/20261115_25_paid_payroll_corrections.sql',
+ 'supabase/migrations/20261115_26_manual_income_payroll_distribution.sql',
  'src/pages/admin/PaidPayrollRecordEditor.tsx',
 ]
-const [orders,accounting,ui,helper,styles,ledgerStyles,sql,ownerSql,periodSql,resetSql,correctionSql,paidEditor]=
+const [orders,accounting,ui,helper,styles,ledgerStyles,sql,ownerSql,periodSql,resetSql,correctionSql,incomeSql,paidEditor]=
  await Promise.all(files.map(path=>readFile(path,'utf8')))
 assert.ok(orders.includes("{id:'active',text:'待處理'}"),
  'Keep the existing pending+preparing queue')
@@ -38,7 +39,7 @@ assert.ok(ui.includes('<h2>員工分薪</h2>')&&
  !ui.includes('當日營業額・員工分薪')&&
  !ui.includes('daily-payroll-metrics')&&
  ui.includes('modeName[mode]')&&ui.includes('確認已發薪')&&
- ui.includes('其他已登錄收入')&&ui.includes('已完成茶宴')&&
+ ui.includes('個別員工薪水')&&ui.includes('已完成茶宴')&&
  ui.includes('分薪清單'),
  'Expose calculations, immutable salary confirmation and revenue components')
 assert.ok(ui.includes('window.confirm(')&&ui.includes('onLedgerChanged()'),
@@ -57,8 +58,14 @@ assert.ok(ownerSql.includes('from public.shift_attendance')&&
  ownerSql.includes('member_type')&&
  ownerSql.includes('sort_index'),
  'Payroll preview and frozen allocations must use the same deduplicated owner+employee roster')
-assert.ok(helper.includes("x.category!=='茶宴收入'"),
- 'Do not double-count manually recorded tea receipts')
+assert.ok(helper.includes('x.isAdditionalRevenue')&&
+ incomeSql.includes("a.payroll_distribution='shared'")&&
+ incomeSql.includes("a.payroll_distribution='individual'")&&
+ incomeSql.includes('v_shared_income')&&
+ incomeSql.includes('v_personal_income')&&
+ incomeSql.includes('v_completed+v_shared_income+v_personal_income')&&
+ !incomeSql.includes("a.category<>'茶宴收入'"),
+ 'Income routing must use explicit flags and category-independent salary calculation')
 assert.ok(ui.includes("week:'當週'")&&ui.includes("month:'當月'")&&
  helper.includes("rpc('create_period_payroll'")&&helper.includes("rpc('confirm_period_payroll_paid'")&&
  helper.includes('fetchPeriodPayrollReport')&&
@@ -176,13 +183,31 @@ try{
  assert.deepEqual(payroll.payrollPeriodWindow('week','2026-11-15'),{start:'2026-11-09',end:'2026-11-16'})
  assert.deepEqual(payroll.payrollPeriodWindow('month','2026-11-15'),{start:'2026-11-01',end:'2026-12-01'})
  assert.throws(()=>payroll.calculateEqualPayroll(-1,employees))
- const entry=(kind,category,amountGil)=>({kind,category,amountGil})
+ const entry=(kind,category,amountGil,isAdditionalRevenue=true,payrollDistribution='shared',payrollRecipientId=null)=>({
+  kind,category,amountGil,isAdditionalRevenue,payrollDistribution,payrollRecipientId,
+ })
  const ledger=[
-  entry('income','茶宴收入',2000),
+  entry('income','茶宴收入',2000,false,'none'),
   entry('income','湯浴收入',3000),
   entry('income','其他收入',750),
-  entry('expense','員工薪酬',1800),
+  entry('expense','員工薪酬',1800,false,'none'),
  ]
+ const mixed=[
+  entry('income','茶宴收入',558,true,'shared'),
+  entry('income','個人小費',1100,true,'individual','owner'),
+  entry('income','非分薪收入',500,true,'none'),
+  entry('income','訂單已計收款',30000,false,'none'),
+ ]
+ const personal=payroll.calculateDirectedPayroll(10000,mixed,withOwner)
+ assert.equal(personal.operatingTurnoverGil,12158)
+ assert.equal(personal.distributableGil,11658)
+ assert.equal(personal.sharedPoolGil,10558)
+ assert.equal(personal.personalIncomeGil,1100)
+ assert.equal(personal.excludedPayrollIncomeGil,500)
+ assert.deepEqual(personal.shares.map(x=>x.amountGil),[4620,3519,3519])
+ assert.equal(personal.shares.reduce((sum,x)=>sum+x.amountGil,0),personal.distributableGil)
+ assert.deepEqual(payroll.calculateDirectedPayroll(0,[entry('income','茶宴收入',558,true,'shared')],[withOwner[0]]).shares.map(x=>x.amountGil),[558])
+ assert.throws(()=>payroll.calculateDirectedPayroll(0,[entry('income','小費',500,true,'individual','missing')],withOwner))
  assert.equal(payroll.sumNonTeaIncome(ledger),3750)
  assert.equal(payroll.sumRecordedReceipts(ledger),5750)
  assert.equal(20000+payroll.sumNonTeaIncome(ledger),23750,
@@ -197,5 +222,5 @@ try{
  !html.includes('當日營業額・員工分薪')&&
  html.includes('選擇當日營業額與分薪日期'),
  'Dashboard must render a selectable daily payroll section even on first paint')
- console.log('PASS: salary corrections and deletion audited, inline ledger actions, safe unpaid reset and 3 periods')
+ console.log('PASS: additional manual income, individual salary routing, no double counting and protected payroll snapshots')
 }finally{await vite.close()}

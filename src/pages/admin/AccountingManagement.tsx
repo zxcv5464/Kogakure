@@ -3,9 +3,9 @@ import type {FormEvent} from 'react'
 import {ArrowDownLeft,ArrowUpRight,CalendarDays,CheckCircle2,FilePenLine,Plus,RefreshCw,Save,Trash2,TriangleAlert,Wallet,X} from 'lucide-react'
 import {
  accountingSummary,deleteAccountingEntry,fetchAccountingEntries,
- fetchAccountingPeriodSales,mergedAccountingSummary,saveAccountingEntry,validateAccountingInput,
+ fetchAccountingPeriodSales,fetchAccountingPayees,mergedAccountingSummary,saveAccountingEntry,validateAccountingInput,
 } from '../../lib/accounting'
-import type {AccountingEntry,AccountingInput,AccountingKind,AccountingPeriod,AccountingSalesSummary} from '../../lib/accounting'
+import type {AccountingEntry,AccountingInput,AccountingKind,AccountingPeriod,AccountingSalesSummary,AccountingPayee,PayrollDistribution} from '../../lib/accounting'
 import {validVenueDate,validVenueMonth,venueDate,venueWeekRange,shiftVenueDate} from '../../lib/taipei-date'
 import {useAdminEditGuard} from './AdminEditGuard'
 import DailyPayrollSection from './DailyPayrollSection'
@@ -14,12 +14,13 @@ import {parsePayrollReference} from '../../lib/daily-payroll'
 import './accounting-management.css'
 
 const categories:Record<AccountingKind,string[]>={
- income:['茶宴收入','湯浴收入','占卜收入','指名服務','共同小費','其他收入'],
+ income:['額外收入','茶宴收入','湯浴收入','占卜收入','指名服務','共同小費','其他收入'],
  expense:['餐點材料','館內用品','員工薪酬','活動支出','場地費用','其他支出'],
 }
 const fresh=():AccountingInput=>({
- date:venueDate(),kind:'income',category:'茶宴收入',amountGil:0,
- description:'',reference:'',
+ date:venueDate(),kind:'income',category:'額外收入',amountGil:0,
+ description:'',reference:'',isAdditionalRevenue:true,
+ payrollDistribution:'shared',payrollRecipientId:null,
 })
 const money=(value:number)=>value.toLocaleString('en-US')+' Gil'
 const timestamp=(value:string)=>new Intl.DateTimeFormat('zh-TW',{
@@ -33,6 +34,8 @@ export default function AccountingManagement(){
  const [month,setMonth]=useState(()=>venueDate().slice(0,7))
  const [entries,setEntries]=useState<AccountingEntry[]>([])
  const [sales,setSales]=useState<AccountingSalesSummary|null>(null)
+ const [payees,setPayees]=useState<AccountingPayee[]>([])
+ const [payeeError,setPayeeError]=useState('')
  const [loading,setLoading]=useState(true)
  const [error,setError]=useState('')
  const [notice,setNotice]=useState('')
@@ -49,6 +52,12 @@ export default function AccountingManagement(){
   ? JSON.stringify(draft)!==JSON.stringify(original)
   : JSON.stringify(draft)!==JSON.stringify(fresh())
 
+ useEffect(()=>{
+  let alive=true
+  void fetchAccountingPayees().then(list=>{if(alive){setPayees(list);setPayeeError('')}})
+   .catch(e=>{if(alive)setPayeeError(e instanceof Error?e.message:'無法讀取員工名單')})
+  return()=>{alive=false}
+ },[])
  useEffect(()=>setEditing(dirty,busy),[dirty,busy,setEditing])
  useEffect(()=>()=>setEditing(false,false),[setEditing])
 
@@ -92,6 +101,8 @@ export default function AccountingManagement(){
   const record:AccountingInput={
    date:entry.date,kind:entry.kind,category:entry.category,
    amountGil:entry.amountGil,description:entry.description,reference:entry.reference,
+   isAdditionalRevenue:entry.isAdditionalRevenue,payrollDistribution:entry.payrollDistribution,
+   payrollRecipientId:entry.payrollRecipientId,
   }
   setEditingId(entry.id);setDraft(record);setOriginal({...record});setNotice('')
   if(window.matchMedia('(max-width:950px)').matches)
@@ -101,7 +112,17 @@ export default function AccountingManagement(){
   setDraft(prev=>({...prev,[key]:value}))
  }
  function changeKind(value:AccountingKind){
-  setDraft(prev=>({...prev,kind:value,category:categories[value][0]}))
+  setDraft(prev=>({...prev,kind:value,category:categories[value][0],
+   isAdditionalRevenue:value==='income',
+   payrollDistribution:value==='income'?'shared':'none',payrollRecipientId:null}))
+ }
+ function changeRevenueIncluded(included:boolean){
+  setDraft(prev=>({...prev,isAdditionalRevenue:included,
+   payrollDistribution:included?'shared':'none',payrollRecipientId:null}))
+ }
+ function changePayDistribution(distribution:PayrollDistribution){
+  setDraft(prev=>({...prev,payrollDistribution:distribution,
+   payrollRecipientId:distribution==='individual'?prev.payrollRecipientId:null}))
  }
  async function save(event:FormEvent<HTMLFormElement>){
   event.preventDefault()
@@ -114,7 +135,13 @@ export default function AccountingManagement(){
    await refresh()
    setPayrollRefreshKey(value=>value+1)
    resetForm()
-   setNotice('帳務紀錄已儲存。已完成茶宴業績與實際收款分別統計，避免重複計算。')
+   setNotice(draft.kind==='income'
+    ?(draft.isAdditionalRevenue?
+      (draft.payrollDistribution==='individual'?'額外營業額已保存，並納入指定員工的分薪。':
+       draft.payrollDistribution==='shared'?'額外營業額已保存，並納入本期平均分薪。':
+       '額外營業額已保存，這筆收入不列入員工分薪。'):
+      '收款已紀錄，但屬於已計入的茶宴訂單，不再重複計入營業額與分薪。')
+    :'支出已保存並更新帳務統計。')
   }catch(e){setError(e instanceof Error?e.message:'帳務儲存失敗')}
   finally{setBusy(false)}
  }
@@ -166,7 +193,7 @@ export default function AccountingManagement(){
    <div><span>統計筆數</span><strong>{summary?summary.count+' 筆':loading?'讀取中…':'—'}</strong>
     <small>已完成茶宴 {summary?.completedCount??'—'} 筆＋帳務 {summary?.ledgerCount??'—'} 筆</small></div>
   </div>
-  <p className="accounting-summary-footnote">依選定期間的訂單建立日期（台灣時間）統計「已完成」茶宴；待處理與已取消訂單不計入。<strong>完成訂單不代表已收款。</strong>已登錄實收 {money(journalSummary.income)}，其中「茶宴收入」不再重複加進營業額。</p>
+  <p className="accounting-summary-footnote">依選定期間的訂單建立日期（台灣時間）統計「已完成」茶宴；待處理與已取消訂單不計入。<strong>完成訂單不代表已收款。</strong>已登錄實收 {money(journalSummary.income)}，只有標記為「訂單收款」的手動收入不重複加進營業額。</p>
   {error&&<p role="alert" className="accounting-notice is-error"><TriangleAlert size={17}/>{error}</p>}
   {notice&&<p role="status" className="accounting-notice is-success"><CheckCircle2 size={17}/>{notice}</p>}
   <DailyPayrollSection selectedDate={mode==='day'||mode==='week'?date:venueDate()} refreshToken={payrollRefreshKey} onLedgerChanged={()=>{void refresh()}}/>
@@ -198,6 +225,12 @@ export default function AccountingManagement(){
        <h3>{entry.category}</h3>
        {entry.description&&<p>{entry.description}</p>}
        {entry.reference&&<small>參考單號：{entry.reference}</small>}
+       {entry.kind==='income'&&<small className="accounting-income-assignment">
+        {entry.isAdditionalRevenue?'額外營業額 · ':'訂單收款（不重複計入營業額） · '}
+        {entry.payrollDistribution==='shared'?'平均分薪':entry.payrollDistribution==='individual'
+          ?'指定員工分薪：'+(payees.find(x=>x.id===entry.payrollRecipientId)?.name||'已指定員工')
+          :'不納入分薪'}
+       </small>}
        <footer><small>登錄時間 {timestamp(entry.createdAt)}</small>
         {entry.reference.startsWith('PAYROLL:')?
         <div className="accounting-paid-actions">
@@ -236,6 +269,38 @@ export default function AccountingManagement(){
      <label>金額（Gil） <input type="number" required min={1} max={1000000000} step={1}
       value={draft.amountGil||''} onChange={e=>setField('amountGil',Number(e.target.value))}
       placeholder="輸入實際收付金額"/></label>
+     {draft.kind==='income'&&<div className="accounting-payroll-setting">
+      <label className="accounting-payroll-checkbox">
+       <input type="checkbox" checked={draft.isAdditionalRevenue}
+        onChange={e=>changeRevenueIncluded(e.target.checked)}/>
+       <span>這筆是<strong>額外收入</strong>，納入館內營業額</span>
+      </label>
+      <small>一般手動收入請勾選；如果只是已完成茶宴訂單的實際收款，取消勾選以避免重複計算。</small>
+      {draft.isAdditionalRevenue&&<>
+       <label>這筆收入如何分薪？
+        <select value={draft.payrollDistribution}
+         onChange={e=>changePayDistribution(e.target.value as PayrollDistribution)}>
+         <option value="shared">平均分配給出勤員工（包含管理員）</option>
+         <option value="individual">全額納入指定員工薪水</option>
+         <option value="none">不納入員工分薪</option>
+        </select>
+       </label>
+       {draft.payrollDistribution==='individual'&&
+        <label>指定員工／管理員
+         <select value={draft.payrollRecipientId||''}
+          onChange={e=>setField('payrollRecipientId',e.target.value||null)} required>
+          <option value="">請選擇員工</option>
+          {payees.map(person=><option key={person.id} value={person.id}>
+           {person.name}{person.source==='owner'?'（婆婆／管理員）':''}
+          </option>)}
+         </select>
+        </label>}
+       {draft.payrollDistribution==='individual'&&payeeError&&
+        <small className="accounting-error" role="alert">{payeeError}</small>}
+       {draft.payrollDistribution==='individual'&&!payees.length&&!payeeError&&
+        <small>目前沒有可指派的員工，請先建立員工帳號或登記管理員出勤。</small>}
+      </>}
+     </div>}
      <label>備註 <textarea rows={3} maxLength={240} value={draft.description}
       onChange={e=>setField('description',e.target.value)} placeholder="例如：旅人餐費、員工薪酬、採買材料…"/></label>
      <label>參考單號（選填） <input maxLength={100} value={draft.reference}
@@ -247,7 +312,7 @@ export default function AccountingManagement(){
       <Save size={16}/>{busy?'儲存中…':editingId?'儲存修改':'新增收支'}
      </button>
     </div>
-    <p className="accounting-editor-hint">金額請輸入正整數 Gil；儲存後才會計入帳務統計。新增、修改與刪除均需「帳務管理」權限。</p>
+    <p className="accounting-editor-hint">手動收入會依「額外收入」勾選結果計入營業額；分薪可選平均、指定員工或不分配。請勿重複計入已完成訂單的收款。修改分薪設定後，未建立的分薪試算會重新計算；已發薪的清單不會自動變動。</p>
    </form>
   </div>
  </section>

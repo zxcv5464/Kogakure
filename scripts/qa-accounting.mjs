@@ -18,8 +18,9 @@ const files=[
  'src/lib/employee-accounts.ts',
  'scripts/prepare-pages.mjs',
  'supabase/migrations/20261115_22_accounting_period_sales.sql',
+ 'supabase/migrations/20261115_26_manual_income_payroll_distribution.sql',
 ]
-const [modules,admin,layout,orders,tea,dateSource,accounting,dashboard,css,sql,delegation,edge,employeeApi,pages,periodSql]=
+const [modules,admin,layout,orders,tea,dateSource,accounting,dashboard,css,sql,delegation,edge,employeeApi,pages,periodSql,incomeSql]=
  await Promise.all(files.map(path=>readFile(path,'utf8')))
 assert.ok(modules.includes("id: 'accounting'")&&modules.includes("title: '帳務管理'")&&
  modules.includes("status: 'available'")&&!modules.includes("title: '營業資訊'"),
@@ -50,6 +51,16 @@ assert.ok(dashboard.includes('accountingSummary')&&dashboard.includes('saveAccou
  dashboard.includes("entry.reference.startsWith('PAYROLL:')")&&
  dashboard.includes('input type="date"')&&dashboard.includes('input type="month"'),
  'Finance module must keep inline editing/deletion while showing paid payroll correction controls')
+assert.ok(accounting.includes("rpc('get_accounting_payroll_payees'")&&
+ dashboard.includes('payrollDistribution')&&dashboard.includes('payrollRecipientId')&&
+ dashboard.includes('額外收入')&&dashboard.includes('平均分配給出勤員工')&&
+ dashboard.includes('全額納入指定員工薪水')&&dashboard.includes('不納入員工分薪')&&
+ incomeSql.includes('accounting_manual_income_strategy_ck')&&
+ incomeSql.includes("a.is_additional_revenue=true")&&
+ incomeSql.includes("a.payroll_distribution='individual'")&&
+ incomeSql.includes('public.get_accounting_payroll_payees')&&
+ !incomeSql.includes("a.category<>'茶宴收入'"),
+ 'Manual income must be independently counted in business revenue and routed into shared, individual or no payroll')
 assert.ok(accounting.includes("rpc('get_accounting_period_sales'")&&
  dashboard.includes('fetchAccountingPeriodSales(period)')&&
  dashboard.includes('mergedAccountingSummary(entries,sales)')&&
@@ -133,7 +144,8 @@ try{
  })
  const ledger=await vite.ssrLoadModule('/src/lib/accounting.ts')
  const example={id:'abc',date:'2026-11-15',category:'茶宴收入',
-  kind:'income',amountGil:5000,description:'',reference:'=HYPERLINK("evil")',
+  kind:'income',amountGil:5000,isAdditionalRevenue:false,payrollDistribution:'none',payrollRecipientId:null,
+  description:'',reference:'=HYPERLINK("evil")',
   createdAt:'2026-11-15T12:00:00+08:00',updatedAt:'2026-11-15T12:00:00+08:00'}
  const expense={...example,id:'def',kind:'expense',amountGil:1200,category:'餐點材料'}
  const total=ledger.accountingSummary([example,expense])
@@ -143,7 +155,7 @@ try{
   completedGil:45000,otherIncome:0,ledgerCount:2,recordedReceipts:5000,
  },'Manual tea receipts must not duplicate completed tea sales')
  assert.deepEqual(ledger.mergedAccountingSummary(
-  [example,{...example,category:'湯浴收入',amountGil:3500},expense],
+  [example,{...example,category:'湯浴收入',amountGil:3500,isAdditionalRevenue:true,payrollDistribution:'shared'},expense],
   {completedCount:2,completedGil:45000},
  ),{
   income:48500,expense:1200,balance:47300,count:5,completedCount:2,
@@ -164,5 +176,5 @@ try{
  !ui.includes('匯出 CSV')&&ui.includes('單日')&&ui.includes('當週')&&ui.includes('月份')&&
  ui.includes('營業收入（試算）')&&ui.includes('完成訂單不代表已收款')&&
  !ui.includes('刪除收支紀錄'))
- console.log('PASS: inline journal deletion restored, separate audited paid-salary corrections, four period filters')
+ console.log('PASS: manual extra revenue counted, shared/personal/no payroll routing, inline journal and protected paid correction')
 }finally{await vite.close()}

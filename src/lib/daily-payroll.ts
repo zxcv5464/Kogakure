@@ -69,11 +69,9 @@ export async function fetchDailyPayrollAllocations(date:string):Promise<PayrollA
  }))
 }
 
-/** Completed orders and ledger receipts are intentionally separate.
- * Exclude manually logged tea income from the calculated turnover to avoid
- * counting the same tea banquet twice. */
+/** Count genuine manual additional revenue irrespective of its category. */
 export function sumNonTeaIncome(entries:AccountingEntry[]):number{
- return entries.filter(x=>x.kind==='income'&&x.category!=='茶宴收入')
+ return entries.filter(x=>x.kind==='income'&&x.isAdditionalRevenue)
   .reduce((s,x)=>s+x.amountGil,0)
 }
 export function sumRecordedReceipts(entries:AccountingEntry[]):number{
@@ -137,6 +135,8 @@ export type PayrollPeriodMode='day'|'week'|'month'
 export type PayrollOverlap={mode:PayrollPeriodMode;start:string;end:string}
 export type PeriodPayrollReport=DailyPayrollReport&{
  periodMode:PayrollPeriodMode;periodEnd:string;overlaps:PayrollOverlap[]
+ operatingTurnoverGil:number;sharedPoolGil:number;personalIncomeGil:number
+ excludedPayrollIncomeGil:number;previewShares:PayrollShare[]
 }
 export function payrollPeriodWindow(mode:PayrollPeriodMode,date:string):{start:string;end:string}{
  dateCheck(date)
@@ -182,12 +182,15 @@ export async function fetchPeriodPayrollReport(mode:PayrollPeriodMode,date:strin
   const key=item.period_mode+':'+item.pay_date
   found.set(key,{mode:item.period_mode,start:item.pay_date,end:item.period_end})
  }
+ const breakdown=calculateDirectedPayroll(sales.completedGil,ledger,roster)
  const manualOtherIncomeGil=sumNonTeaIncome(ledger)
- const revenueGil=sales.completedGil+manualOtherIncomeGil
- if(!Number.isSafeInteger(revenueGil))throw new Error('期間營業額超出可計算範圍')
+ const revenueGil=breakdown.distributableGil
  return {
   date:period.start,periodMode:mode,periodEnd:period.end,
   sales,manualOtherIncomeGil,manualReceiptGil:sumRecordedReceipts(ledger),revenueGil,
+  operatingTurnoverGil:breakdown.operatingTurnoverGil,sharedPoolGil:breakdown.sharedPoolGil,
+  personalIncomeGil:breakdown.personalIncomeGil,excludedPayrollIncomeGil:breakdown.excludedPayrollIncomeGil,
+  previewShares:breakdown.shares,
   roster,allocations,overlaps:[...found.values()].sort((a,b)=>a.start.localeCompare(b.start)),
  }
 }
@@ -278,4 +281,41 @@ export async function fetchPaidPayrollAudit(
   updatedGil:row.updated_gil===null?null:gil(row.updated_gil),
   reason:row.reason,createdAt:row.created_at,
  }))
+}
+
+/** Same distribution as private.create_period_payroll: share the completed
+ * orders and selected shared revenue, then credit each personal assignment
+ * exclusively to its chosen employee. */
+export function calculateDirectedPayroll(
+ completedTeaGil:number,entries:AccountingEntry[],roster:PayrollEmployee[]
+):{
+ shares:PayrollShare[];operatingTurnoverGil:number;sharedPoolGil:number
+ personalIncomeGil:number;excludedPayrollIncomeGil:number
+ distributableGil:number
+}{
+ if(!Number.isSafeInteger(completedTeaGil)||completedTeaGil<0)throw new Error('茶宴營業額無效')
+ const income=entries.filter(x=>x.kind==='income'&&x.isAdditionalRevenue)
+ const additional=income.reduce((total,x)=>total+x.amountGil,0)
+ const shared=income.filter(x=>x.payrollDistribution==='shared').reduce((sum,x)=>sum+x.amountGil,0)
+ const personal=income.filter(x=>x.payrollDistribution==='individual').reduce((sum,x)=>sum+x.amountGil,0)
+ const excluded=income.filter(x=>x.payrollDistribution==='none').reduce((sum,x)=>sum+x.amountGil,0)
+ const sharedPoolGil=completedTeaGil+shared
+ const preview=calculateEqualPayroll(sharedPoolGil,roster)
+ const individuals=new Map<string,number>()
+ for(const x of income){
+  if(x.payrollDistribution!=='individual')continue
+  if(!x.payrollRecipientId)throw new Error('個人收入未選擇員工')
+  individuals.set(x.payrollRecipientId,(individuals.get(x.payrollRecipientId)||0)+x.amountGil)
+ }
+ const unassigned=[...individuals.keys()].filter(id=>!preview.some(person=>person.id===id))
+ if(unassigned.length)throw new Error('個人分薪對象尚未列入本期名單，請重新選擇出勤或員工資料')
+ const shares=preview.map(person=>({
+  ...person,amountGil:person.amountGil+(individuals.get(person.id)||0),
+ }))
+ const distributableGil=sharedPoolGil+personal
+ const operatingTurnoverGil=completedTeaGil+additional
+ if(![distributableGil,operatingTurnoverGil].every(Number.isSafeInteger))
+  throw new Error('Gil 總額超出可計算範圍')
+ return {shares,operatingTurnoverGil,sharedPoolGil,
+  personalIncomeGil:personal,excludedPayrollIncomeGil:excluded,distributableGil}
 }

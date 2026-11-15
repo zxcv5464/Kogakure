@@ -3,9 +3,13 @@ import {supabase} from './supabase'
 import {shiftVenueDate,validVenueDate,validVenueMonth,venueMonthRange,venueWeekRange} from './taipei-date'
 
 export type AccountingKind='income'|'expense'
+export type PayrollDistribution='none'|'shared'|'individual'
+export type AccountingPayee={id:string;name:string;source:'owner'|'employee'}
 export type AccountingEntry={
  id:string;date:string;kind:AccountingKind;category:string;amountGil:number
- description:string;reference:string;createdAt:string;updatedAt:string
+ description:string;reference:string;isAdditionalRevenue:boolean
+ payrollDistribution:PayrollDistribution;payrollRecipientId:string|null
+ createdAt:string;updatedAt:string
 }
 export type AccountingInput=Omit<AccountingEntry,'id'|'createdAt'|'updatedAt'>
 export type AccountingPeriod={mode:'day'|'week'|'month'|'all';value:string}
@@ -18,6 +22,7 @@ export type AccountingOverview={
 type Row={
  id:string;entry_date:string;kind:AccountingKind;category:string
  amount_gil:number;description:string;reference:string
+ is_additional_revenue:boolean;payroll_distribution:PayrollDistribution;payroll_recipient_id:string|null
  created_at:string;updated_at:string
 }
 
@@ -33,12 +38,21 @@ export function validateAccountingInput(entry:AccountingInput):string|null{
   return 'Gil 金額需為 1～1,000,000,000 的整數'
  if(entry.description.length>240)return '備註最多 240 字'
  if(entry.reference.length>100)return '參考單號最多 100 字'
+ if(typeof entry.isAdditionalRevenue!=='boolean')return '請確認此收入是否為額外營業額'
+ if(!['none','shared','individual'].includes(entry.payrollDistribution))return '請選擇收入分薪方式'
+ if(entry.kind==='income'&&entry.isAdditionalRevenue&&entry.payrollDistribution==='individual'&&
+  !/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(entry.payrollRecipientId??''))
+  return '指定個別員工分薪時，請選擇有效員工'
+ if(entry.kind==='income'&&!entry.isAdditionalRevenue&&entry.payrollDistribution!=='none')
+  return '已計入茶宴訂單的收款不得再次分薪'
  return null
 }
 const rowToEntry=(row:Row):AccountingEntry=>({
  id:row.id,date:row.entry_date,kind:row.kind,category:row.category,
  amountGil:Number(row.amount_gil),description:row.description,
- reference:row.reference,createdAt:row.created_at,updatedAt:row.updated_at,
+ reference:row.reference,isAdditionalRevenue:row.is_additional_revenue,
+ payrollDistribution:row.payroll_distribution,payrollRecipientId:row.payroll_recipient_id,
+ createdAt:row.created_at,updatedAt:row.updated_at,
 })
 function scopedRows(period:AccountingPeriod){
  if((period.mode==='day'||period.mode==='week')&&!validVenueDate(period.value))throw new Error('日期格式不正確')
@@ -53,7 +67,7 @@ export async function fetchAccountingEntries(period:AccountingPeriod):Promise<Ac
  // the PostgREST maximum or whichever records loaded most recently.
  for(let offset=0;offset<10_000;offset+=pageSize){
   let request=db().from('accounting_entries')
-   .select('id,entry_date,kind,category,amount_gil,description,reference,created_at,updated_at')
+   .select('id,entry_date,kind,category,amount_gil,description,reference,is_additional_revenue,payroll_distribution,payroll_recipient_id,created_at,updated_at')
   if(period.mode==='day')request=request.eq('entry_date',period.value)
   if(month)request=request.gte('entry_date',month.start).lt('entry_date',month.end)
   const {data,error}=await request.order('entry_date',{ascending:false})
@@ -86,6 +100,10 @@ function payload(entry:AccountingInput){
   entry_date:entry.date,kind:entry.kind,category:entry.category.trim(),
   amount_gil:entry.amountGil,description:entry.description.trim(),
   reference:entry.reference.trim(),
+  is_additional_revenue:entry.kind==='income'&&entry.isAdditionalRevenue,
+  payroll_distribution:entry.kind==='income'&&entry.isAdditionalRevenue?entry.payrollDistribution:'none',
+  payroll_recipient_id:entry.kind==='income'&&entry.isAdditionalRevenue&&entry.payrollDistribution==='individual'
+   ?entry.payrollRecipientId:null,
  }
 }
 export async function saveAccountingEntry(entry:AccountingInput,id?:string):Promise<void>{
@@ -104,10 +122,11 @@ export function accountingSummary(rows:AccountingEntry[]){
  const expense=rows.filter(x=>x.kind==='expense').reduce((s,x)=>s+x.amountGil,0)
  return {income,expense,balance:income-expense,count:rows.length}
 }
-/** Same gross revenue definition as daily payroll. Completion is not payment. */
+/** Operating turnover includes completed orders plus independently entered manual income.
+ * Mark receipts for already-counted completed orders to avoid double counting. */
 export function mergedAccountingSummary(rows:AccountingEntry[],sales:AccountingSalesSummary):AccountingOverview{
  const journal=accountingSummary(rows)
- const otherIncome=rows.filter(x=>x.kind==='income'&&x.category!=='茶宴收入')
+ const otherIncome=rows.filter(x=>x.kind==='income'&&x.isAdditionalRevenue)
   .reduce((sum,x)=>sum+x.amountGil,0)
  const income=sales.completedGil+otherIncome
  if(!Number.isSafeInteger(income)||!Number.isSafeInteger(income-journal.expense))
@@ -131,4 +150,14 @@ export function accountingCsv(rows:AccountingEntry[]):string{
   x.description,x.reference,x.createdAt,
  ].map(csvCell).join(','))
  return '\ufeff'+[headers.map(csvCell).join(','),...lines].join('\r\n')
+}
+
+/** Payees are employee accounts and known owner/manager accounts, never guests. */
+export async function fetchAccountingPayees():Promise<AccountingPayee[]>{
+ const {data,error}=await db().rpc('get_accounting_payroll_payees')
+ if(error)throw new Error(error.message||'無法讀取員工薪資名單')
+ type PayeeRow={employee_id:string;employee_name:string;member_type:'owner'|'employee'}
+ return ((data||[]) as PayeeRow[]).map(p=>({
+  id:p.employee_id,name:p.employee_name,source:p.member_type==='owner'?'owner' as const:'employee' as const,
+ }))
 }
