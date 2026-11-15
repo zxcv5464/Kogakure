@@ -130,26 +130,27 @@
 .dialog-overlay .detail-bio,
 .dialog-overlay .dialog-content blockquote { overflow-wrap: anywhere; }
 .dialog-scroll-hint {
- position: relative;
- display: inline-flex;
- align-items: center;
- justify-content: center;
- gap: 9px;
- min-height: 39px;
- padding: 8px 15px;
- border: 1px solid rgba(216,181,129,.44);
- border-radius: 999px;
- background: rgba(25,23,32,.96);
- color: #e5cdab;
- box-shadow: 0 5px 24px rgba(0,0,0,.25);
- font-size: .77rem;
- line-height: 1.2;
- letter-spacing: .05em;
+ display: grid;
+ place-items: center;
+ width: 40px;
+ height: 40px;
+ min-height: 40px;
+ padding: 0;
+ border: 1px solid rgba(216,181,129,.35);
+ border-radius: 50%;
+ background: rgba(25,23,32,.93);
+ color: #dfbc85;
+ cursor: pointer;
+ box-shadow: 0 5px 24px rgba(0,0,0,.18);
 }
 .dialog-scroll-hint:hover { background: #302b34; color: #fff0d5; }
-.dialog-scroll-end {
- color: rgba(216,181,129,.42);
- font-family: Georgia,serif;
- font-size: .85rem;
- line-height: 1;
+.dialog-scroll-hint svg{animation:staffScrollArrow 2.2s ease-in-out infinite}
+.dialog-scroll-hint:focus-visible{outline:2px solid #d8b581;outline-offset:3px}
+@keyframes staffScrollArrow{
+ 0%,100%{transform:translateY(-2px);opacity:.65}
+ 50%{transform:translateY(2px);opacity:1}
+}
+@media(prefers-reduced-motion:reduce){.dialog-scroll-hint svg{animation:none}}
+@media(max-width:570px){
+ .dialog-scroll-footer.is-complete{height:0;padding:0;border:0}
 }

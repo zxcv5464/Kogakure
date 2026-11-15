@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Plus, X } from 'lucide-react'
 import { getStaff } from '../../lib/staff'
+import ScrollCue from '../../components/ScrollCue'
 import { createAdminBooking, describeBookingError,staffAcceptsPlan,staffCanJoinBooking } from '../../lib/bookings'
 import type { BookingPlan } from '../../lib/bookings'
 import type { Staff } from '../../types'
@@ -104,6 +105,7 @@ export default function AdminBookingCreate({plans,close,onCreated}:Props){
      <button type="submit" className="primary" disabled={busy||loading||!plans.length||!people.length}><Plus size={16}/>{busy?'新增中…':'新增待審核申請'}</button>
     </div>
    </form>
+   <ScrollCue/>
   </div>
  </div>
 }

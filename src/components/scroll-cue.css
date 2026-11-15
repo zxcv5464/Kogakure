@@ -1,0 +1,21 @@
+/* A single, unobtrusive gold scroll indicator shared across public and
+   administrative panels. Preserve wheel, touch, keyboard and smooth scrolling. */
+.shared-scroll-cue{display:none;align-items:center;justify-content:center;flex:0 0 auto;
+ width:100%;height:30px;min-height:30px;padding:0;border:0;border-radius:4px;
+ color:#d7b485;background:transparent;cursor:pointer;z-index:8}
+.shared-scroll-cue.is-active{display:flex}
+.shared-scroll-cue.is-sticky{position:sticky;bottom:0;
+ background:linear-gradient(0deg,rgba(22,20,28,.92),rgba(22,20,28,.35) 78%,transparent)}
+.shared-scroll-cue.is-below{height:27px;min-height:27px}
+.shared-scroll-cue svg{display:block;animation:sharedScrollFloat 2.1s ease-in-out infinite}
+.shared-scroll-cue:hover{color:#f7d8a9}
+.shared-scroll-cue:focus-visible{outline:2px solid #ddb989;outline-offset:-2px}
+@keyframes sharedScrollFloat{0%,100%{transform:translateY(-2px);opacity:.65}50%{transform:translateY(2px);opacity:1}}
+@media(prefers-reduced-motion:reduce){.shared-scroll-cue svg{animation:none}}
+/* Hide native scrollbars in both applications and their portal dialogs,
+ * including the admin's prior thin scrollbars and long text editors.
+ * Scrolling via mouse wheel, trackpad, touch and keyboard remains native. */
+html,body,body *{scrollbar-width:none!important;-ms-overflow-style:none!important}
+html::-webkit-scrollbar,body::-webkit-scrollbar,body *::-webkit-scrollbar{
+ display:none!important;width:0!important;height:0!important;
+}

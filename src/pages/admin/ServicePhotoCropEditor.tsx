@@ -1,6 +1,7 @@
 import {useEffect,useRef,useState} from 'react'
 import type {PointerEvent} from 'react'
 import {createPortal} from 'react-dom'
+import ScrollCue from '../../components/ScrollCue'
 import {Check,RotateCcw,X} from 'lucide-react'
 import {
  DEFAULT_SERVICE_CROP,normalizeServiceCrop,servicePhotoFrameStyle,
@@ -158,6 +159,7 @@ export default function ServicePhotoCropEditor({
     </div>
    </div>
    <p className="service-admin-crop-save-note">套用後仍需返回編輯頁面點選「儲存服務」，才會正式更新前台照片範圍。</p>
+   <ScrollCue/>
   </section>
  </div>,document.body)
 }

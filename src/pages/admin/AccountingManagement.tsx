@@ -9,6 +9,7 @@ import type {AccountingEntry,AccountingInput,AccountingKind,AccountingPeriod,Acc
 import {validVenueDate,validVenueMonth,venueDate,venueWeekRange,shiftVenueDate} from '../../lib/taipei-date'
 import {useAdminEditGuard} from './AdminEditGuard'
 import DailyPayrollSection from './DailyPayrollSection'
+import ScrollCue from '../../components/ScrollCue'
 import PaidPayrollRecordEditor from './PaidPayrollRecordEditor'
 import {parsePayrollReference} from '../../lib/daily-payroll'
 import './accounting-management.css'
@@ -251,6 +252,7 @@ export default function AccountingManagement(){
        </footer>
       </article>)}
      </div>}
+    {!loading&&<ScrollCue target=".accounting-entry-list"/>}
    </div>
    <form className="accounting-editor" ref={editor} onSubmit={e=>void save(e)}>
     <div className="accounting-editor-heading"><div><p>KOGAKURE · JOURNAL</p><h2>{editingId?'修改收支紀錄':'新增收支紀錄'}</h2></div>

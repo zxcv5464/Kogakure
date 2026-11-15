@@ -5,6 +5,7 @@ import {ArrowUpRight,CheckCircle2,FileText,Pin,Plus,RefreshCw,Save,Trash2} from 
 import {deleteAnnouncement,fetchAdminAnnouncements,saveAnnouncement,validateAnnouncement} from '../../lib/announcements'
 import type {Announcement,AnnouncementCategory} from '../../lib/announcements'
 import {useAdminEditGuard} from './AdminEditGuard'
+import ScrollCue from '../../components/ScrollCue'
 import './announcement-management.css'
 
 const kinds:Record<AnnouncementCategory,string>={notice:'館內公告',news:'最新消息'}
@@ -106,6 +107,7 @@ export default function AnnouncementManagement(){
        <small>{printed(item.publishedAt||item.updatedAt)}</small>
       </button>)}
      </div>}
+    {!loading&&rows.length>0&&<ScrollCue target=".announcement-admin-list"/>}
    </section>
    <section className="announcement-admin-editor" aria-label="公告編輯">
     {!draft?<div className="announcement-admin-empty-editor">

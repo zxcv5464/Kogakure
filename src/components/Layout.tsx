@@ -4,6 +4,7 @@ import { Home, UsersRound, CalendarDays, UtensilsCrossed, Grid2X2, X, AtSign, Ar
 import { asset } from '../lib/paths'
 import { prefetchStaffPage, prefetchShiftsPage, prefetchServicesPage, prefetchMenuPage, prefetchBookingPage } from '../lib/prefetch'
 import SiteBgm from './SiteBgm'
+import ScrollCue from './ScrollCue'
 
 const DISCORD_INVITE='https://discord.gg/f34DSnUgGV'
 
@@ -125,6 +126,7 @@ export default function Layout({children,onRegisterBgm}:{children:React.ReactNod
     {mobileExtra.map(({to,label,icon:Icon},index)=><NavLink key={to} to={to} ref={index===0?firstExtra:undefined} className={({isActive})=>'mobile-extra-link'+(isActive?' active':'')} onMouseEnter={to==='/services'?prefetchServicesPage:to==='/menu'?prefetchMenuPage:to==='/booking'?prefetchBookingPage:undefined} onFocus={to==='/services'?prefetchServicesPage:to==='/menu'?prefetchMenuPage:to==='/booking'?prefetchBookingPage:undefined} onTouchStart={to==='/services'?prefetchServicesPage:to==='/menu'?prefetchMenuPage:to==='/booking'?prefetchBookingPage:undefined} onPointerDown={to==='/services'?prefetchServicesPage:to==='/menu'?prefetchMenuPage:to==='/booking'?prefetchBookingPage:undefined} onClick={()=>setMoreOpen(false)}><Icon size={21} strokeWidth={1.8}/><span>{label}</span><ArrowUpRight size={16}/></NavLink>)}
     <a className="mobile-extra-link mobile-social-link" href="https://www.threads.com/@kogakure_ffxiv" target="_blank" rel="noopener noreferrer" onClick={()=>setMoreOpen(false)}><AtSign size={21} strokeWidth={1.8}/><span>官方 Threads</span><ArrowUpRight size={16}/></a>
     <a className="mobile-extra-link mobile-social-link" href={DISCORD_INVITE} target="_blank" rel="noopener noreferrer" onClick={()=>setMoreOpen(false)}><DiscordMark size={21}/><span>官方 Discord</span><ArrowUpRight size={16}/></a>
+    <ScrollCue/>
    </nav>
   </>}
   <nav className="mobile-bottom-nav" aria-label="手機主要導覽">

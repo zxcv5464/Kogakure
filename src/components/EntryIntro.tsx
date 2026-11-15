@@ -1,6 +1,7 @@
 import {useEffect,useRef,useState} from 'react'
 import {ArrowRight} from 'lucide-react'
 import {asset} from '../lib/paths'
+import ScrollCue from './ScrollCue'
 import './entry-intro.css'
 
 type Phase='preparing'|'enter'|'ready'|'clear'|'reveal'|'done'
@@ -116,5 +117,6 @@ export default function EntryIntro({onEnter,onReveal}:{onEnter?:()=>void;onRevea
     disabled={phase!=='ready'} onClick={enterInn}>進入狐隱<ArrowRight size={17} strokeWidth={1.7}/></button>
    <small className="intro-music-note">入館後可於頁首隨時關閉或重新播放 BGM</small>
   </div>
+  <ScrollCue/>
  </div>
 }

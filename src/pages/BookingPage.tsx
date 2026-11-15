@@ -6,6 +6,7 @@ import { resolveBookingNominees } from '../lib/booking-selection'
 import type { BookingNominee } from '../lib/booking-selection'
 import { BOOKING_PAGE_READY_EVENT } from '../lib/route-events'
 import BookingLoading from '../components/BookingLoading'
+import ScrollCue from '../components/ScrollCue'
 import { getCachedPublicStaff,loadPublicStaff } from '../lib/public-staff'
 import {loadPublicBookingPlans,loadPublicStaffPresence,peekPublicBookingPlans,peekPublicStaffPresence} from '../lib/public-booking-data'
 import { getStaff } from '../lib/staff'
@@ -255,6 +256,7 @@ export default function BookingPage(){
      </button>
      <p className="booking-disclaimer">本表單僅供 FFXIV RP 預約，非真實商業交易。送出後須待館方接取，並非自動確認。</p>
     </form>}
+    <ScrollCue/>
    </div>
   </div>}
  </section>

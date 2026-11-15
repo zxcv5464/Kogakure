@@ -6,6 +6,7 @@ import {useRollingShiftWeeks,shiftDateLabel,SHIFT_WEEKDAYS} from '../../lib/shif
 import {fetchOwnPreferredShiftName,fetchShifts,listActiveShiftEmployees,markOwnerShiftAttendance,markShiftAttendance,renameOwnShiftAttendance,saveOwnPreferredShiftName,setShiftOpening,unmarkShiftAttendance} from '../../lib/shifts'
 import type {ShiftAttendance,ShiftCalendarData,ShiftEmployee,ShiftOpenDay} from '../../lib/shifts'
 import {permitted} from '../../lib/employee-accounts'
+import ScrollCue from '../../components/ScrollCue'
 import type {BackofficeAccess} from '../../lib/employee-accounts'
 import './shift-management.css'
 type ShiftKind='open'|'closed'
@@ -328,6 +329,7 @@ export default function ShiftManagement({access}:{access:BackofficeAccess}){
      })}
     </div>
    </div>
+   <ScrollCue target=".shift-calendar-scroll" direction="right"/>
   </div>}
   {selectedDate&&!loading&&!error&&<div className="shift-admin-modal-backdrop"
    onMouseDown={event=>{if(event.target===event.currentTarget)closeDay()}}>
@@ -351,6 +353,7 @@ export default function ShiftManagement({access}:{access:BackofficeAccess}){
       employeeShiftName={employeeShiftName} busy={busy}
       onOpening={saveOpening} onMark={mark} onMarkOwn={markOwn}
       onRename={rename} onRemove={remove}/>
+     <ScrollCue/>
     </div>
     <div className="shift-admin-modal-footer">
      <button type="button" onClick={closeDay} disabled={busy}>完成・關閉</button>

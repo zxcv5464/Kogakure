@@ -7,6 +7,7 @@ import {
 } from '../../lib/menu-catalog'
 import type { MenuCatalog, MenuCategory, MenuItem } from '../../lib/menu-catalog'
 import { useAdminEditGuard } from './AdminEditGuard'
+import ScrollCue from '../../components/ScrollCue'
 import './menu-management.css'
 
 type Selection =
@@ -179,6 +180,7 @@ export default function MenuManagement() {
      </button>)}
      {visible.length===0&&<p className="menu-admin-no-items">沒有符合的項目。</p>}
     </div>
+    <ScrollCue target=".menu-admin-list"/>
    </aside>
    <div className="menu-admin-editor" ref={editorRef}>
     {!selection ? <div className="menu-admin-editor-empty">請從左側選擇御品，或建立新的分類與菜單內容。</div> :

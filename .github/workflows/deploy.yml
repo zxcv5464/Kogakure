@@ -68,6 +68,10 @@ jobs:
         env:
           VITE_OFFLINE_PREVIEW: 'true'
         run: node scripts/qa-announcements.mjs
+      - name: Verify all scroll surfaces use unobtrusive directional hints
+        env:
+          VITE_OFFLINE_PREVIEW: 'true'
+        run: node scripts/qa-scroll-cues.mjs
       - name: Verify all delegable backoffice permissions and privilege-escalation guards
         env:
           VITE_OFFLINE_PREVIEW: 'true'

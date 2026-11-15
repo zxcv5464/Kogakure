@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { X, ArrowUpRight, ArrowDown, Flower2, MoonStar } from 'lucide-react'
+import { X, ArrowUpRight, ChevronDown, Flower2, MoonStar } from 'lucide-react'
 import type { CSSProperties } from 'react'
 import type { Staff } from '../types'
 import { safeExternalUrl } from '../lib/url'
@@ -53,7 +53,11 @@ export default function StaffDialog({staff,onClose}:{staff:Staff;onClose:()=>voi
    </div>
   </section>
    <div className={'dialog-scroll-footer' + (hasMore ? ' has-more' : ' is-complete')}>
-    {hasMore ? <button className="dialog-scroll-hint" type="button" onClick={()=>{const area=scrollingElement();area?.scrollBy({top:Math.max(260,area.clientHeight*.58),behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'})}}><span>繼續閱讀</span><ArrowDown size={16}/></button> : <span className="dialog-scroll-end" aria-hidden="true">✦</span>}
+    {hasMore&&<button className="dialog-scroll-hint" type="button"
+     aria-label="向下閱讀更多狐姬介紹" title="向下閱讀更多"
+     onClick={()=>{const area=scrollingElement();area?.scrollBy({top:Math.max(260,area.clientHeight*.58),behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'})}}>
+     <ChevronDown size={21} strokeWidth={1.65} aria-hidden="true"/>
+    </button>}
    </div>
   </div>
  </div>

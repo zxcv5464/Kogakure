@@ -10,6 +10,7 @@ import { invalidatePublicStaffCache } from '../../lib/public-staff'
 import { safeExternalUrl } from '../../lib/url'
 import { removeUploadedStaffImages, uploadStaffCrop, uploadStaffImage, validateStaffImage } from '../../lib/upload'
 import StaffPhotoCrop from '../../components/StaffPhotoCrop'
+import ScrollCue from '../../components/ScrollCue'
 import type { StaffCrop } from '../../lib/staff-crop'
 import { useAdminEditGuard } from './AdminEditGuard'
 import './staff-management.css'
@@ -375,6 +376,7 @@ export default function StaffManagement() {
      {!loading && rows.length > 0 && visible.length === 0 && <p className="roster-empty">沒有符合條件的員工，請調整搜尋或篩選。</p>}
      {loading && <p className="roster-empty" role="status">讀取名帖列表…</p>}
     </div>
+    <ScrollCue target=".staff-roster-list"/>
    </aside>
 
    <div ref={editorRef} className={'admin-editor staff-admin-editor' + (busy ? ' is-busy' : '')}>

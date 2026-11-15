@@ -11,6 +11,7 @@ import { getStaff } from '../../lib/staff'
 import { invalidatePublicStaffCache } from '../../lib/public-staff'
 import { useAdminEditGuard } from './AdminEditGuard'
 import AdminBookingCreate from './AdminBookingCreate'
+import ScrollCue from '../../components/ScrollCue'
 import './booking-management.css'
 
 const statusNames:Record<BookingStatus,string>={
@@ -360,6 +361,7 @@ export default function BookingManagement(){
      {selectedBooking.status==='pending'&&<><button type="button" className="primary" disabled={busy} onClick={()=>void act(selectedBooking,'accept')}>接取並開始計時</button><button type="button" className="danger" disabled={busy} onClick={()=>void act(selectedBooking,'reject')}>婉拒</button></>}
      {selectedBooking.status==='accepted'&&<button type="button" className="primary" disabled={busy} onClick={()=>void act(selectedBooking,'complete')}>結束服務並釋放狐姬</button>}
     </div>
+    <ScrollCue/>
    </div>
   </div>}
  </section>
