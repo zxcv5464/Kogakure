@@ -1,6 +1,6 @@
 import {useCallback,useEffect,useRef,useState} from 'react'
 import {Link} from 'react-router-dom'
-import {CalendarDays,CheckCircle2,ExternalLink,RefreshCw,Save,UsersRound,AlertCircle,X} from 'lucide-react'
+import {CalendarDays,CheckCircle2,ExternalLink,RefreshCw,Save,UsersRound,AlertCircle,X,Clock3,ChevronRight} from 'lucide-react'
 import {supabase} from '../../lib/supabase'
 import {useRollingShiftWeeks,shiftDateLabel,SHIFT_WEEKDAYS} from '../../lib/shift-calendar'
 import {fetchOwnPreferredShiftName,fetchShifts,listActiveShiftEmployees,markOwnerShiftAttendance,markShiftAttendance,renameOwnShiftAttendance,saveOwnPreferredShiftName,setShiftOpening,unmarkShiftAttendance} from '../../lib/shifts'
@@ -85,6 +85,10 @@ export default function ShiftManagement({access}:{access:BackofficeAccess}){
  const {today,weeks}=useRollingShiftWeeks()
  const start=weeks[0].start,end=weeks[3].end
  const [calendar,setCalendar]=useState<ShiftCalendarData>(empty)
+ const [selectedDate,setSelectedDate]=useState<string|null>(null)
+ const triggerRef=useRef<HTMLButtonElement|null>(null)
+ const modalRef=useRef<HTMLElement|null>(null)
+ const closeRef=useRef<HTMLButtonElement|null>(null)
  const [people,setPeople]=useState<ShiftEmployee[]>([])
  const [selfId,setSelfId]=useState('')
  const [employeeShiftName,setEmployeeShiftName]=useState(()=>access.kind==='employee'?access.displayName:'')
@@ -99,6 +103,41 @@ export default function ShiftManagement({access}:{access:BackofficeAccess}){
  const [busy,setBusy]=useState(false)
  const busyRef=useRef(false)
  const owner=access.kind==='owner'
+ function showDay(date:string,button:HTMLButtonElement){
+  triggerRef.current=button
+  setSelectedDate(date)
+ }
+ function closeDay(){
+  if(busyRef.current)return
+  setSelectedDate(null)
+  triggerRef.current?.focus()
+ }
+ useEffect(()=>{
+  if(!selectedDate)return
+  const oldOverflow=document.body.style.overflow
+  document.body.style.overflow='hidden'
+  const frame=window.requestAnimationFrame(()=>closeRef.current?.focus())
+  function onKey(event:KeyboardEvent){
+   if(event.key==='Escape'&&!busyRef.current){event.preventDefault();closeDay()}
+   if(event.key!=='Tab')return
+   const controls=modalRef.current?.querySelectorAll<HTMLElement>(
+    'button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),a[href]'
+   )
+   if(!controls?.length)return
+   const first=controls[0],last=controls[controls.length-1]
+   if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus()}
+   else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus()}
+  }
+  document.addEventListener('keydown',onKey)
+  return()=>{
+   window.cancelAnimationFrame(frame)
+   document.removeEventListener('keydown',onKey)
+   document.body.style.overflow=oldOverflow
+  }
+ },[selectedDate])
+ useEffect(()=>{
+  if(selectedDate&&(selectedDate<start||selectedDate>end))setSelectedDate(null)
+ },[selectedDate,start,end])
  const reload=useCallback(async()=>{
   const [data,accounts]=await Promise.all([fetchShifts(start,end),owner?listActiveShiftEmployees():Promise.resolve([])])
   setCalendar(data)
@@ -238,15 +277,80 @@ export default function ShiftManagement({access}:{access:BackofficeAccess}){
    {notice.error?<AlertCircle size={18}/>:<CheckCircle2 size={18}/>} {notice.message}</p>}
   {error&&<p className="shift-admin-message is-error" role="alert">{error}</p>}
   {loading&&<p className="shift-admin-message" role="status">正在載入四週出勤表…</p>}
-  {!loading&&!error&&<div className="shift-admin-weeks">
-   {weeks.map((week,weekIndex)=><section className="shift-admin-week" key={week.start}>
-    <div className="shift-admin-week-head"><span>WEEK {String(weekIndex+1).padStart(2,'0')}</span>
-     <h2>{shiftDateLabel(week.start)} — {shiftDateLabel(week.end)}</h2></div>
-    <div className="shift-admin-day-list">{week.days.map((date,i)=><ShiftDayEditor key={date}
-     date={date} weekday={SHIFT_WEEKDAYS[i]} today={today} day={openings.get(date)}
-     staff={byDate.get(date)||[]} people={people} access={access} selfId={selfId} ownerName={ownerName} employeeShiftName={employeeShiftName}
-     busy={busy} onOpening={saveOpening} onMark={mark} onMarkOwn={markOwn} onRename={rename} onRemove={remove}/>)}</div>
-   </section>)}
+  {!loading&&!error&&<div className="shift-calendar-container">
+   <div className="shift-calendar-heading">
+    <div><p>四週排班總覽</p><h2>{shiftDateLabel(start)} — {shiftDateLabel(end)}</h2></div>
+    <span>選取日期以查看與修改當日安排</span>
+   </div>
+   <div className="shift-calendar-legend" aria-label="營業狀態說明">
+    <span><i className="is-open"/>營業</span>
+    <span><i className="is-closed"/>休館</span>
+    <span><i className="is-unannounced"/>未公告</span>
+    <span><i className="is-today"/>今日</span>
+   </div>
+   <p className="shift-calendar-scroll-hint">手機可左右滑動月曆查看完整星期；點選任一日期編輯</p>
+   <div className="shift-calendar-scroll" role="region" aria-label="四週值班月曆" tabIndex={0}>
+    <div className="shift-calendar-grid">
+     {SHIFT_WEEKDAYS.map(day=><div key={day} className="shift-calendar-weekday">週{day}</div>)}
+     {weeks.flatMap(week=>week.days).map((date,index)=>{
+      const day=openings.get(date)
+      const staff=byDate.get(date)||[]
+      const state:ShiftKind=!day?'unannounced':day.open?'open':'closed'
+      const visibleStaff=day?.open?staff:[]
+      const month=Number(date.slice(5,7)),dayNumber=Number(date.slice(8,10))
+      const isToday=date===today
+      return <button type="button" key={date}
+       className={'shift-calendar-cell is-'+state+(isToday?' is-today':'')+(date<today?' is-past':'')}
+       aria-label={date+' 週'+SHIFT_WEEKDAYS[index%7]+'，'+(state==='open'?'營業':state==='closed'?'休館':'未公告')+
+        (state==='open'?'，出勤'+visibleStaff.length+'位':'')+'，開啟當日安排'}
+       aria-haspopup="dialog" aria-expanded={selectedDate===date}
+       onClick={event=>showDay(date,event.currentTarget)}>
+       <span className="shift-calendar-cell-top">
+        <span className="shift-calendar-date"><small>{month}月</small><strong>{dayNumber}</strong></span>
+        {isToday&&<span className="shift-calendar-today">今日</span>}
+       </span>
+       <span className={'shift-calendar-status is-'+state}>{state==='open'?'營業':state==='closed'?'休館':'未公告'}</span>
+       {state==='open'?<span className="shift-calendar-summary">
+        {day?.hours&&<span className="shift-calendar-time"><Clock3 size={12}/>{day.hours}</span>}
+        <span className="shift-calendar-count"><UsersRound size={13}/>{visibleStaff.length} 位出勤</span>
+        {visibleStaff.length>0&&<span className="shift-calendar-names">
+         {visibleStaff.slice(0,2).map(person=><span key={person.source+person.employeeId}>{person.name}</span>)}
+         {visibleStaff.length>2&&<span>另有 {visibleStaff.length-2} 位</span>}
+        </span>}
+       </span>:<span className="shift-calendar-empty">{state==='closed'?'當日休館':'尚未設定開店日'}</span>}
+       <span className="shift-calendar-edit"><span>查看／安排</span><ChevronRight size={14}/></span>
+      </button>
+     })}
+    </div>
+   </div>
+  </div>}
+  {selectedDate&&!loading&&!error&&<div className="shift-admin-modal-backdrop"
+   onMouseDown={event=>{if(event.target===event.currentTarget)closeDay()}}>
+   <section className="shift-admin-modal" ref={modalRef} role="dialog" aria-modal="true"
+    aria-labelledby="shift-day-modal-heading">
+    <div className="shift-admin-modal-heading">
+     <div><p>狐隱 KOGAKURE · 值班安排</p>
+      <h2 id="shift-day-modal-heading">{selectedDate.replace(/-/g,' / ')} · 週{SHIFT_WEEKDAYS[(weeks.flatMap(week=>week.days).indexOf(selectedDate))%7]}</h2>
+      <span>{owner?'調整當日營業及出勤人員':'查看營業狀態並登記自己的出勤'}</span>
+     </div>
+     <button type="button" ref={closeRef} className="shift-admin-modal-close"
+      onClick={closeDay} disabled={busy} aria-label="關閉當日值班安排"><X size={21}/></button>
+    </div>
+    <div className="shift-admin-modal-body">
+     {notice&&<p className={'shift-admin-message'+(notice.error?' is-error':'')} role={notice.error?'alert':'status'}>
+      {notice.error?<AlertCircle size={18}/>:<CheckCircle2 size={18}/>} {notice.message}</p>}
+     <ShiftDayEditor key={selectedDate} date={selectedDate}
+      weekday={SHIFT_WEEKDAYS[weeks.flatMap(week=>week.days).indexOf(selectedDate)%7]}
+      today={today} day={openings.get(selectedDate)} staff={byDate.get(selectedDate)||[]}
+      people={people} access={access} selfId={selfId} ownerName={ownerName}
+      employeeShiftName={employeeShiftName} busy={busy}
+      onOpening={saveOpening} onMark={mark} onMarkOwn={markOwn}
+      onRename={rename} onRemove={remove}/>
+    </div>
+    <div className="shift-admin-modal-footer">
+     <button type="button" onClick={closeDay} disabled={busy}>完成・關閉</button>
+    </div>
+   </section>
   </div>}
   <p className="shift-admin-help">尚未公告的日期不代表營業；只有管理員設定「營業」的日子才可登記出勤。員工與正式管理員均可使用自訂出勤顯示名稱。名稱不影響帳號權限、登入名稱或密碼。</p>
  </section>
