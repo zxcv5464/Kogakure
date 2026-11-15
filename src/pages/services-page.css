@@ -207,7 +207,11 @@
  line-height: 1.62;
  font-weight: 600;
  letter-spacing: .1em;
+ text-wrap: balance;
 }
+/* Each meaningful clause remains intact; short screens wrap after the comma,
+   e.g.「循狐火，」and「探尋心中之願」instead of orphaning 「願」. */
+.services-title-clause{display:inline-block;white-space:nowrap;max-width:100%}
 .services-quote {
  margin: 0;
  color: #dcc5a3;
