@@ -49,6 +49,7 @@
 .accounting-entry footer button{display:flex;align-items:center;gap:5px;padding:7px 9px;border:1px solid rgba(221,183,125,.3);border-radius:4px;color:#ddbf98;background:rgba(40,33,47,.7);font-size:.74rem}
 .accounting-entry footer button.is-danger{border-color:rgba(232,123,125,.36);color:#eeb1a8}
 .accounting-entry footer button:disabled{opacity:.4;cursor:not-allowed}
+.accounting-payroll-locked{display:inline-flex;gap:6px;align-items:center;color:#bad6b6;font-size:.74rem}
 .accounting-editor{position:sticky;top:18px}
 .accounting-editor-heading{display:flex;align-items:start;justify-content:space-between;gap:12px;margin-bottom:17px}
 .accounting-editor-heading p{font:.7rem Georgia,serif;letter-spacing:.12em;color:#bfa17f;margin:0 0 7px}
