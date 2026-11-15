@@ -223,7 +223,7 @@ export default function ShiftManagement({access}:{access:BackofficeAccess}){
    <small>管理員安排新班次會使用已儲存的常用出勤名稱（不是帳號名稱）。自助報班會同步儲存常用名稱；已存在的班次不會自動改名，請在該日期點「儲存我的出勤名稱」。</small>
    <button type="button" className="shift-admin-save-preference" disabled={busy||!employeeShiftName.trim()||employeeShiftName.trim().length>100||employeeShiftName.trim()===savedEmployeeShiftName}
     onClick={()=>void savePreferredName()}><Save size={15}/>儲存常用出勤名稱</button>
-  </div>
+  </div>}
   {notice&&<p className={'shift-admin-message'+(notice.error?' is-error':'')} role={notice.error?'alert':'status'}>
    {notice.error?<AlertCircle size={18}/>:<CheckCircle2 size={18}/>} {notice.message}</p>}
   {error&&<p className="shift-admin-message is-error" role="alert">{error}</p>}
