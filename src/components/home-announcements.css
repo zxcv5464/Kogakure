@@ -52,4 +52,4 @@
  .home-news-entry strong{font-size:.76rem}
  .home-news-dialog-shell{max-height:83dvh}
 }
-@media(prefers-reduced-motion:reduce){.home-news *,.home-news-dialog{scroll-behavior:auto}.home-news-scroll-cue svg,.home-news-dialog-scroll-cue svg{animation:none}}
+@media(prefers-reduced-motion:reduce){.home-news *,.home-news-dialog{scroll-behavior:auto}.home-news-scroll-cue svg{animation:none}.home-news-dialog-scroll-cue svg{animation:none}}
