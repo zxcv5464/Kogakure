@@ -42,6 +42,20 @@ assert.ok(baseStyles.includes('select,textarea):focus')&&
  !baseStyles.includes('#94d7cc')&&
  baseStyles.includes('button:focus-visible,a:focus-visible'),
  'Text inputs, selects and textareas must not show the browser blue focus border')
+assert.ok(board.includes('canScrollDown')&&
+ board.includes('scrollHeight-list.clientHeight-list.scrollTop>2')&&
+ board.includes('onScroll={event=>')&&
+ board.includes('scrollToMore')&&
+ board.includes('<ChevronDown size={18}')&&
+ board.includes('aria-label="向下捲動查看更多消息"')&&
+ board.includes('list.scrollTop=0')&&
+ !board.includes('home-news-scroll-note')&&
+ boardStyles.includes('scrollbar-width:none')&&
+ boardStyles.includes('.home-news-list::-webkit-scrollbar{display:none')&&
+ boardStyles.includes('.home-news-scroll-cue')&&
+ boardStyles.includes('@keyframes homeNewsArrow')&&
+ boardStyles.includes('.home-news-scroll-cue svg{animation:none}'),
+ 'Notice board should hide its scrollbar, show a downward arrow only while overflow remains, and keep touch/keyboard scrolling')
 assert.ok(boardStyles.includes('.home-news')&&boardStyles.includes('.home-news-dialog')&&
  boardStyles.includes('@media(max-width:570px)')&&homeStyles.includes('.home-news-list'),
  'Responsive board must be part of homepage composition')

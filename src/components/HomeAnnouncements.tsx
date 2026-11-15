@@ -1,6 +1,6 @@
-import {useEffect,useMemo,useState} from 'react'
+import {useEffect,useMemo,useRef,useState} from 'react'
 import {createPortal} from 'react-dom'
-import {ChevronRight,Pin,X} from 'lucide-react'
+import {ChevronDown,ChevronRight,Pin,X} from 'lucide-react'
 import {configured} from '../lib/config'
 import {fetchPublicAnnouncements} from '../lib/announcements'
 import type {Announcement,AnnouncementCategory} from '../lib/announcements'
@@ -22,6 +22,8 @@ export default function HomeAnnouncements(){
  const [active,setActive]=useState<Announcement|null>(null)
  const [loading,setLoading]=useState(configured)
  const [error,setError]=useState(false)
+ const listRef=useRef<HTMLDivElement>(null)
+ const [canScrollDown,setCanScrollDown]=useState(false)
  useEffect(()=>{
   if(!configured)return
   let alive=true
@@ -58,6 +60,25 @@ export default function HomeAnnouncements(){
   return()=>window.removeEventListener('keydown',dismiss)
  },[active])
  const filtered=useMemo(()=>rows.filter(row=>row.category===category),[rows,category])
+ // Show the arrow only when there are actually more entries below the
+ // viewport, including after live announcements refresh or resize.
+ useEffect(()=>{
+  const list=listRef.current
+  if(!list)return
+  list.scrollTop=0
+  const update=()=>setCanScrollDown(list.scrollHeight-list.clientHeight-list.scrollTop>2)
+  update()
+  const frame=window.requestAnimationFrame(update)
+  const observer=typeof ResizeObserver==='undefined'?null:new ResizeObserver(update)
+  observer?.observe(list)
+  return()=>{window.cancelAnimationFrame(frame);observer?.disconnect()}
+ },[category,filtered,loading,error])
+ function scrollToMore(){
+  const list=listRef.current
+  if(!list)return
+  const reduceMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  list.scrollBy({top:Math.max(40,Math.round(list.clientHeight*.85)),behavior:reduceMotion?'auto':'smooth'})
+ }
  return <>
   <section className="home-news" aria-label="館內公告及最新消息">
    <header className="home-news-heading">
@@ -68,13 +89,14 @@ export default function HomeAnnouncements(){
      <button key={value} type="button" role="tab"
       aria-selected={category===value}
       className={category===value?'is-selected':''}
-      onClick={()=>setCategory(value)}>
+      onClick={()=>{setCanScrollDown(false);setCategory(value)}}>
       {categories[value]}
      </button>
     )}
    </div>
-   <div className="home-news-list" role="tabpanel" aria-label={categories[category]}
-    aria-live="polite">
+   <div className="home-news-list" ref={listRef} role="tabpanel" aria-label={categories[category]}
+    aria-live="polite" tabIndex={filtered.length?0:-1}
+    onScroll={event=>setCanScrollDown(event.currentTarget.scrollHeight-event.currentTarget.clientHeight-event.currentTarget.scrollTop>2)}>
     {loading&&<p className="home-news-empty">正在翻閱館內消息…</p>}
     {!loading&&error&&<p className="home-news-empty">館內消息暫時無法讀取，請稍後再試。</p>}
     {!loading&&!error&&filtered.length===0&&
@@ -89,8 +111,12 @@ export default function HomeAnnouncements(){
      </button>
     )}
    </div>
-   {filtered.length>2&&!loading&&!error&&
-    <small className="home-news-scroll-note">向下捲動查看更多消息</small>}
+   {canScrollDown&&!loading&&!error&&
+    <button className="home-news-scroll-cue" type="button"
+     onClick={scrollToMore} aria-label="向下捲動查看更多消息"
+     title="向下捲動查看更多消息">
+     <ChevronDown size={18} strokeWidth={1.65} aria-hidden="true"/>
+    </button>}
   </section>
   {active&&typeof document!=='undefined'&&createPortal(<div className="home-news-overlay" role="presentation"
    onMouseDown={event=>{if(event.target===event.currentTarget)setActive(null)}}>
