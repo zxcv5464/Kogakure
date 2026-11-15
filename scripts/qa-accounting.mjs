@@ -49,7 +49,7 @@ assert.ok(dashboard.includes('accountingSummary')&&dashboard.includes('saveAccou
  dashboard.includes('刪除紀錄')&&dashboard.includes('PaidPayrollRecordEditor')&&
  dashboard.includes("entry.reference.startsWith('PAYROLL:')")&&
  dashboard.includes('input type="date"')&&dashboard.includes('input type="month"'),
- 'Finance module must keep inline editing/deletion while showing paid payroll correction controls'
+ 'Finance module must keep inline editing/deletion while showing paid payroll correction controls')
 assert.ok(accounting.includes("rpc('get_accounting_period_sales'")&&
  dashboard.includes('fetchAccountingPeriodSales(period)')&&
  dashboard.includes('mergedAccountingSummary(entries,sales)')&&
