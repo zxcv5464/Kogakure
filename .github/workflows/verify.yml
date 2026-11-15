@@ -46,6 +46,10 @@ jobs:
         env:
           VITE_OFFLINE_PREVIEW: 'true'
         run: node scripts/qa-service-load-performance.mjs
+      - name: Verify each service photo crop selection and saved front-end framing
+        env:
+          VITE_OFFLINE_PREVIEW: 'true'
+        run: node scripts/qa-service-photo-crop.mjs
       - name: Verify editable services, polaroid keepsake, guarded admin CRUD and storage policy
         env:
           VITE_OFFLINE_PREVIEW: 'true'
