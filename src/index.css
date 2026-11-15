@@ -44,3 +44,11 @@ html{scroll-behavior:smooth;scrollbar-width:none}body{margin:0;min-width:320px;s
 .mobile-more-panel .mobile-extra-link:nth-of-type(3){animation-delay:.23s}
 .mobile-more-panel .mobile-extra-link:nth-of-type(4){animation-delay:.29s}
 @media(prefers-reduced-motion:reduce){.desktop-nav .nav-slider,.mobile-bottom-item svg,.mobile-bottom-item span{transition:none!important}.mobile-more-backdrop,.mobile-more-panel,.mobile-more-panel .mobile-extra-link{animation:none!important}}
+
+
+/* Threads and Discord use matching golden circular header links. */
+.header-socials{display:flex;align-items:center;justify-content:center;gap:8px;flex:0 0 auto}
+.header-socials .social-header{flex:0 0 40px;min-width:40px;min-height:40px}
+.header-socials .social-header svg{display:block}
+.header-socials .social-header:focus-visible{outline:2px solid #d9b783;outline-offset:3px}
+@media(max-width:850px){.header-socials{display:none}}
