@@ -1,4 +1,4 @@
-// Checks owner-only ledger permissions, date-scoped tea orders and safe Gil sums.
+// Checks manager-delegated ledger permissions, date-scoped orders and safe Gil sums.
 // Never writes to production, verifies SQL migration and frontend under offline preview.
 import assert from 'node:assert/strict'
 import {readFile} from 'node:fs/promises'
@@ -13,17 +13,20 @@ const files=[
  'src/lib/accounting.ts','src/pages/admin/AccountingManagement.tsx',
  'src/pages/admin/accounting-management.css',
  'supabase/migrations/20261115_16_accounting_ledger.sql',
+ 'supabase/migrations/20261115_17_delegated_accounting_permission.sql',
+ 'supabase/functions/manage-employee-accounts/index.ts',
+ 'src/lib/employee-accounts.ts',
  'scripts/prepare-pages.mjs',
 ]
-const [modules,admin,layout,orders,tea,dateSource,accounting,dashboard,css,sql,pages]=
+const [modules,admin,layout,orders,tea,dateSource,accounting,dashboard,css,sql,delegation,edge,employeeApi,pages]=
  await Promise.all(files.map(path=>readFile(path,'utf8')))
 assert.ok(modules.includes("id: 'accounting'")&&modules.includes("title: '帳務管理'")&&
  modules.includes("status: 'available'")&&!modules.includes("title: '營業資訊'"),
  'Accounting must replace the old placeholder, not create a second planned module')
 assert.ok(modules.includes("path: '/admin/accounting'")&&
  admin.includes('module="accounting"')&&admin.includes('<AccountingManagement/>')&&
- admin.includes("if(id==='accounts'||id==='services'||id==='accounting')return access.kind==='owner'"),
- 'Accounting route must be owner-only even if an employee manages tea orders')
+ admin.includes("if(id==='accounting')return permitted(access,'accounting.manage')"),
+ 'Accounting must be separately authorized, not tied to orders or universal employee access')
 assert.ok(layout.includes("'/admin/accounting' ? '帳務管理'")&&
  pages.includes("'admin/accounting'"),
  'Direct GitHub Pages accounting route must load and display correct title')
@@ -63,6 +66,30 @@ assert.ok(!sql.includes('has_backoffice_permission(\'orders.manage\')')&&
  !sql.includes('update public.tea_orders'),
  'Ledger migration must not expose employee access, auto count receipts, or mutate existing orders')
 
+// Public table policies must require the independent accounting permission,
+// including INSERT/UPDATE and DELETE. Never equate a completed order with cash.
+for(const snippet of [
+ "add constraint employee_accounts_permissions_check",
+ "'accounting.manage'",
+ "security invoker set search_path=''",
+ "using ((select public.has_backoffice_permission('accounting.manage')))",
+ "with check ((select public.has_backoffice_permission('accounting.manage')))",
+ "and created_by=(select auth.uid())",
+ "on delete set null",
+]){
+ assert.ok(delegation.includes(snippet),'Accounting delegation migration missing: '+snippet)
+}
+assert.equal((delegation.match(/create policy "accounting operators /g)||[]).length,4,
+ 'All four financial operations require separately assigned authorization')
+assert.ok(edge.includes("'accounting.manage'")&&edge.includes('value.length>allowedPermissions.size'),
+ 'The deployed account manager must validate all five permissions on creation and update')
+assert.ok(employeeApi.includes("id:'accounting.manage'")&&
+ !delegation.includes("has_backoffice_permission('orders.manage')")&&
+ !delegation.includes('grant select on public.accounting_entries to anon'),
+ 'Do not leak finance rights through order permissions or anonymous sessions')
+assert.ok(!delegation.includes('delete from public.accounting_entries'),
+ 'Employee revocation must not erase historical ledger records')
+
 const vite=await createServer({server:{middlewareMode:true,hmr:false},appType:'custom'})
 try{
  const date=await vite.ssrLoadModule('/src/lib/taipei-date.ts')
@@ -97,5 +124,5 @@ try{
  const ui=renderToStaticMarkup(createElement(AdminEditGuardProvider,null,createElement(AccountingManagement)))
  assert.ok(ui.includes('帳務管理')&&ui.includes('新增收支紀錄')&&
  ui.includes('匯出 CSV')&&ui.includes('單日')&&ui.includes('月份'))
- console.log('PASS: owner-only finance ledger, 3 reporting periods, CSV safety, Gil totals and Taiwan-date tea order filtering')
+ console.log('PASS: delegated finance ledger, 3 reporting periods, CSV safety, Gil totals and Taiwan-date tea order filtering')
 }finally{await vite.close()}
