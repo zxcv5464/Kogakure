@@ -98,7 +98,12 @@ export default function ServicePhotoCropEditor({
      <h3>原始照片 · 可拖曳圈選</h3>
      <div className="service-admin-crop-source-scroller">
       <div className="service-admin-crop-original"
-       style={{aspectRatio:natural.width&&natural.height?natural.width+'/'+natural.height:'4/3'}}
+       style={{
+        aspectRatio:natural.width&&natural.height?natural.width+'/'+natural.height:'4/3',
+        width:natural.width&&natural.height
+         ?'min(100%, '+Math.round(320*natural.width/natural.height)+'px)'
+         :'min(100%, 440px)',
+       }}
        onPointerDown={pointerDown} onPointerMove={pointerMove}
        onPointerUp={pointerUp} onPointerCancel={pointerUp}
        aria-label="原圖與可拖曳的金色圈選框">
