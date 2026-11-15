@@ -1,5 +1,6 @@
 import {useCallback,useEffect,useRef,useState} from 'react'
 import {Music2,Play,Volume2,VolumeX,Headphones,ArrowRight} from 'lucide-react'
+import {createPortal} from 'react-dom'
 import './site-bgm.css'
 
 // BGMer's official short recording of the selected "みやびごころ" track.
@@ -117,7 +118,7 @@ export default function SiteBgm({introReady=true}:{introReady?:boolean}){
    <span className="site-bgm-text"><strong>BGM</strong><small>{status}</small></span>
    {playing&&<span className="site-bgm-note" aria-hidden="true"><Music2 size={12}/></span>}
   </button>
-  {gateVisible&&<div className="site-bgm-entry-backdrop">
+  {gateVisible&&createPortal(<div className="site-bgm-entry-backdrop">
    <section className="site-bgm-entry" role="dialog" aria-modal="true"
     aria-labelledby="site-bgm-entry-title" aria-describedby="site-bgm-entry-desc">
     <div className="site-bgm-entry-symbol" aria-hidden="true"><Headphones size={32} strokeWidth={1.4}/></div>
@@ -136,6 +137,6 @@ export default function SiteBgm({introReady=true}:{introReady?:boolean}){
      onClick={pauseMusic}>暫不播放・直接入館</button>
     <small>音樂啟動後可隨時使用頁首 BGM 按鈕停止播放。</small>
    </section>
-  </div>}
+  </div>,document.body)}
  </div>
 }
