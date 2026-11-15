@@ -26,10 +26,10 @@
 /* Menu and booking already have a branded, first-paint-ready shell.
    Faster curtains remove the extra 1–2s perceived wait only on these routes. */
 .page-transition-curtain.is-quick.is-covering{
- transition-duration:340ms;
+ transition-duration:180ms;
 }
 .page-transition-curtain.is-quick.is-revealing{
- transition-duration:410ms;
+ transition-duration:260ms;
 }
 
 @media (prefers-reduced-motion: reduce) {
