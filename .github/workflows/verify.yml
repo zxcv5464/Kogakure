@@ -30,6 +30,10 @@ jobs:
         env:
           VITE_OFFLINE_PREVIEW: 'true'
         run: node scripts/qa-menu.mjs
+      - name: Verify completed-order turnover and equal staff salary ledger
+        env:
+          VITE_OFFLINE_PREVIEW: 'true'
+        run: node scripts/qa-daily-payroll.mjs
       - name: Verify accounting ledger, owner permissions and daily order navigation
         env:
           VITE_OFFLINE_PREVIEW: 'true'
