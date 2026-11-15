@@ -9,13 +9,13 @@ import MenuLoading from './components/MenuLoading'
 import BookingLoading from './components/BookingLoading'
 import { HomePage, OtherPage } from './pages/OtherPages'
 import AboutPage from './pages/AboutPage'
+import ShiftsPage from './pages/ShiftsPage'
 import ServicesPage from './pages/ServicesPage'
 
 const AdminPage = lazy(() => import('./pages/AdminPage'))
 const StaffPage = lazy(() => import('./pages/StaffPage'))
 const MenuPage = lazy(() => import('./pages/MenuPage'))
 const BookingPage = lazy(() => import('./pages/BookingPage'))
-const ShiftsPage = lazy(() => import('./pages/ShiftsPage'))
 
 // The administration route is deliberately separate from the public shell.
 // This keeps its interface and loading state independent of public animations.
