@@ -17,3 +17,14 @@ export function prefetchShiftsPage():void{
   // The shifts page handles errors and provides a manual refresh button.
  })
 }
+
+/** Only on hover/focus/touch intent: reuse a brief published-content cache
+ * instead of making a fresh Supabase request on every visit. */
+export function prefetchServicesPage():void{
+ void Promise.all([
+  import('../pages/ServicesPage'),
+  import('./public-services').then(module=>module.prefetchPublicServices()),
+ ]).catch(()=>{
+  // The services page displays any error and can be revisited to retry.
+ })
+}
