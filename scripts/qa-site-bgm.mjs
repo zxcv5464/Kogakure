@@ -57,6 +57,17 @@ assert.ok(!app.includes('<SiteBgm')&&app.includes('return <PublicApp />'),
  'Only the public shell should own the BGM player, not every page or admin')
 assert.ok(intro.includes("images/brand/logo-intro.webp")&&intro.includes('intro-motto'),
  'Use the existing original animated logo and motto, not a new entrance page')
+assert.ok(intro.includes("type Phase='preparing'")&&intro.includes("'preparing'"), 
+ 'Cold first load must have a distinct asset-preparation stage')
+assert.ok(intro.includes('image.decode().then(settle,settle)')&&intro.includes('LOGO_LOAD_TIMEOUT_MS'),
+ 'Start animation after the logo image decodes, with a bounded fallback')
+assert.ok(intro.includes('window.requestAnimationFrame(()=>')&&intro.includes("setPhase('enter')"),
+ 'Ensure a complete initial paint before beginning the brand animation')
+assert.ok(introCss.includes('.entry-intro.is-preparing :is(')&&
+ introCss.includes('animation:none!important;opacity:0'),
+ 'First paint must hide all entrance layers until the logo is ready')
+assert.ok(intro.includes("phase==='preparing'?' is-preparing'"),
+ 'The CSS preparation state must actually be applied to the initial intro')
 assert.ok(intro.includes('進入狐隱<ArrowRight')&&intro.includes('onClick={enterInn}'),
  'The original logo page must show just 進入狐隱 on the enter-and-play button')
 assert.ok(!intro.includes('進入狐隱・開始播放音樂'),
