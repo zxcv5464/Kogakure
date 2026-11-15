@@ -17,8 +17,9 @@ const files=[
  'supabase/migrations/20261115_18_accounting_sales_payroll.sql',
  'supabase/migrations/20261115_21_owner_attendance_payroll.sql',
  'supabase/migrations/20261115_23_period_payroll.sql',
+ 'supabase/migrations/20261115_24_payroll_reset_recalculate.sql',
 ]
-const [orders,accounting,ui,helper,styles,ledgerStyles,sql,ownerSql,periodSql]=
+const [orders,accounting,ui,helper,styles,ledgerStyles,sql,ownerSql,periodSql,resetSql]=
  await Promise.all(files.map(path=>readFile(path,'utf8')))
 assert.ok(orders.includes("{id:'active',text:'待處理'}"),
  'Keep the existing pending+preparing queue')
@@ -31,7 +32,9 @@ assert.ok(orders.includes("filter==='active'?x.status==='pending'||x.status==='p
 assert.ok(accounting.includes('<DailyPayrollSection')&&
  accounting.includes("entry.reference.startsWith('PAYROLL:')"),
  'Accounting should display daily sales and protect paid-salary entries')
-assert.ok(ui.includes('當日營業額・員工分薪')&&
+assert.ok(ui.includes('<h2>員工分薪</h2>')&&
+ !ui.includes('當日營業額・員工分薪')&&
+ !ui.includes('daily-payroll-metrics')&&
  ui.includes('modeName[mode]')&&ui.includes('確認已發薪')&&
  ui.includes('其他已登錄收入')&&ui.includes('已完成茶宴')&&
  ui.includes('分薪清單'),
@@ -63,7 +66,20 @@ assert.ok(ui.includes("week:'當週'")&&ui.includes("month:'當月'")&&
  periodSql.includes('private.create_period_payroll')&&
  periodSql.includes('private.confirm_period_payroll_paid'),
  'Daily/week/month payroll requires server-side overlap validation, frozen shares and atomic payout')
-assert.ok(styles.includes('.daily-payroll-metrics')&&
+assert.ok(ui.includes("changeSnapshot('reset')")&&
+ ui.includes("changeSnapshot('recalculate')")&&
+ ui.includes('person.paidAt===null&&person.accountingEntryId===null')&&
+ helper.includes("rpc('reset_period_payroll'")&&
+ helper.includes("rpc('recalculate_period_payroll'")&&
+ resetSql.includes('private.manage_period_payroll_snapshot')&&
+ resetSql.includes("p_action='recalculate'")&&
+ resetSql.includes('p.paid_at is not null or p.accounting_entry_id is not null')&&
+ resetSql.includes('return private.create_period_payroll(p_mode,p_anchor)')&&
+ resetSql.includes('v_deleted<>v_total')&&
+ resetSql.includes('pg_catalog.pg_advisory_xact_lock')&&
+ !resetSql.includes('delete from public.accounting_entries'),
+ 'Reset and recalculate must be protected against paid snapshots and atomic with rollback')
+assert.ok(styles.includes('.daily-payroll-salary-basis')&&
  styles.includes('@media(max-width:640px)')&&
  ledgerStyles.includes('.accounting-payroll-locked'),
  'Daily salary report should work on mobile and distinguish protected entries')
@@ -149,8 +165,9 @@ try{
  const {default:AccountingManagement}=await vite.ssrLoadModule('/src/pages/admin/AccountingManagement.tsx')
  const {AdminEditGuardProvider}=await vite.ssrLoadModule('/src/pages/admin/AdminEditGuard.tsx')
  const html=renderToStaticMarkup(createElement(AdminEditGuardProvider,null,createElement(AccountingManagement)))
- assert.ok(html.includes('帳務管理')&&html.includes('當日營業額・員工分薪')&&
+ assert.ok(html.includes('帳務管理')&&html.includes('員工分薪')&&
+ !html.includes('當日營業額・員工分薪')&&
  html.includes('選擇當日營業額與分薪日期'),
  'Dashboard must render a selectable daily payroll section even on first paint')
- console.log('PASS: day/week/month frozen payroll, owner inclusion, overlap lock and audited Gil payouts')
+ console.log('PASS: salary-only UI, safe unpaid reset/recalculation, immutable paid snapshots, and ledger deletion controls')
 }finally{await vite.close()}

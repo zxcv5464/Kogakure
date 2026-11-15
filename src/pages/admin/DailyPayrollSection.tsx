@@ -1,8 +1,8 @@
 import {useCallback,useEffect,useMemo,useRef,useState} from 'react'
-import {CalendarDays,CheckCircle2,ChevronLeft,ChevronRight,Coins,RefreshCw,UsersRound,Wallet} from 'lucide-react'
+import {CalendarDays,CheckCircle2,ChevronLeft,ChevronRight,RefreshCw,RotateCcw,Trash2,UsersRound,Wallet} from 'lucide-react'
 import {
  calculateEqualPayroll,confirmPeriodPayrollPaid,createPeriodPayroll,fetchPeriodPayrollReport,
- payrollPeriodWindow,
+ payrollPeriodWindow,recalculatePeriodPayroll,resetPeriodPayroll,
 } from '../../lib/daily-payroll'
 import type {PayrollAllocation,PayrollPeriodMode,PeriodPayrollReport} from '../../lib/daily-payroll'
 import {shiftVenueDate,validVenueDate,validVenueMonth,venueDate} from '../../lib/taipei-date'
@@ -60,6 +60,8 @@ export default function DailyPayrollSection({
  const freezeTotal=data?.allocations[0]?.revenueGil??0
  const frozenMembers=data?.allocations[0]?.employeeCount??0
  const frozenMismatch=frozen&&data!==null&&(freezeTotal!==data.revenueGil||frozenMembers!==data.roster.length)
+ const resettable=frozen&&data!==null&&data.allocations.every(person=>
+  person.paidAt===null&&person.accountingEntryId===null)
  function movePeriod(direction:number){
   if(mode==='month'){
    const [year,month]=date.slice(0,7).split('-').map(Number)
@@ -82,6 +84,23 @@ export default function DailyPayrollSection({
   }catch(e){setError(e instanceof Error?e.message:'無法建立分薪清單')}
   finally{setWorking(false)}
  }
+ async function changeSnapshot(action:'reset'|'recalculate'){
+  if(working||!resettable||!data)return
+  const question=action==='reset'
+   ?'確定重置 '+currentLabel+' 的未發薪清單？\\n這會移除該期間已建立的分配名單，但不會刪除茶宴訂單或一般帳務。重置後可重新建立。'
+   :'確定重新計算 '+currentLabel+' 的薪資？\\n系統會依最新已完成訂單、其他收入及出勤人員，重新分配全部尚未發放的薪水。若重算失敗，原清單會保留。'
+  if(!window.confirm(question))return
+  setWorking(true);setError('');setNotice('')
+  try{
+   if(action==='reset')await resetPeriodPayroll(mode,date)
+   else await recalculatePeriodPayroll(mode,date)
+   await load()
+   setNotice(action==='reset'
+    ?'已重置此期間尚未發薪的清單，可重新建立分薪。'
+    :'已依最新收入與出勤名單重新計算薪資，金額已更新。')
+  }catch(e){setError(e instanceof Error?e.message:'分薪清單更新失敗')}
+  finally{setWorking(false)}
+ }
  async function pay(member:PayrollAllocation){
   if(working||member.paidAt)return
   if(!window.confirm(
@@ -97,9 +116,9 @@ export default function DailyPayrollSection({
   }catch(e){setError(e instanceof Error?e.message:'發薪紀錄未更新')}
   finally{setWorking(false)}
  }
- return <section className="daily-payroll" aria-label="當日營業額與員工分薪">
+ return <section className="daily-payroll" aria-label="員工分薪">
   <header className="daily-payroll-header">
-   <div><p>KOGAKURE · DAY BOOK & PAYROLL</p><h2>當日營業額・員工分薪</h2>
+   <div><p>KOGAKURE · STAFF PAYROLL</p><h2>員工分薪</h2>
     <small>可選當日、當週或當月分薪；依出勤人員（含婆婆／管理員出勤）平均分配 Gil。</small></div>
   </header>
   <div className="daily-payroll-period-toolbar">
@@ -125,19 +144,12 @@ export default function DailyPayrollSection({
    </div>
   </div>
   <p className="daily-payroll-period-caption">目前查看：<strong>{modeName[mode]} · {currentLabel}</strong>。當週為週一至週日；期間內每個出勤帳號只計算一次。</p>
-  <p className="daily-payroll-explain">
-   營業額試算＝該期間「已完成」的茶宴訂單＋其他已登錄收入（不重複計入手動登錄的「茶宴收入」）。<strong>完成訂單不代表已實收 Gil</strong>，實收仍以帳務明細為準。
-  </p>
+  <p className="daily-payroll-explain">分薪依所選期間已完成茶宴訂單與其他已登錄收入計算；<strong>訂單完成不代表已實際收款</strong>，請核對後建立清單。</p>
   {error&&<p role="alert" className="daily-payroll-message is-error">{error}</p>}
   {notice&&<p role="status" className="daily-payroll-message is-success"><CheckCircle2 size={16}/>{notice}</p>}
   {loading&&!data?<p className="daily-payroll-loading" role="status">正在核對所選期間訂單、帳務與員工排班…</p>:
    data&&<>
-    <div className="daily-payroll-metrics">
-     <div><small>已完成茶宴 · {data.sales.completedCount} 筆</small><strong>{money(data.sales.completedGil)}</strong></div>
-     <div><small>其他已登錄收入</small><strong>{money(data.manualOtherIncomeGil)}</strong></div>
-     <div className="is-total"><small><Coins size={17}/>期間總營業額（試算）</small><strong>{money(data.revenueGil)}</strong></div>
-     <div><small>帳務已登錄收入（實收紀錄）</small><strong>{money(data.manualReceiptGil)}</strong></div>
-    </div>
+    <p className="daily-payroll-salary-basis">本期分薪基準 <strong>{money(data.revenueGil)}</strong> · {data.sales.completedCount} 筆已完成茶宴 · {data.roster.length} 位出勤人員（試算）</p>
     <div className="daily-payroll-roster-heading">
      <div><h3><UsersRound size={18}/>出勤人員薪資分配</h3>
       <p>{frozen?'該期間分薪清單已建立，金額為建立當時的固定快照。':'依所選期間的「值班排班」登記員工與婆婆／管理員出勤平均分配，同一帳號只計算一次。'}</p>
@@ -145,7 +157,14 @@ export default function DailyPayrollSection({
      {!frozen&&<button type="button" className="is-create"
       disabled={working||loading||blocked||!preview.length||!data.revenueGil}
       onClick={()=>void create()}><Wallet size={16}/>建立{modeName[mode]}分薪清單</button>}
+     {frozen&&<div className="daily-payroll-reset-actions">
+      <button type="button" className="is-recalculate" disabled={working||loading||!resettable}
+       onClick={()=>void changeSnapshot('recalculate')}><RotateCcw size={16}/>重新計算薪資</button>
+      <button type="button" className="is-reset" disabled={working||loading||!resettable}
+       onClick={()=>void changeSnapshot('reset')}><Trash2 size={16}/>重置分薪清單</button>
+     </div>}
     </div>
+    {frozen&&!resettable&&<p className="daily-payroll-message is-warning">此分薪清單已有薪水確認發放，不能重置或重算，以避免修改已交付的 Gil 與帳務支出。</p>}
     {blocked&&<p className="daily-payroll-message is-warning" role="alert">
      此期間與已建立的分薪紀錄重疊（{data.overlaps.map(item=>label(item.mode,item.start,item.end)+' '+modeName[item.mode]).join('、')}）。
      為避免重複發薪，不能再次建立涵蓋相同日期的薪資清單。可查看既有分薪期間。

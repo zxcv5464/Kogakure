@@ -37,6 +37,7 @@ export default function AccountingManagement(){
  const [busy,setBusy]=useState(false)
  const [payrollRefreshKey,setPayrollRefreshKey]=useState(0)
  const [kindFilter,setKindFilter]=useState<'all'|AccountingKind>('all')
+ const [deleteManagerOpen,setDeleteManagerOpen]=useState(false)
  const [draft,setDraft]=useState<AccountingInput>(fresh)
  const [editingId,setEditingId]=useState<string|null>(null)
  const [original,setOriginal]=useState<AccountingInput|null>(null)
@@ -70,6 +71,8 @@ export default function AccountingManagement(){
  const journalSummary=useMemo(()=>accountingSummary(entries),[entries])
  const summary=useMemo(()=>sales===null?null:mergedAccountingSummary(entries,sales),[entries,sales])
  const visible=useMemo(()=>entries.filter(row=>kindFilter==='all'||row.kind===kindFilter),[entries,kindFilter])
+ const deletableEntries=useMemo(()=>entries.filter(row=>!row.reference.startsWith('PAYROLL:')),[entries])
+ const protectedCount=entries.length-deletableEntries.length
  // Poll aggregate results; staff may complete an order in another session.
  useEffect(()=>{
   const update=()=>{if(document.visibilityState==='visible'&&!busy)void refresh()}
@@ -171,12 +174,30 @@ export default function AccountingManagement(){
   <div className="accounting-workspace">
    <div className="accounting-list-panel">
     <div className="accounting-list-heading"><div><h2>收支紀錄</h2><small>手動收支 {visible.length} 筆{sales&&kindFilter!=='expense'?' · 已完成茶宴 '+sales.completedCount+' 筆':''}</small></div>
-     <div className="accounting-kind-filter">
-      <button type="button" className={kindFilter==='all'?'is-active':''} onClick={()=>setKindFilter('all')}>全部</button>
-      <button type="button" className={kindFilter==='income'?'is-active':''} onClick={()=>setKindFilter('income')}>收入</button>
-      <button type="button" className={kindFilter==='expense'?'is-active':''} onClick={()=>setKindFilter('expense')}>支出</button>
+     <div className="accounting-list-controls">
+      <div className="accounting-kind-filter">
+       <button type="button" className={kindFilter==='all'?'is-active':''} onClick={()=>setKindFilter('all')}>全部</button>
+       <button type="button" className={kindFilter==='income'?'is-active':''} onClick={()=>setKindFilter('income')}>收入</button>
+       <button type="button" className={kindFilter==='expense'?'is-active':''} onClick={()=>setKindFilter('expense')}>支出</button>
+      </div>
+      <button type="button" className="accounting-delete-toggle" aria-expanded={deleteManagerOpen}
+       aria-controls="accounting-delete-manager" onClick={()=>{setDeleteManagerOpen(open=>!open);setKindFilter('all')}}>
+       <Trash2 size={15}/>刪除收支紀錄</button>
      </div>
     </div>
+    {deleteManagerOpen&&<div id="accounting-delete-manager" className="accounting-delete-manager" role="region" aria-label="收支紀錄刪除管理">
+     <strong><Trash2 size={16}/>刪除管理 · 可刪除 {deletableEntries.length} 筆</strong>
+     {deletableEntries.length>0?
+      <div className="accounting-delete-list">
+       {deletableEntries.map(entry=><div key={entry.id} className="accounting-delete-row">
+        <span>{entry.date} · {entry.category} · {entry.kind==='income'?'收入':'支出'} {money(entry.amountGil)}</span>
+        <button type="button" disabled={busy||loading} onClick={()=>void remove(entry)}>
+         <Trash2 size={15}/>刪除</button>
+       </div>)}
+      </div>:
+      <p>目前沒有可刪除的手動收支紀錄。新增一般收入或支出後，便可以在這裡選擇刪除。</p>}
+     <small>已發放薪資 {protectedCount} 筆受到保護，不可直接刪除；茶宴訂單彙總須至「訂單管理」調整。</small>
+    </div>}
     {loading?<p className="accounting-empty" role="status">正在整理帳務資料…</p>:
      error&&!entries.length?<p className="accounting-empty">帳務資料未能載入，請重新整理。</p>:
      !visible.length&&(!sales?.completedCount||kindFilter==='expense')?<p className="accounting-empty">這個日期範圍目前沒有符合條件的收支紀錄。</p>:
@@ -197,7 +218,7 @@ export default function AccountingManagement(){
        {entry.description&&<p>{entry.description}</p>}
        {entry.reference&&<small>參考單號：{entry.reference}</small>}
        <footer><small>登錄時間 {timestamp(entry.createdAt)}</small>
-        {entry.reference.startsWith('PAYROLL:')?<span className="accounting-payroll-locked"><CheckCircle2 size={15}/>分薪已發放 · 鎖定紀錄</span>:
+        {entry.reference.startsWith('PAYROLL:')?<span className="accounting-payroll-locked"><CheckCircle2 size={15}/>已發薪 · 禁止刪除</span>:
         <div>
          <button type="button" disabled={busy} onClick={()=>edit(entry)}><FilePenLine size={15}/>編輯</button>
          <button type="button" disabled={busy} className="is-danger" aria-label={'刪除收支紀錄：'+entry.category+' '+entry.date} onClick={()=>void remove(entry)}><Trash2 size={15}/>刪除紀錄</button>

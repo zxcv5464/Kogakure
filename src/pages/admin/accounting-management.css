@@ -31,6 +31,17 @@
 .accounting-list-heading{display:flex;gap:12px;align-items:start;justify-content:space-between;flex-wrap:wrap;margin-bottom:15px}
 .accounting-list-heading h2,.accounting-editor-heading h2{font:600 1.1rem 'Noto Serif TC',serif;color:#efd7b0;margin:0 0 6px}
 .accounting-list-heading small{color:#b7a9a0;font-size:.73rem}
+.accounting-list-controls{display:flex;align-items:center;flex-wrap:wrap;gap:9px}
+.accounting-delete-toggle{display:inline-flex;align-items:center;gap:6px;min-height:35px;padding:7px 10px;border-radius:5px;border:1px solid rgba(232,131,129,.5);background:rgba(121,44,48,.17);color:#f1b3ab;font-size:.76rem;cursor:pointer}
+.accounting-delete-toggle[aria-expanded=true]{background:rgba(141,56,59,.3)}
+.accounting-delete-manager{padding:14px;margin:0 0 16px;border:1px solid rgba(224,128,128,.46);border-radius:7px;background:#2e262d;display:grid;gap:10px}
+.accounting-delete-manager>strong{display:flex;align-items:center;gap:7px;color:#f5b8ae;font-size:.83rem}
+.accounting-delete-manager p,.accounting-delete-manager small{color:#d8bab1;font-size:.76rem;line-height:1.75;margin:0}
+.accounting-delete-list{display:grid;gap:7px;max-height:380px;overflow:auto}
+.accounting-delete-row{display:flex;align-items:center;justify-content:space-between;gap:9px;flex-wrap:wrap;padding:10px;border:1px solid rgba(224,162,148,.25);border-radius:5px;background:#27232b}
+.accounting-delete-row>span{font-size:.78rem;color:#eedbd1;overflow-wrap:anywhere}
+.accounting-delete-row button{display:inline-flex;align-items:center;gap:5px;min-height:33px;padding:7px 11px;color:#ffe1da;border:1px solid rgba(230,122,122,.5);border-radius:5px;background:#773c41;font-size:.76rem}
+.accounting-delete-row button:disabled{opacity:.5;cursor:not-allowed}
 .accounting-kind-filter{display:flex;gap:5px}
 .accounting-kind-filter button{min-height:35px;padding:7px 10px;border-radius:4px;background:#1c1d27;border:1px solid rgba(220,181,132,.3);color:#d5bba0;font-size:.76rem}
 .accounting-kind-filter button.is-active{background:#d3af7c;color:#26202a;border-color:#d3af7c}

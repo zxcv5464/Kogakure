@@ -25,6 +25,13 @@
 .daily-payroll-metrics strong{font:600 clamp(.96rem,1.8vw,1.22rem) Georgia,serif;font-variant-numeric:tabular-nums;overflow-wrap:anywhere;color:#ead2af}
 .daily-payroll-metrics .is-total{border-color:rgba(226,190,139,.52);background:linear-gradient(145deg,#4a3a39,#2c2933)}
 .daily-payroll-metrics .is-total strong{color:#f6d39e}
+.daily-payroll-salary-basis{margin:0 0 18px;padding:12px 14px;border:1px solid rgba(217,183,128,.3);border-radius:6px;background:#20222c;font-size:.79rem;line-height:1.7;color:#cdbba7}
+.daily-payroll-salary-basis strong{font:600 1.1rem Georgia,serif;color:#f4d2a4;margin:0 5px}
+.daily-payroll-reset-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.daily-payroll-reset-actions button{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:42px;padding:9px 12px;border:1px solid rgba(218,184,138,.39);border-radius:5px;font-size:.78rem;color:#eed6b6;background:#312b32;cursor:pointer}
+.daily-payroll-reset-actions button.is-recalculate{background:rgba(194,151,86,.14)}
+.daily-payroll-reset-actions button.is-reset{border-color:rgba(231,139,129,.45);background:rgba(134,53,61,.23);color:#f5c3bc}
+.daily-payroll-reset-actions button:disabled{opacity:.4;cursor:not-allowed}
 .daily-payroll-roster-heading{display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap;border-top:1px solid rgba(215,179,126,.2);padding-top:21px}
 .daily-payroll-roster-heading h3{display:flex;align-items:center;gap:7px;color:#f0d5ab;font:600 1.04rem 'Noto Serif TC',serif;margin:0 0 7px}
 .daily-payroll-roster-heading p{margin:0;max-width:610px;color:#beab9b;line-height:1.75;font-size:.75rem}
@@ -63,6 +70,8 @@
  .daily-payroll-metrics>div{padding:10px 9px}
  .daily-payroll-metrics strong{font-size:1rem}
  .daily-payroll-roster-heading .is-create{width:100%;justify-content:center}
+ .daily-payroll-reset-actions{width:100%}
+ .daily-payroll-reset-actions button{flex:1}
  .daily-payroll-member{grid-template-columns:minmax(0,1fr) auto;gap:7px;padding:11px 9px}
  .daily-payroll-member button,.daily-payroll-pending{grid-column:1/-1;justify-self:stretch}
  .daily-payroll-amount{font-size:.9rem}

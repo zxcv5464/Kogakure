@@ -207,3 +207,21 @@ export async function confirmPeriodPayrollPaid(mode:PayrollPeriodMode,date:strin
  })
  if(error)throw new Error(error.message||'登錄發薪失敗')
 }
+
+/** Manage a frozen salary snapshot only if no employee has been paid.
+ * Recalculation happens transactionally in PostgreSQL; if income/roster
+ * validation fails the old snapshot is preserved. */
+export async function resetPeriodPayroll(mode:PayrollPeriodMode,date:string):Promise<void>{
+ payrollPeriodWindow(mode,date)
+ const {data,error}=await db().rpc('reset_period_payroll',{p_mode:mode,p_anchor:date})
+ if(error)throw new Error(error.message||'重置分薪清單失敗')
+ if(!Number.isSafeInteger(Number(data))||Number(data)<1)
+  throw new Error('沒有可重置的分薪清單')
+}
+export async function recalculatePeriodPayroll(mode:PayrollPeriodMode,date:string):Promise<void>{
+ payrollPeriodWindow(mode,date)
+ const {data,error}=await db().rpc('recalculate_period_payroll',{p_mode:mode,p_anchor:date})
+ if(error)throw new Error(error.message||'重新計算薪資失敗')
+ if(!Number.isSafeInteger(Number(data))||Number(data)<1)
+  throw new Error('重新計算未成功，原分薪清單應保持不變')
+}
