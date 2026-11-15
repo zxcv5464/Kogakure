@@ -17,7 +17,6 @@
 .shift-message.is-error{color:#f1b5b0}
 /* First visit: paint the entire calendar immediately and reveal live values
    in place. Unknown dates are NOT treated as closed days until fetched. */
-.shift-calendar-shell[aria-busy="true"]{min-height:720px}
 .shift-day.is-loading,.shift-day.is-loading.is-closed{
  background:rgba(43,39,49,.7);border-color:rgba(185,165,150,.23);
  opacity:1;transform:none;cursor:wait;
