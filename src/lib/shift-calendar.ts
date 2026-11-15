@@ -1,4 +1,4 @@
-import {useEffect,useState} from 'react'
+import {useEffect,useMemo,useState} from 'react'
 
 // Display dates in Asia/Taipei regardless of the traveller's browser locale.
 export function taipeiToday(now:Date=new Date()):string{
@@ -37,6 +37,7 @@ export function useRollingShiftWeeks(){
   window.addEventListener('focus',refresh)
   return()=>{window.clearInterval(interval);document.removeEventListener('visibilitychange',refresh);window.removeEventListener('focus',refresh)}
  },[])
- return {today,weeks:rollingShiftWeeks(today)}
+ const weeks=useMemo(()=>rollingShiftWeeks(today),[today])
+ return {today,weeks}
 }
 export const SHIFT_WEEKDAYS=['一','二','三','四','五','六','日']
