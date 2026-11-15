@@ -28,3 +28,21 @@ export function prefetchServicesPage():void{
   // The services page displays any error and can be revisited to retry.
  })
 }
+
+/** Tea banquet: warm the lazily loaded page and published catalog only if
+ * the traveller approaches its navigation link. */
+export function prefetchMenuPage():void{
+ void Promise.all([
+  import('../pages/MenuPage'),
+  import('./public-menu').then(module=>module.prefetchPublicMenu()),
+ ]).catch(()=>{/* The visitor page displays a safe unavailable state. */})
+}
+
+/** Booking: reuse staff thumbnails/data and the two short-lived public
+ * lookups without accessing private requests or triggering any write. */
+export function prefetchBookingPage():void{
+ void Promise.all([
+  import('../pages/BookingPage'),
+  import('./public-booking-data').then(module=>module.prefetchPublicBookingData()),
+ ]).catch(()=>{/* BookingPage handles the visible error. */})
+}
