@@ -47,7 +47,8 @@ export async function fetchDailyPayrollRoster(date:string):Promise<PayrollEmploy
  // even for historical dates that are no longer published on the public calendar.
  const {data,error}=await db().rpc('get_accounting_daily_payroll_roster',{p_day:date})
  if(error)throw new Error('讀取當日員工／管理員排班失敗：'+error.message)
- return (data||[]).map(row=>({
+ type PayrollRosterRow={employee_id:string;employee_name:string;member_type:'employee'|'owner';sort_index:number}
+ return ((data||[]) as PayrollRosterRow[]).map(row=>({
   id:row.employee_id,name:row.employee_name,
   source:row.member_type==='owner'?'owner' as const:'employee' as const,
   sortIndex:Number(row.sort_index),
