@@ -30,6 +30,10 @@ jobs:
         env:
           VITE_OFFLINE_PREVIEW: 'true'
         run: node scripts/qa-menu.mjs
+      - name: Verify accounting ledger, owner permissions and daily order navigation
+        env:
+          VITE_OFFLINE_PREVIEW: 'true'
+        run: node scripts/qa-accounting.mjs
       - name: Verify guest tea-order submission, secured manager workflow and pending order notifications
         env:
           VITE_OFFLINE_PREVIEW: 'true'
