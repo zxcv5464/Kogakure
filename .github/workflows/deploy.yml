@@ -65,6 +65,7 @@ jobs:
           VITE_OFFLINE_PREVIEW: 'true'
         run: |
           node scripts/qa-accounting.mjs
+          node scripts/qa-employee-permissions.mjs
           node scripts/qa-tea-orders.mjs
       - name: Verify tea menu and booking public caches, safe first-paint UI and existing submission flows
         env:
