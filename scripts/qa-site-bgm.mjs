@@ -1,69 +1,92 @@
-// Sound controls must work across public route changes and never request
-// access to guest or employee data. This runs without browser audio hardware.
+// The original animated logo is the only audio-entry surface.
+// Test wiring without audio hardware, browser autoplay hacks, or DB access.
 import assert from 'node:assert/strict'
 import {readFile} from 'node:fs/promises'
 import {createElement} from 'react'
 import {renderToStaticMarkup} from 'react-dom/server'
 import {MemoryRouter} from 'react-router-dom'
 import {createServer} from 'vite'
+import ts from 'typescript'
 
-const [player,css,layout,app,terms]=await Promise.all([
- 'src/components/SiteBgm.tsx',
- 'src/components/site-bgm.css',
- 'src/components/Layout.tsx',
- 'src/App.tsx',
+const paths=[
+ 'src/components/SiteBgm.tsx','src/components/site-bgm.css',
+ 'src/components/Layout.tsx','src/App.tsx',
  'src/components/PageTransition.tsx',
-].map(path=>readFile(path,'utf8')))
-
+ 'src/components/EntryIntro.tsx','src/components/entry-intro.css',
+]
+const [player,css,layout,app,transition,intro,introCss]=
+ await Promise.all(paths.map(p=>readFile(p,'utf8')))
+for(const path of paths.filter(p=>p.endsWith('.tsx'))){
+ const source=await readFile(path,'utf8')
+ const parsed=ts.createSourceFile(path,source,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX)
+ assert.equal(parsed.parseDiagnostics.length,0,'Invalid TSX: '+path)
+}
 assert.ok(player.includes('https://bgmer.net/wp-content/uploads/2025/04/456_BPM80.mp3'),
- 'Use the actual short version of the selected BGMer song')
-assert.ok(player.includes('useState(true)')&&player.includes('useState<Playback>(\'starting\')'),
- 'Every visit should request music by default, even if a past visit was muted')
+ 'Keep playing the selected official BGMer track')
+assert.ok(player.includes('useState(true)')&&player.includes("useState<Playback>('waiting')"),
+ 'A fresh public visit must be ready for background music')
 assert.ok(!player.includes('localStorage')&&!player.includes('sessionStorage'),
- 'Previous stop preference must not silently mute the next visit')
-assert.ok(player.includes('function pauseMusic()')&&player.includes('audio.pause()')&&player.includes("setPlayback('off')"),
- 'Visitors must still be able to stop music at any time')
-assert.ok(player.includes('function startMusic()')&&player.includes('attemptPlay(true)'),
- 'User-initiated BGM requests must immediately call the player')
-assert.ok(player.includes('const request=audio.play()')&&player.includes("NotAllowedError"),
- 'Browser autoplay rejection must be detected by the actual playback promise')
-assert.ok(player.includes('const gateVisible=introReady&&enabled&&entryRequired'),
- 'A branded music-entry screen must appear only if autoplay is blocked or fails')
-assert.ok(player.includes("createPortal(<div className=\"site-bgm-entry-backdrop\"")&&player.includes('document.body)'),
- 'Gate must overlay the site without being trapped under the header stacking context')
-assert.ok(player.includes('onClick={startMusic}')&&player.includes('onClick={pauseMusic}'),
- 'Entering with music must call play inside the click; a music-free alternative must remain')
-assert.ok(player.includes('role="dialog" aria-modal="true"')&&player.includes('entryPlayRef.current?.focus()'),
- 'Entry screen must be keyboard accessible')
-assert.ok(player.includes('onPlaying={()=>')&&player.includes('setEntryRequired(false)'),
- 'Entry gate must close once media actually begins playing')
-assert.ok(player.includes('loop preload="auto"')&&player.includes('DEFAULT_VOLUME=0.24'),
- 'BGM should loop softly and begin loading immediately')
-
-assert.ok(player.includes("onError={()=>{if(enabled){setPlayback('error')")&&player.includes("if(!everPlayed.current)setEntryRequired(true)"),
- 'Unavailable audio must show a retryable entry screen rather than leaving visitors stuck in silence')
-assert.ok(layout.includes('<SiteBgm introReady={introReady}/>')&&layout.includes("import SiteBgm from './SiteBgm'"),
- 'Only one audio player should be mounted in persistent public Layout and synchronized with brand intro')
+ 'Muting a previous visit must not affect the next entrance')
+assert.ok(player.includes('const request=audio.play()')&&player.includes('NotAllowedError'),
+ 'Honor actual browser autoplay policy and handle playback rejection')
+assert.ok(player.includes('audio.volume=DEFAULT_VOLUME')&&player.includes('DEFAULT_VOLUME=0.24'),
+ 'Keep gentle background volume')
+assert.ok(player.includes('loop preload="auto"'),
+ 'Play the official soundtrack continuously using only one audio element')
+assert.ok(player.includes('function pauseMusic()')&&player.includes('audioRef.current?.pause()'),
+ 'The public header music control must still be able to stop audio')
+assert.ok(player.includes('function toggle()')&&player.includes('else startMusic()'),
+ 'Visitors can restart background music from the header')
+assert.ok(player.includes('onRegisterStart?.(startMusic)'),
+ 'Expose a direct click-to-play action to the original intro via registration')
+assert.ok(!player.includes('createPortal')&&!player.includes('site-bgm-entry-backdrop'),
+ 'The separate playback gateway/modal must be removed entirely')
+assert.ok(!css.includes('.site-bgm-entry-backdrop')&&!css.includes('.site-bgm-entry-play'),
+ 'Obsolete separate-player-screen CSS must be removed')
+assert.ok(layout.includes('<SiteBgm onRegisterStart={onRegisterBgm}/>'),
+ 'The persistent public layout must expose its one audio player to the entrance')
 assert.ok(layout.includes('bgmer.net/music/456'),
- 'Composer/source attribution must remain available')
+ 'Soundtrack credit must remain visible in public footer')
+assert.ok(app.includes('const startMusic=useRef<()=>void>')&&
+ app.includes('const registerBgm=useCallback('),
+ 'Keep a stable, directly callable music starter across the logo and header')
+assert.ok(app.includes('<Layout onRegisterBgm={registerBgm}>')&&
+ app.includes('<EntryIntro onEnter={()=>startMusic.current()}'),
+ 'The logo entry action must start the audio without switching to another modal')
 assert.ok(!app.includes('<SiteBgm')&&app.includes('return <PublicApp />'),
- 'Do not duplicate audio per page or inject it into the administrative shell')
-assert.ok(css.includes('@media(max-width:850px)')&&css.includes('.site-bgm{margin-left:auto}'),
- 'The BGM toggle must remain usable in the mobile top bar')
-assert.ok(css.includes('.site-bgm-entry-backdrop{')&&css.includes('.site-bgm-entry-play{'),
- 'Blocked autoplay requires a responsive, prominent entrance action')
-assert.ok(terms.includes('<SceneBackdrop introReady={introReady} />'),
- 'Shared scene animations must remain separate from the audio')
+ 'Only the public shell should own the BGM player, not every page or admin')
+assert.ok(intro.includes("images/brand/logo-intro.webp")&&intro.includes('intro-motto'),
+ 'Use the existing original animated logo and motto, not a new entrance page')
+assert.ok(intro.includes('進入狐隱・開始播放音樂')&&intro.includes('onClick={enterInn}'),
+ 'The original logo page must show the single enter-and-start-music action')
+assert.ok(intro.includes('onEnter?.()')&&intro.indexOf('onEnter?.()')<intro.indexOf("setPhase('clear')"),
+ 'Start the audio synchronously within the entry button click before fade timers')
+assert.ok(intro.includes("phase==='ready'")&&intro.includes("setPhase('ready')"),
+ 'Wait for the original logo arrival before showing the entry button')
+assert.ok(!intro.includes('sessionStorage')&&!intro.includes('localStorage'),
+ 'Every fresh page visit should show the single logo entrance for audio activation')
+assert.ok(intro.includes('role="dialog" aria-modal="true"')&&intro.includes('entryButton.current?.focus('),
+ 'Logo entry must be keyboard accessible')
+assert.ok(introCss.includes('.intro-entry-action')&&
+ introCss.includes('.intro-entry-action:focus-visible'),
+ 'The enter-and-play control must be legible and keyboard focusable')
+assert.ok(introCss.includes('@media(prefers-reduced-motion:reduce)')&&
+ !introCss.includes('.entry-intro{display:none!important}'),
+ 'Visitors with reduced motion must retain access to the entry button')
+assert.ok(transition.includes('<SceneBackdrop introReady={introReady} />'),
+ 'Site background and route transitions must keep using the existing reveal state')
+assert.ok(css.includes('@media(max-width:850px)')&&introCss.includes('@media(max-width:570px)'),
+ 'Keep mobile music controls and responsive logo entry')
 
 const vite=await createServer({server:{middlewareMode:true,hmr:false},appType:'custom'})
 try{
  const {default:Layout}=await vite.ssrLoadModule('/src/components/Layout.tsx')
  const markup=renderToStaticMarkup(createElement(MemoryRouter,null,
   createElement(Layout,null,createElement('p',null,'TEST'))))
- assert.equal((markup.match(/<audio\b/g)||[]).length,1,'The public shell should have exactly one audio element')
- assert.ok(markup.includes('loop=""')||markup.includes(' loop'),'Audio must loop automatically')
- assert.ok(markup.includes('背景音樂')&&markup.includes('BGM'),'Visitors should see a labeled playback toggle')
- assert.ok(markup.includes('bgmer.net/wp-content/uploads/2025/04/456_BPM80.mp3'),
-  'Server render must point to the official audio file')
- console.log('PASS: fresh-visit music start, browser-blocked entry gate, play-on-click, optional mute, one looping player and attribution')
+ assert.equal((markup.match(/<audio\b/g)||[]).length,1,
+  'There must be precisely one persistent public audio element')
+ assert.ok(markup.includes('loop=""')||markup.includes(' loop'))
+ assert.ok(markup.includes('BGM')&&markup.includes('背景音樂'))
+ assert.ok(markup.includes('bgmer.net/wp-content/uploads/2025/04/456_BPM80.mp3'))
+ console.log('PASS: original logo click starts one looping BGM player; no separate audio screen; mobile, keyboard, stop/restart and attribution intact')
 }finally{await vite.close()}
