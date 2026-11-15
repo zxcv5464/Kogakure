@@ -40,8 +40,8 @@ assert.ok(player.includes('onPlaying={()=>')&&player.includes('setEntryRequired(
 assert.ok(player.includes('loop preload="auto"')&&player.includes('DEFAULT_VOLUME=0.24'),
  'BGM should loop softly and begin loading immediately')
 
-assert.ok(player.includes("onError={()=>setPlayback('error')}"),
- 'Unavailable audio must show an understandable error state')
+assert.ok(player.includes("onError={()=>{if(enabled){setPlayback('error')")&&player.includes("if(!everPlayed.current)setEntryRequired(true)"),
+ 'Unavailable audio must show a retryable entry screen rather than leaving visitors stuck in silence')
 assert.ok(layout.includes('<SiteBgm introReady={introReady}/>')&&layout.includes("import SiteBgm from './SiteBgm'"),
  'Only one audio player should be mounted in persistent public Layout and synchronized with brand intro')
 assert.ok(layout.includes('bgmer.net/music/456'),
