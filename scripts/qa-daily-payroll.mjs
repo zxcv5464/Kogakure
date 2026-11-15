@@ -21,8 +21,9 @@ const files=[
  'supabase/migrations/20261115_25_paid_payroll_corrections.sql',
  'supabase/migrations/20261115_26_manual_income_payroll_distribution.sql',
  'src/pages/admin/PaidPayrollRecordEditor.tsx',
+ 'src/pages/admin/paid-payroll-editor.css',
 ]
-const [orders,accounting,ui,helper,styles,ledgerStyles,sql,ownerSql,periodSql,resetSql,correctionSql,incomeSql,paidEditor]=
+const [orders,accounting,ui,helper,styles,ledgerStyles,sql,ownerSql,periodSql,resetSql,correctionSql,incomeSql,paidEditor,paidEditorStyles]=
  await Promise.all(files.map(path=>readFile(path,'utf8')))
 assert.ok(orders.includes("{id:'active',text:'待處理'}"),
  'Keep the existing pending+preparing queue')
@@ -88,10 +89,20 @@ assert.ok(ui.includes("changeSnapshot('reset')")&&
  resetSql.includes('pg_catalog.pg_advisory_xact_lock')&&
  !resetSql.includes('delete from public.accounting_entries'),
  'Reset and recalculate must be protected against paid snapshots and atomic with rollback')
+assert.ok(paidEditorStyles.includes('.paid-payroll-history summary')&&
+ paidEditorStyles.includes('.paid-payroll-history[open] summary svg')&&
+ paidEditorStyles.includes('.paid-payroll-history-list'),
+ 'Salary history must be collapsed initially, accessible with keyboard, and expandable')
 assert.ok(accounting.includes('PaidPayrollRecordEditor')&&
  !accounting.includes('accounting-delete-manager')&&
  ui.includes('fetchPaidPayrollAudit')&&ui.includes('PaidPayrollRecordEditor')&&
  ui.includes('已發薪調整歷史')&&
+ ui.includes('<details className="paid-payroll-history">')&&
+ ui.includes('<summary>')&&
+ ui.includes('paid-payroll-history-list')&&
+ !ui.includes('<details className="paid-payroll-history" open')&&
+ !ui.includes('請核對實際支付情形並填寫原因')&&
+ ledgerStyles.includes('.accounting-payroll-locked')&&
  helper.includes("rpc('manage_paid_payroll'")&&
  helper.includes('parsePayrollReference')&&
  correctionSql.includes('public.payroll_correction_audit')&&

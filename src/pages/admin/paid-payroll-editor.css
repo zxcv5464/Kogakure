@@ -12,8 +12,15 @@
 .paid-payroll-actions button.is-delete{border-color:rgba(231,137,136,.49);color:#f7c4bd;background:#64343b}
 .paid-payroll-actions button:disabled,.paid-payroll-toolbar button:disabled{opacity:.44;cursor:not-allowed}
 .paid-payroll-success{color:#c5e4be;font-size:.74rem}
-.paid-payroll-history{margin-top:16px;border-top:1px solid rgba(218,181,128,.25);padding-top:13px;display:grid;gap:9px}
-.paid-payroll-history h4{margin:0;font-size:.85rem;color:#edd0ab}
+.paid-payroll-history{margin-top:16px;border-top:1px solid rgba(218,181,128,.25);padding-top:11px;min-width:0}
+.paid-payroll-history summary{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:40px;padding:7px 4px;list-style:none;cursor:pointer;color:#edd0ab;font-size:.85rem;font-weight:600}
+.paid-payroll-history summary::-webkit-details-marker{display:none}
+.paid-payroll-history summary svg{flex-shrink:0;transition:transform .2s ease}
+.paid-payroll-history[open] summary svg{transform:rotate(180deg)}
+.paid-payroll-history summary:focus-visible{outline:2px solid #e5c18c;outline-offset:3px;border-radius:4px}
+.paid-payroll-history-list{display:grid;gap:9px;padding-top:9px}
 .paid-payroll-history-row{border:1px solid rgba(217,183,128,.2);border-radius:5px;padding:10px 12px;display:grid;gap:5px;font-size:.75rem;color:#d5c2b1;line-height:1.65}
 .paid-payroll-history-row strong{color:#f0d3b3}
 @media(max-width:640px){.paid-payroll-actions button{flex:1}.paid-payroll-toolbar button{width:100%}}
+
+@media(prefers-reduced-motion:reduce){.paid-payroll-history summary svg{transition:none}}
