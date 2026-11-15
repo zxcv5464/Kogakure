@@ -25,7 +25,6 @@
 .shift-dot{display:inline-block;width:10px;height:10px;border-radius:3px;border:1px solid rgba(193,156,110,.8)}
 .shift-dot.is-open{background:#c6a56e}
 .shift-dot.is-closed{background:#756473;border-color:#9c8691}
-.shift-dot.is-unannounced{background:transparent}
 .shift-dot.is-today{background:#e6c489;border-radius:50%;box-shadow:0 0 0 2px rgba(225,181,111,.2)}
 .shift-calendar-instruction{margin:10px 0 14px;color:#e0c9a7;font-size:.82rem;line-height:1.6}
 .shift-calendar-weekdays,.shift-week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:7px}
@@ -36,7 +35,6 @@
 .shift-day{position:relative;display:flex;flex-direction:column;align-items:stretch;gap:9px;min-width:0;min-height:156px;padding:11px 10px 10px;border:1px solid rgba(205,166,116,.27);border-radius:5px;background:rgba(24,22,35,.91);color:#efe0ca;text-align:left;font:inherit;cursor:pointer;transition:background .2s ease,border-color .2s ease,transform .2s ease}
 .shift-day.is-open{background:linear-gradient(155deg,rgba(78,61,58,.8),rgba(38,31,42,.91));border-color:rgba(215,175,117,.61)}
 .shift-day.is-closed{background:rgba(33,29,39,.83)}
-.shift-day.is-unannounced{background:rgba(23,22,32,.65)}
 .shift-day.is-past{opacity:.78}
 .shift-day.is-today{box-shadow:inset 0 0 0 2px rgba(233,193,126,.91)}
 .shift-day.is-selected{border-color:#f1d29f;box-shadow:inset 0 0 0 1px #e8c58b,0 0 0 2px rgba(226,185,124,.3)}
@@ -50,7 +48,6 @@
 .shift-status{align-self:flex-start;padding:4px 8px;color:#bba9a3;border:1px solid rgba(206,167,123,.34);border-radius:3px;font-size:.74rem;white-space:nowrap}
 .shift-status.is-open{background:rgba(195,149,81,.24);border-color:rgba(218,172,108,.63);color:#f6d29d}
 .shift-status.is-closed{background:rgba(126,98,117,.16);color:#c9b5c0}
-.shift-status.is-unannounced{color:#a99c9f}
 .shift-day-details{display:flex;flex-direction:column;gap:7px;font-size:.74rem;line-height:1.35}
 .shift-hours,.shift-attendance-count,.shift-event{display:flex;gap:5px;align-items:flex-start;min-width:0;color:#ddc7a8}
 .shift-hours svg,.shift-attendance-count svg,.shift-event svg{flex:none;margin-top:1px}
@@ -68,7 +65,6 @@
 .shift-detail-state{font-size:.87rem;padding:7px 15px;border:1px solid rgba(213,177,137,.4);border-radius:4px;color:#cbb9ad}
 .shift-detail-state.is-open{color:#f5d39e;background:rgba(165,116,62,.17);border-color:rgba(228,180,113,.55)}
 .shift-detail-state.is-closed{color:#d4bfc8;background:rgba(121,83,107,.2)}
-.shift-detail-state.is-unannounced{color:#a9a0a2}
 .shift-detail-content{padding-top:19px}
 .shift-detail-facts{display:flex;flex-wrap:wrap;gap:12px}
 .shift-detail-fact{display:flex;align-items:flex-start;gap:12px;min-width:min(100%,240px);flex:1;padding:15px;border:1px solid rgba(214,179,127,.26);border-radius:5px;background:rgba(22,20,31,.64)}
