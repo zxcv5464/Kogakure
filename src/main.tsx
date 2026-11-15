@@ -25,6 +25,20 @@ if (!offlinePreview && redirected) {
  }
 }
 
+
+/**
+ * GitHub Pages serves route folders with a trailing slash (e.g. /shifts/).
+ * BrowserRouter and every fallback page should receive one canonical path,
+ * including after a 404-route restore or a legacy hash redirect.
+ */
+if(!offlinePreview){
+ const current=window.location.pathname
+ if(current.startsWith(base)&&current!==base&&/\\/+$/.test(current)){
+  const clean=current.replace(/\\/+$/,'')
+  window.history.replaceState(window.history.state,'',clean+window.location.search+window.location.hash)
+ }
+}
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
  <React.StrictMode><Router basename={offlinePreview ? undefined : base}><App /></Router></React.StrictMode>
 )
