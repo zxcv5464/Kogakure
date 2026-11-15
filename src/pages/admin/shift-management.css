@@ -104,8 +104,10 @@
 .shift-calendar-summary{display:flex;flex-direction:column;gap:5px;font-size:.73rem;line-height:1.45;min-width:0}
 .shift-calendar-time,.shift-calendar-count{display:flex;gap:5px;align-items:center;min-width:0;color:#d4bda2;overflow:hidden;text-overflow:ellipsis}
 .shift-calendar-time svg,.shift-calendar-count svg{flex:none}
-.shift-calendar-names{display:flex;flex-direction:column;gap:3px;margin-top:2px}
-.shift-calendar-names span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#edd0ae}
+.shift-calendar-event{display:flex;align-items:flex-start;gap:5px;min-width:0;margin-top:4px;padding:6px 7px;border:1px solid rgba(213,175,121,.38);border-radius:3px;background:rgba(142,103,66,.19);color:#f3d39c;font-size:.72rem;line-height:1.35}
+.shift-calendar-event svg{flex:none;margin-top:1px}
+.shift-calendar-event span{min-width:0;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden;overflow-wrap:anywhere}
+.shift-admin-event-detail{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:9px 11px;border:1px solid rgba(217,183,130,.33);border-radius:4px;color:#eed0a1;background:rgba(95,68,54,.28);font-size:.81rem}
 .shift-calendar-empty{color:#978e91;font-size:.71rem;line-height:1.4}
 .shift-calendar-edit{display:flex;justify-content:space-between;align-items:center;gap:5px;margin-top:auto;padding-top:8px;border-top:1px solid rgba(214,183,139,.16);font-size:.7rem;color:#b9a58c}
 .shift-calendar-cell:hover .shift-calendar-edit{color:#f2d1a0}
