@@ -1,0 +1,108 @@
+import {useEffect,useMemo,useState} from 'react'
+import {createPortal} from 'react-dom'
+import {ChevronRight,Pin,X} from 'lucide-react'
+import {configured} from '../lib/config'
+import {fetchPublicAnnouncements} from '../lib/announcements'
+import type {Announcement,AnnouncementCategory} from '../lib/announcements'
+import './home-announcements.css'
+
+const categories:Record<AnnouncementCategory,string>={
+ notice:'館內公告',news:'最新消息',
+}
+const publishedDate=(date:string|null)=>
+ date?new Date(date).toLocaleDateString('zh-TW',{
+  timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit',
+ }):''
+
+/** Independent, non-blocking public feed. Backoffice publishing needs no
+ * GitHub Pages redeploy; active pages revalidate and refresh on focus. */
+export default function HomeAnnouncements(){
+ const [rows,setRows]=useState<Announcement[]>([])
+ const [category,setCategory]=useState<AnnouncementCategory>('notice')
+ const [active,setActive]=useState<Announcement|null>(null)
+ const [loading,setLoading]=useState(configured)
+ const [error,setError]=useState(false)
+ useEffect(()=>{
+  if(!configured)return
+  let alive=true
+  let inFlight=false
+  const update=async()=>{
+   if(inFlight)return
+   inFlight=true
+   try{
+    const results=await fetchPublicAnnouncements()
+    if(alive){setRows(results);setError(false)}
+   }catch{
+    if(alive)setError(true)
+   }finally{
+    inFlight=false
+    if(alive)setLoading(false)
+   }
+  }
+  void update()
+  const onFocus=()=>{if(document.visibilityState==='visible')void update()}
+  const timer=window.setInterval(onFocus,45000)
+  window.addEventListener('focus',onFocus)
+  document.addEventListener('visibilitychange',onFocus)
+  return()=>{
+   alive=false
+   window.clearInterval(timer)
+   window.removeEventListener('focus',onFocus)
+   document.removeEventListener('visibilitychange',onFocus)
+  }
+ },[])
+ useEffect(()=>{
+  if(!active)return
+  const dismiss=(event:KeyboardEvent)=>{if(event.key==='Escape')setActive(null)}
+  window.addEventListener('keydown',dismiss)
+  return()=>window.removeEventListener('keydown',dismiss)
+ },[active])
+ const filtered=useMemo(()=>rows.filter(row=>row.category===category),[rows,category])
+ return <>
+  <section className="home-news" aria-label="館內公告及最新消息">
+   <header className="home-news-heading">
+    <span>狐隱手帖</span><small>KOGAKURE · NOTICE BOARD</small>
+   </header>
+   <div className="home-news-tabs" role="tablist" aria-label="選擇館內消息類別">
+    {(['notice','news'] as const).map(value=>
+     <button key={value} type="button" role="tab"
+      aria-selected={category===value}
+      className={category===value?'is-selected':''}
+      onClick={()=>setCategory(value)}>
+      {categories[value]}
+     </button>
+    )}
+   </div>
+   <div className="home-news-list" role="tabpanel" aria-label={categories[category]}
+    aria-live="polite">
+    {loading&&<p className="home-news-empty">正在翻閱館內消息…</p>}
+    {!loading&&error&&<p className="home-news-empty">館內消息暫時無法讀取，請稍後再試。</p>}
+    {!loading&&!error&&filtered.length===0&&
+     <p className="home-news-empty">{category==='notice'?'目前沒有館內公告':'目前沒有最新消息'}</p>}
+    {!loading&&!error&&filtered.map(item=>
+     <button key={item.id} type="button" className="home-news-entry"
+      onClick={()=>setActive(item)} aria-label={'閱讀'+categories[item.category]+'：'+item.title}>
+      <time>{publishedDate(item.publishedAt)}</time>
+      <strong>{item.title}</strong>
+      {item.pinned&&<Pin size={13} aria-label="置頂公告"/>}
+      <ChevronRight className="home-news-entry-arrow" size={16} aria-hidden="true"/>
+     </button>
+    )}
+   </div>
+   {filtered.length>2&&!loading&&!error&&
+    <small className="home-news-scroll-note">向下捲動查看更多消息</small>}
+  </section>
+  {active&&typeof document!=='undefined'&&createPortal(<div className="home-news-overlay" role="presentation"
+   onMouseDown={event=>{if(event.target===event.currentTarget)setActive(null)}}>
+   <article className="home-news-dialog" role="dialog" aria-modal="true"
+    aria-label={active.title} tabIndex={-1}>
+    <button className="home-news-close" type="button" aria-label="關閉公告"
+     onClick={()=>setActive(null)}><X size={20}/></button>
+    <p className="home-news-dialog-category">{categories[active.category]} · {publishedDate(active.publishedAt)}</p>
+    <h2>{active.title}</h2>
+    <div className="home-news-dialog-body">{active.content}</div>
+    <p className="home-news-dialog-end">狐隱 · KOGAKURE</p>
+   </article>
+  </div>,document.body)}
+ </>
+}

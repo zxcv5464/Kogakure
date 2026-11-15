@@ -64,6 +64,10 @@ jobs:
         env:
           VITE_OFFLINE_PREVIEW: 'true'
         run: node scripts/qa-daily-payroll.mjs
+      - name: Verify homepage announcements, owner-only publication and admin news editor
+        env:
+          VITE_OFFLINE_PREVIEW: 'true'
+        run: node scripts/qa-announcements.mjs
       - name: Verify owner accounting ledger, date-scoped tea orders and CSV safety
         env:
           VITE_OFFLINE_PREVIEW: 'true'

@@ -2,6 +2,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { ArrowRight, CalendarDays, Compass, Coffee, ScrollText, Utensils } from 'lucide-react'
 import { asset } from '../lib/paths'
 import { prefetchStaffPage } from '../lib/prefetch'
+import HomeAnnouncements from '../components/HomeAnnouncements'
 import './home-page.css'
 const pages={
  '/about':{title:'入館須知',desc:'穿過山林的夜色，尋一處可暫時忘憂的所在。',icon:Compass},
@@ -11,7 +12,7 @@ const pages={
  '/booking':{title:'預約',desc:'選擇想體驗的服務，在狐火亮起時與我們相見。',icon:ScrollText},
 }
 export function HomePage(){
- return <div className="home-page"><section className="home-hero"><div className="home-image" aria-hidden="true"/><div className="home-content"><img className="home-logo" src={asset('images/brand/logo-wide.webp')} alt="狐隱 KOGAKURE 狐隱の湯"/><p className="home-verse">世有百鬼，夜有萬境。<br/>循狐而入，借湯忘憂。</p><p className="home-blurb">傳說在月色最深的夜晚，山林裡會出現一盞青色狐火。<br/>循著那盞光，你將抵達隱於結界之中的湯宿。</p><Link className="primary-link" to="/staff" onMouseEnter={prefetchStaffPage} onFocus={prefetchStaffPage} onTouchStart={prefetchStaffPage}>邂逅狐姬 <ArrowRight size={18}/></Link></div></section></div>
+ return <div className="home-page"><section className="home-hero"><div className="home-image" aria-hidden="true"/><div className="home-content"><img className="home-logo" src={asset('images/brand/logo-wide.webp')} alt="狐隱 KOGAKURE 狐隱の湯"/><p className="home-verse">世有百鬼，夜有萬境。<br/>循狐而入，借湯忘憂。</p><p className="home-blurb">傳說在月色最深的夜晚，山林裡會出現一盞青色狐火。<br/>循著那盞光，你將抵達隱於結界之中的湯宿。</p><Link className="primary-link" to="/staff" onMouseEnter={prefetchStaffPage} onFocus={prefetchStaffPage} onTouchStart={prefetchStaffPage}>邂逅狐姬 <ArrowRight size={18}/></Link><HomeAnnouncements/></div></section></div>
 }
 export function OtherPage(){
  // Direct GitHub Pages URLs may arrive as /shifts/ before canonicalization.

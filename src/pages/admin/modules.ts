@@ -14,7 +14,7 @@ export type AdminModule = {
 export const ADMIN_MODULES: AdminModule[] = [
  { id: 'accounts', title: '員工帳號', summary: '建立員工登入帳號、密碼、管理權限與刪除帳號', icon: ShieldCheck, path: '/admin/accounts', status: 'available' },
  { id: 'staff', title: '員工名帖', summary: '管理人員介紹、照片、顯示順序與公開狀態', icon: UsersRound, path: '/admin/staff', status: 'available' },
- { id: 'announcements', title: '公告管理', summary: '館內公告、最新消息與首頁資訊', icon: FileText, status: 'planned' },
+ { id: 'announcements', title: '公告管理', summary: '編輯館內公告與最新消息、置頂及發布狀態（管理員）', icon: FileText, path: '/admin/announcements', status: 'available' },
  { id: 'accounting', title: '帳務管理', summary: '每日／每月 Gil 收支登錄、結餘統計與明細匯出（管理員）', icon: Wallet, path: '/admin/accounting', status: 'available' },
  { id: 'menu', title: '菜單管理', summary: '茶宴分類、品項、Gil 金額、供應狀態與公開排序', icon: Soup, path: '/admin/menu', status: 'available' },
  { id: 'services', title: '服務內容管理', summary: '新增服務、上傳多張照片、調整輪播順序與公開狀態（管理員）', icon: ScrollText, path: '/admin/services', status: 'available' },

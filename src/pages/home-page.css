@@ -63,3 +63,23 @@
  .site > main .home-page .home-blurb { font-size: .85rem; line-height: 1.85; margin-bottom: 21px; }
  .site > main .home-page .home-note { margin-top: 21px; font-size: .75rem; }
 }
+
+/* The live notice board follows the CTA without covering the original artwork. */
+.site > main .home-page .home-content{padding-block:clamp(17px,3.5vh,42px)}
+.site > main .home-page .home-logo{max-height:clamp(96px,17vh,163px);margin-bottom:clamp(10px,2vh,17px)}
+.site > main .home-page .home-blurb{margin-bottom:16px}
+.site > main .home-page .home-news{flex:0 0 auto}
+@media(max-height:760px) and (min-width:851px){
+ .site > main .home-page .home-hero{min-height:660px}
+ .site > main .home-page .home-verse{line-height:1.7;margin-bottom:8px}
+ .site > main .home-page .home-news-list{max-height:88px}
+}
+@media(max-width:850px){
+ .site > main .home-page .home-hero{min-height:720px}
+ .site > main .home-page .home-content{padding:23px 16px 27px}
+}
+@media(max-width:570px){
+ .site > main .home-page .home-hero{min-height:690px}
+ .site > main .home-page .home-logo{max-height:123px}
+ .site > main .home-page .home-news-list{max-height:88px}
+}
