@@ -76,8 +76,8 @@ assert.ok(intro.includes("disabled={phase!=='ready'}")&&intro.includes('const HO
  'Button stays mounted for a smooth fade but must not be clickable before it fully appears')
 assert.ok(intro.includes('onEnter?.()')&&intro.indexOf('onEnter?.()')<intro.indexOf("setPhase('clear')"),
  'Start the audio synchronously within the entry button click before fade timers')
-assert.ok(intro.includes("phase==='ready'")&&intro.includes("setPhase('ready')"),
- 'Wait for the original logo arrival before showing the entry button')
+assert.ok(intro.includes("phase!=='ready'")&&intro.includes("setPhase('ready')"),
+ 'Enable the entry button only after the original logo has finished its entrance')
 assert.ok(!intro.includes('sessionStorage')&&!intro.includes('localStorage'),
  'Every fresh page visit should show the single logo entrance for audio activation')
 assert.ok(intro.includes('role="dialog" aria-modal="true"')&&
