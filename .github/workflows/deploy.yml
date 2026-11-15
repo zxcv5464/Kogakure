@@ -60,6 +60,8 @@ jobs:
         run: node scripts/qa-entry-intro-first-load.mjs
       - name: Verify shared rotating scene backgrounds on services and shifts
         run: node scripts/qa-public-scene-backdrops.mjs
+      - name: Verify cold first-visit shifts stay responsive during delayed database reads
+        run: node scripts/qa-shift-cold-first-paint.mjs
       - name: Verify smooth public shifts loading, cache and refresh behaviour
         env:
           VITE_OFFLINE_PREVIEW: 'true'
