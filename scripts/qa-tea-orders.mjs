@@ -74,7 +74,8 @@ for(const token of [
 ]){
  assert.ok(orders.includes(token),'Order data access missing '+token)
 }
-assert.ok(orders.includes(".limit(200)"),'Admin should cap fetched history')
+assert.ok(orders.includes(".limit(date?1000:200)")&&orders.includes("request=request.gte('created_at',range.start).lt('created_at',range.end)"),
+ 'Admin orders must server-filter a selected Taipei business date, while recent history stays capped')
 assert.ok(admin.includes('接單 · 開始製作')&&admin.includes('完成訂單')&&admin.includes('取消訂單'),
  'Admin must support pending, preparing, completed, cancelled actions')
 assert.ok(!admin.includes('window.prompt(')
