@@ -77,7 +77,7 @@ for(const phrase of [
  'window.setInterval',
  'IntersectionObserver',
  'image.decode().then(ready,ready)',
- "document.visibilityState==='visible'",
+ "document.visibilityState!=='visible'",
  'services-photo-slide',
  "photos.length>1",
 ])assert.ok(gallery.includes(phrase),'Timed service slideshow missing: '+phrase)
