@@ -67,3 +67,67 @@
 .shift-admin-save-preference:hover:not(:disabled){background:rgba(123,84,77,.49)}
 .shift-admin-save-preference:disabled{opacity:.52;cursor:not-allowed}
 @media(max-width:580px){.shift-admin-save-preference{width:100%;justify-self:stretch}}
+
+/* Four-week calendar overview. Day editing is intentionally kept in a modal,
+   rather than squeezing full administrative forms into 28 calendar cells. */
+.shift-calendar-container{min-width:0;padding:18px;border:1px solid rgba(216,178,130,.29);border-radius:8px;background:linear-gradient(155deg,rgba(44,34,49,.91),rgba(19,18,29,.98))}
+.shift-calendar-heading{display:flex;justify-content:space-between;align-items:end;gap:12px;flex-wrap:wrap;padding:1px 2px 14px}
+.shift-calendar-heading p{font-size:.76rem;letter-spacing:.13em;color:#bb9e7d;margin:0 0 5px}
+.shift-calendar-heading h2{font:600 clamp(1.1rem,2.7vw,1.5rem) 'Noto Serif TC',serif;color:#f0d8b4;margin:0}
+.shift-calendar-heading>span{color:#c5b4a3;font-size:.81rem;line-height:1.65}
+.shift-calendar-legend{display:flex;align-items:center;gap:17px;flex-wrap:wrap;margin:0 0 16px;padding:12px 4px;border-top:1px solid rgba(222,188,145,.18);border-bottom:1px solid rgba(222,188,145,.18)}
+.shift-calendar-legend span{display:flex;align-items:center;gap:7px;color:#d2c0ab;font-size:.78rem}
+.shift-calendar-legend i{width:10px;height:10px;display:inline-block;border-radius:2px;border:1px solid #c4ad8f}
+.shift-calendar-legend i.is-open{background:#baa071}
+.shift-calendar-legend i.is-closed{background:#716774;border-color:#8d7b87}
+.shift-calendar-legend i.is-unannounced{background:transparent}
+.shift-calendar-legend i.is-today{background:#f3cb8e;border-color:#f3cb8e;border-radius:50%}
+.shift-calendar-scroll{max-width:100%;overflow-x:auto;overflow-y:hidden;scrollbar-color:rgba(210,170,116,.7) transparent;scrollbar-width:thin}
+.shift-calendar-scroll:focus-visible{outline:2px solid #d9b487;outline-offset:3px}
+.shift-calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(108px,1fr));gap:7px;min-width:784px}
+.shift-calendar-weekday{padding:11px 4px;text-align:center;color:#d5bb93;font-size:.82rem;font-weight:600;letter-spacing:.15em;border-bottom:1px solid rgba(219,186,137,.35)}
+.shift-calendar-cell{display:flex;min-width:0;min-height:150px;flex-direction:column;align-items:stretch;gap:7px;padding:11px 10px 9px;text-align:left;font:inherit;color:#ddcdbb;border:1px solid rgba(216,181,138,.24);border-radius:4px;background:rgba(23,21,33,.81);cursor:pointer;transition:border-color .18s ease,background .18s ease,transform .18s ease}
+.shift-calendar-cell:hover{border-color:#d4ac78;background:rgba(74,55,62,.63);transform:translateY(-2px)}
+.shift-calendar-cell:focus-visible{outline:2px solid #f1cf92;outline-offset:2px}
+.shift-calendar-cell.is-open{background:linear-gradient(180deg,rgba(66,56,56,.67),rgba(29,25,36,.88));border-color:rgba(191,158,108,.47)}
+.shift-calendar-cell.is-closed{background:rgba(26,24,33,.78)}
+.shift-calendar-cell.is-today{box-shadow:inset 0 0 0 1px #ebc48c;border-color:#dfba82}
+.shift-calendar-cell.is-past{opacity:.8}
+.shift-calendar-cell-top{display:flex;align-items:start;justify-content:space-between;min-height:30px;gap:4px}
+.shift-calendar-date{display:flex;align-items:baseline;gap:5px;white-space:nowrap}
+.shift-calendar-date small{font-size:.67rem;color:#bba28a}
+.shift-calendar-date strong{font:600 1.35rem Georgia,serif;color:#f5dec1;line-height:1.1}
+.shift-calendar-today{padding:3px 5px;border-radius:3px;color:#301d21;background:#e4bc80;font-size:.64rem;white-space:nowrap}
+.shift-calendar-status{align-self:flex-start;padding:3px 8px;border-radius:3px;border:1px solid rgba(201,177,142,.27);color:#b9a99b;font-size:.72rem;white-space:nowrap}
+.shift-calendar-status.is-open{color:#f0d1a0;background:rgba(148,111,68,.23);border-color:rgba(212,177,122,.55)}
+.shift-calendar-status.is-closed{color:#bfadb7;background:rgba(98,84,103,.23)}
+.shift-calendar-summary{display:flex;flex-direction:column;gap:5px;font-size:.73rem;line-height:1.45;min-width:0}
+.shift-calendar-time,.shift-calendar-count{display:flex;gap:5px;align-items:center;min-width:0;color:#d4bda2;overflow:hidden;text-overflow:ellipsis}
+.shift-calendar-time svg,.shift-calendar-count svg{flex:none}
+.shift-calendar-names{display:flex;flex-direction:column;gap:3px;margin-top:2px}
+.shift-calendar-names span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#edd0ae}
+.shift-calendar-empty{color:#978e91;font-size:.71rem;line-height:1.4}
+.shift-calendar-edit{display:flex;justify-content:space-between;align-items:center;gap:5px;margin-top:auto;padding-top:8px;border-top:1px solid rgba(214,183,139,.16);font-size:.7rem;color:#b9a58c}
+.shift-calendar-cell:hover .shift-calendar-edit{color:#f2d1a0}
+.shift-calendar-scroll-hint{display:none;margin:0 0 10px;color:#c4ac95;font-size:.74rem}
+.shift-admin-modal-backdrop{position:fixed;z-index:1000;inset:0;padding:clamp(10px,3vw,26px);display:flex;align-items:center;justify-content:center;background:rgba(8,8,16,.8);backdrop-filter:blur(5px)}
+.shift-admin-modal{display:flex;flex-direction:column;width:min(560px,100%);max-height:min(92dvh,850px);border:1px solid rgba(215,173,116,.59);border-radius:9px;background:#1d1927;color:#e9d7be;box-shadow:0 25px 90px rgba(0,0,0,.65);overflow:hidden}
+.shift-admin-modal-heading{display:flex;justify-content:space-between;gap:18px;align-items:start;padding:22px 23px 16px;border-bottom:1px solid rgba(213,179,137,.31);background:linear-gradient(95deg,rgba(69,49,67,.66),rgba(31,27,42,.93))}
+.shift-admin-modal-heading p{margin:0 0 9px;color:#c2a583;letter-spacing:.14em;font-size:.7rem}
+.shift-admin-modal-heading h2{margin:0;color:#f3ddc0;font:600 clamp(1.15rem,3vw,1.45rem) 'Noto Serif TC',serif}
+.shift-admin-modal-heading span{display:block;margin-top:8px;color:#bdad9c;font-size:.78rem}
+.shift-admin-modal-close{display:grid;place-items:center;flex:none;width:38px;height:38px;border:1px solid rgba(224,191,147,.39);border-radius:4px;color:#e1c6a2;background:rgba(27,23,38,.66);cursor:pointer}
+.shift-admin-modal-close:focus-visible{outline:2px solid #edcb8f;outline-offset:2px}
+.shift-admin-modal-body{min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:18px 21px}
+.shift-admin-modal-body .shift-admin-day{padding:0;background:transparent;border:0;opacity:1}
+.shift-admin-modal-body .shift-admin-open-editor{gap:12px}
+.shift-admin-modal-body .shift-admin-open-editor label{grid-column:1/-1}
+.shift-admin-modal-body .shift-admin-open-editor select,.shift-admin-modal-body .shift-admin-open-editor input,.shift-admin-modal-body .shift-admin-add-person select{min-height:43px}
+.shift-admin-modal-body .shift-admin-attendance{margin-top:17px;padding-top:17px}
+.shift-admin-modal-body .shift-admin-day-head{margin-bottom:16px}
+.shift-admin-modal-footer{display:flex;justify-content:flex-end;padding:14px 22px;border-top:1px solid rgba(213,179,137,.25);background:#211c2a}
+.shift-admin-modal-footer button{min-height:41px;padding:9px 20px;border:1px solid rgba(222,187,139,.55);border-radius:4px;background:rgba(111,80,76,.33);color:#f2d5ab;font:inherit;cursor:pointer}
+.shift-admin-modal button:disabled{opacity:.5;cursor:not-allowed}
+@media(max-width:950px){.shift-calendar-scroll-hint{display:block}}
+@media(max-width:600px){.shift-calendar-container{padding:13px 10px}.shift-calendar-grid{gap:5px}.shift-calendar-cell{min-height:137px;padding:9px 8px}.shift-admin-modal-backdrop{padding:0;align-items:flex-end}.shift-admin-modal{width:100%;max-height:96dvh;border-radius:14px 14px 0 0}.shift-admin-modal-heading{padding:17px 17px 13px}.shift-admin-modal-body{padding:15px 17px}.shift-admin-modal-footer{padding:12px 17px}}
+@media(prefers-reduced-motion:reduce){.shift-calendar-cell{transition:none}.shift-calendar-cell:hover{transform:none}}
