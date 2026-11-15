@@ -1,9 +1,9 @@
-import {useCallback,useEffect,useRef,useState} from 'react'
+import {useCallback,useEffect,useMemo,useRef,useState} from 'react'
 import {Link} from 'react-router-dom'
 import {CalendarDays,Clock3,RefreshCw,UsersRound,Sparkles,ArrowRight,CalendarCheck2} from 'lucide-react'
 import {configured} from '../lib/config'
 import {useRollingShiftWeeks,shiftDateLabel,SHIFT_WEEKDAYS} from '../lib/shift-calendar'
-import {fetchShifts} from '../lib/shifts'
+import {loadPublicShifts,peekPublicShifts} from '../lib/public-shifts'
 import type {ShiftCalendarData} from '../lib/shifts'
 import './shifts-page.css'
 
@@ -14,36 +14,74 @@ const stateLabel:Record<DayState,string>={open:'營業',closed:'休館'}
 export default function ShiftsPage(){
  const {today,weeks}=useRollingShiftWeeks()
  const start=weeks[0].start,end=weeks[3].end
- const [calendar,setCalendar]=useState<ShiftCalendarData>(blank)
- const [loading,setLoading]=useState(configured)
+ // Keep a previous visitor snapshot on screen while its 45-second freshness
+ // window expires. An empty but successfully loaded 4-week schedule is valid.
+ const [calendar,setCalendar]=useState<ShiftCalendarData>(()=>peekPublicShifts(start,end)??blank)
+ const [hasSnapshot,setHasSnapshot]=useState(()=>peekPublicShifts(start,end)!==null)
+ const [loading,setLoading]=useState(()=>configured&&peekPublicShifts(start,end)===null)
+ const [refreshing,setRefreshing]=useState(false)
  const [error,setError]=useState('')
  const [selectedDate,setSelectedDate]=useState(today)
  const detailRef=useRef<HTMLElement>(null)
+ const latestRequest=useRef(0)
  const reload=useCallback(async()=>{
   if(!configured)return
-  const next=await fetchShifts(start,end)
-  setCalendar(next);setError('')
+  const request=++latestRequest.current
+  setRefreshing(true)
+  try{
+   // Unlike background prefetch, the user's update action forces a new read.
+   const next=await loadPublicShifts(start,end,{force:true})
+   if(request===latestRequest.current){
+    setCalendar(next);setHasSnapshot(true);setError('')
+   }
+  }catch(e){
+   if(request===latestRequest.current)
+    setError(e instanceof Error?e.message:'更新失敗')
+  }finally{
+   if(request===latestRequest.current)setRefreshing(false)
+  }
  },[start,end])
  useEffect(()=>{
   if(!configured)return
   let active=true
-  setLoading(true)
-  fetchShifts(start,end).then(value=>{if(active){setCalendar(value);setError('')}})
-   .catch(e=>{if(active)setError(e instanceof Error?e.message:'排班資訊暫時無法讀取')})
-   .finally(()=>{if(active)setLoading(false)})
+  const request=++latestRequest.current
+  const snapshot=peekPublicShifts(start,end)
+  if(snapshot){
+   setCalendar(snapshot);setHasSnapshot(true);setLoading(false)
+  }else{
+   setCalendar(blank);setHasSnapshot(false);setLoading(true)
+  }
+  setError('')
+  loadPublicShifts(start,end).then(value=>{
+   if(active&&request===latestRequest.current){
+    setCalendar(value);setHasSnapshot(true);setError('')
+   }
+  }).catch(e=>{
+   if(active&&request===latestRequest.current)
+    setError(e instanceof Error?e.message:'排班資訊暫時無法讀取')
+  }).finally(()=>{
+   if(active&&request===latestRequest.current)setLoading(false)
+  })
   return()=>{active=false}
  },[start,end])
  useEffect(()=>{
   if(selectedDate<start||selectedDate>end)setSelectedDate(today)
  },[selectedDate,start,end,today])
- const openings=new Map(calendar.days.map(x=>[x.date,x]))
- const members=new Map<string,string[]>()
- for(const entry of calendar.attendance){
-  if(!members.has(entry.date))members.set(entry.date,[])
-  members.get(entry.date)?.push(entry.name)
- }
- const openingCount=calendar.days.filter(day=>day.open).length
- const activityCount=calendar.days.filter(day=>day.open&&day.eventTitle.trim()).length
+ // Changing the selected day should not rebuild maps and re-count the full
+ // schedule; derive these only when new public shift data actually arrives.
+ const {openings,members,openingCount,activityCount}=useMemo(()=>{
+  const openings=new Map(calendar.days.map(x=>[x.date,x]))
+  const members=new Map<string,string[]>()
+  for(const entry of calendar.attendance){
+   if(!members.has(entry.date))members.set(entry.date,[])
+   members.get(entry.date)?.push(entry.name)
+  }
+  return {
+   openings,members,
+   openingCount:calendar.days.filter(day=>day.open).length,
+   activityCount:calendar.days.filter(day=>day.open&&day.eventTitle.trim()).length,
+  }
+ },[calendar])
  const selectedOpening=openings.get(selectedDate)
  const selectedStatus:DayState=selectedOpening?.open?'open':'closed'
  const selectedNames=selectedOpening?.open?members.get(selectedDate)||[]:[]
@@ -70,12 +108,12 @@ export default function ShiftsPage(){
   <div className="shift-body">
    <div className="shift-toolbar">
     <p><CalendarDays size={17}/>本週與未來三週 · 每週一更新</p>
-    <button type="button" disabled={loading||!configured} onClick={()=>{void reload().catch(e=>setError(e instanceof Error?e.message:'更新失敗'))}}><RefreshCw size={16}/>更新排班</button>
+    <button type="button" disabled={loading||refreshing||!configured} onClick={()=>{void reload()}}><RefreshCw size={16}/>{refreshing?'更新中…':'更新排班'}</button>
    </div>
    {!configured&&<p className="shift-message">目前為離線展示模式，正式營業與出勤資訊請以館方公告為準。</p>}
    {loading&&<p role="status" className="shift-message">狐火正在照亮四週值夜曆…</p>}
    {error&&<p role="alert" className="shift-message is-error">排班讀取失敗：{error}。請點選「更新排班」再試一次。</p>}
-   {!loading&&!error&&<>
+   {!loading&&(!error||hasSnapshot)&&<>
     <section className="shift-calendar-shell" aria-label="四週營業月曆">
      <div className="shift-calendar-heading">
       <div><span>FOUR-WEEK CALENDAR</span><h2>{shiftDateLabel(start)} — {shiftDateLabel(end)}</h2></div>
