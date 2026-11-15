@@ -209,7 +209,7 @@ export default function EmployeeAccountsManagement(){
         onChange={e=>toggle(permission.id,e.target.checked)}/>
        <span><strong>{permission.label}</strong><small>{permission.description}</small></span>
       </label>)}
-      <p>沒有授權的功能不會顯示，資料庫也會拒絕未授權的讀寫。</p>
+      <p>沒有授權的功能不會顯示，資料庫也會拒絕未授權的讀寫。帳務管理包含收入、支出、新增、編輯與刪除 Gil 紀錄，請只授予需要處理館內帳務的館員。</p>
      </fieldset>
      {draft.userId&&<label className="employee-admin-active">
       <input type="checkbox" checked={draft.active} disabled={busy}
