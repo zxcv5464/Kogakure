@@ -26,13 +26,8 @@ export async function fetchShifts(start:string,end:string):Promise<ShiftCalendar
   ].sort((first,second)=>first.date.localeCompare(second.date)||first.name.localeCompare(second.name,'zh-TW')),
  }
 }
-export async function setShiftOpening(date:string,kind:'open'|'closed'|'unannounced',hours:string,note:string,eventTitle:string):Promise<void>{
+export async function setShiftOpening(date:string,kind:'open'|'closed',hours:string,note:string,eventTitle:string):Promise<void>{
  const db=client()
- if(kind==='unannounced'){
-  const {error}=await db.from('shift_open_days').delete().eq('shift_date',date)
-  if(error)throw new Error(error.message)
-  return
- }
  if(hours.length>80||note.length>240||eventTitle.trim().length>120)throw new Error('營業時間、活動名稱或備註過長')
  const {data,error}=await db.from('shift_open_days').upsert({
   shift_date:date,is_open:kind==='open',hours_label:kind==='open'?hours.trim():'',
