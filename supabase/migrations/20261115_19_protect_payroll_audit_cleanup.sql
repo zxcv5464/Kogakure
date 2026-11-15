@@ -33,7 +33,7 @@ returns trigger language plpgsql security invoker set search_path=''
 as $function$
 begin
  if new.reference like 'PAYROLL:%'
-  and pg_catalog.current_user<>'postgres' then
+  and current_user<>'postgres' then
   raise exception '薪資參考編號只能由分薪系統產生'
    using errcode='42501';
  end if;
