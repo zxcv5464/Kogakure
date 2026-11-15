@@ -3,9 +3,12 @@ import { Bell, Check, CheckCircle2, Clock3, ExternalLink, Plus, RefreshCw, Save,
 import { Link } from 'react-router-dom'
 import {
  countdown, decideBooking, deleteAdminBooking, describeBookingError, loadAdminBookings,
- loadBookingPlans, removeBookingPlan, saveBookingPlan, watchBookingChanges,
+ loadBookingPlans, removeBookingPlan, saveBookingPlan, setBookingNomineeVisibility, watchBookingChanges,
 } from '../../lib/bookings'
 import type { BookingPlan, BookingRequest, BookingStatus } from '../../lib/bookings'
+import type { Staff } from '../../types'
+import { getStaff } from '../../lib/staff'
+import { invalidatePublicStaffCache } from '../../lib/public-staff'
 import { useAdminEditGuard } from './AdminEditGuard'
 import AdminBookingCreate from './AdminBookingCreate'
 import './booking-management.css'
@@ -20,7 +23,8 @@ type SelectedPlan={value:BookingPlan;original:BookingPlan;creating:boolean}
 export default function BookingManagement(){
  const [bookings,setBookings]=useState<BookingRequest[]>([])
  const [plans,setPlans]=useState<BookingPlan[]>([])
- const [tab,setTab]=useState<'requests'|'plans'>('requests')
+ const [nominees,setNominees]=useState<Staff[]>([])
+ const [tab,setTab]=useState<'requests'|'plans'|'nominees'>('requests')
  const [filter,setFilter]=useState<'all'|BookingStatus>('pending')
  const [loading,setLoading]=useState(true)
  const [error,setError]=useState('')
@@ -40,13 +44,13 @@ export default function BookingManagement(){
  useEffect(()=>()=>setEditing(false,false),[setEditing])
 
  const refresh=useCallback(async()=>{
-  const [requests,updatedPlans]=await Promise.all([loadAdminBookings(),loadBookingPlans(true)])
+  const [requests,updatedPlans,updatedNominees]=await Promise.all([loadAdminBookings(),loadBookingPlans(true),getStaff(true)])
   if(didLoad.current){
    const newcomers=requests.filter(r=>r.status==='pending'&&!lastSeen.current.has(r.id))
    if(newcomers.length)setIncoming(newcomers[0])
   } else didLoad.current=true
   lastSeen.current=new Set(requests.map(r=>r.id))
-  setBookings(requests);setPlans(updatedPlans);setError('')
+  setBookings(requests);setPlans(updatedPlans);setNominees(updatedNominees);setError('')
  },[])
  useEffect(()=>{
   let alive=true
@@ -68,6 +72,24 @@ export default function BookingManagement(){
  const shown=useMemo(()=>bookings.filter(b=>filter==='all'||b.status===filter),[bookings,filter])
  const selectedBooking=bookings.find(b=>b.id===focused)
 
+ async function changeNominationAvailability(person:Staff,visible:boolean){
+  if(busyRef.current||person.bookingVisible===visible)return
+  busyRef.current=true;setBusy(true);setError('');setNotice('')
+  try{
+   await setBookingNomineeVisibility(person.id,visible)
+   // Preserve a successful write even if a subsequent refresh fails.
+   setNominees(current=>current.map(p=>p.id===person.id?{...p,bookingVisible:visible}:p))
+   invalidatePublicStaffCache()
+   const message=person.name+(visible?' 已開放預約指名。':' 已關閉新的預約指名。')
+   try{
+    await refresh()
+    setNotice(message+(person.published?' 前台預約頁重新開啟後會顯示最新狀態。':' 名帖尚未公開，前台仍不會顯示。'))
+   }catch{
+    setNotice(message+' 已成功儲存，但重新載入清單失敗，請稍後按「更新」。')
+   }
+  }catch(e){setError(describeBookingError(e))}
+  finally{busyRef.current=false;setBusy(false)}
+ }
  async function act(booking:BookingRequest,action:'accept'|'reject'|'complete'){
   if(busyRef.current)return
   const label=action==='accept'?'接取':action==='reject'?'婉拒':'結束'
@@ -139,7 +161,7 @@ export default function BookingManagement(){
  }
  return <section className="booking-admin admin-page">
   <header className="booking-admin-header">
-   <div><p className="eyebrow">KOGAKURE · RESERVATION DESK</p><h1>狐姬預約管理</h1><p>申請審核、指名狀態、同步計時及指名方案設定</p></div>
+   <div><p className="eyebrow">KOGAKURE · RESERVATION DESK</p><h1>狐姬預約管理</h1><p>申請審核、指名狀態、可指名人員與指名方案設定</p></div>
    <div className="booking-admin-top-actions">
     <button type="button" className="booking-admin-new-button" disabled={busy||loading} onClick={()=>{setTab('requests');setCreatingBooking(true)}}><Plus size={16}/>新增預約</button>
     <button type="button" disabled={busy} onClick={()=>void refresh().catch(e=>setError(describeBookingError(e)))}><RefreshCw size={16}/>更新</button>
@@ -162,6 +184,7 @@ export default function BookingManagement(){
   <div className="booking-admin-tabs">
    <button className={tab==='requests'?'active':''} type="button" onClick={()=>{if(!dirty||window.confirm('放棄未儲存的方案修改？')){setTab('requests');setPlanDraft(null)}}}>預約申請</button>
    <button className={tab==='plans'?'active':''} type="button" onClick={()=>setTab('plans')}>指名方案管理</button>
+   <button className={tab==='nominees'?'active':''} type="button" onClick={()=>{if(!dirty||window.confirm('放棄未儲存的方案修改？')){setTab('nominees');setPlanDraft(null)}}}>可指名人員設定</button>
   </div>
   {loading&&<p className="booking-admin-loading" role="status">正在讀取預約清單…</p>}
   {!loading&&tab==='requests'&&<div className="booking-admin-requests">
@@ -187,6 +210,38 @@ export default function BookingManagement(){
     </article>)}
    </div>}
   </div>}
+  {!loading&&tab==='nominees'&&<section className="booking-admin-nominee-settings">
+   <div className="booking-admin-nominee-settings-head">
+    <div><h2>可指名人員設定</h2>
+     <p>在這裡統一決定哪些館員會出現在旅人的預約頁面並接受新指名。開關立即儲存，不必再進入「員工名帖」。</p>
+    </div>
+    <div className="booking-admin-nominee-summary"><strong>{nominees.filter(p=>p.published&&p.bookingVisible).length}</strong><span>位目前公開接受指名</span></div>
+   </div>
+   {!nominees.length?<p className="booking-admin-empty">目前尚無員工名帖。請先到「員工名帖」建立人員資料。</p>:
+    <div className="booking-admin-nominee-grid">
+     {nominees.map(person=><article className="booking-admin-nominee-card" key={person.id}>
+      <div className="booking-admin-nominee-identity">
+       <span className="booking-admin-nominee-avatar">
+        {(person.thumbnailUrl||person.imageUrl)?<img src={person.thumbnailUrl||person.imageUrl} alt="" loading="lazy"/>:person.name.slice(0,1)}
+       </span>
+       <div><h3>{person.name}</h3><p>{person.role||'館員'}</p>
+        <span className={'booking-admin-nominee-publish'+(person.published?' is-published':'')}>{person.published?'名帖已公開':'名帖未公開'}</span>
+       </div>
+      </div>
+      <label className="booking-admin-visibility-switch">
+       <input type="checkbox" checked={person.bookingVisible} disabled={busy}
+        aria-label={person.name+'：在預約頁面顯示並接受指名'}
+        onChange={event=>void changeNominationAvailability(person,event.target.checked)}/>
+       <span><strong>在預約頁面顯示並接受指名</strong>
+        <small>{person.bookingVisible?
+         person.published?'目前開放指名，旅人可在預約頁選擇這位館員。':'已允許指名，但需要先在「員工名帖」公開名帖，旅人才看得到。'
+         :'已關閉新指名；原有名帖和既有預約紀錄不受影響。'}</small>
+       </span>
+      </label>
+     </article>)}
+    </div>}
+   <p className="booking-admin-nominee-footnote">僅「名帖已公開」且「接受指名已開啟」的館員會顯示在前台預約頁，不限職稱。關閉指名不會取消已建立的預約。公開名帖與角色照片仍請前往「員工名帖」管理。</p>
+  </section>}
   {!loading&&tab==='plans'&&<div className="booking-admin-plans">
    <div className="booking-admin-plan-head"><p>新開放的方案才會顯示在前台。範例方案預設未開放，請確認內容與費用後再啟用。</p><button type="button" onClick={()=>choosePlan(initialPlan(),true)}><Plus size={16}/>新增方案</button></div>
    <div className="booking-admin-plan-layout">
