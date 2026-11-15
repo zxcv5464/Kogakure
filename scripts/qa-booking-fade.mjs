@@ -1,4 +1,4 @@
-// Booking retains the same ordered staff-directory reveal, but avoids excessive waiting on first entry.
+// Booking follows the same restrained hero/description rhythm as all public venue pages.
 import assert from 'node:assert/strict'
 import {readFile} from 'node:fs/promises'
 
@@ -13,18 +13,18 @@ assert.ok(motion.includes('.route-stage .booking-page{--public-reveal-ease:cubic
  'Booking must share other public pages\' easing curve')
 assert.ok(motion.includes('.route-stage .staff-entry{animation:staffReveal 1.34s var(--staff-ease) both;animation-delay:calc(1.2s + min(var(--delay,0ms),640ms))}'),
  'Staff directory reference animation has unexpectedly changed')
-assert.ok(motion.includes('.route-stage .booking-profile{animation:staffReveal .64s var(--public-reveal-ease) both;animation-delay:calc(.24s + min(var(--booking-delay,0ms),400ms))}'),
- 'Booking cards should arrive gently but without an extra 1.2s invisible delay')
+assert.ok(motion.includes('.route-stage .booking-profile{animation:staffReveal 1.1s var(--public-reveal-ease) both;animation-delay:calc(.84s + min(var(--booking-delay,0ms),640ms))}'),
+ 'Booking cards should follow the unhurried directory-style staged reveal')
 assert.ok(!motion.includes('.booking-profile.staff-entry'), 'Obsolete selector cannot match the redesigned landscape cards')
 assert.ok(!bookingCss.includes('animation:bookingReveal'), 'Do not override the shared entrance with an earlier page-local animation')
 assert.ok(!bookingCss.includes('@keyframes bookingReveal'), 'Remove unused faster animation')
 assert.ok(bookingPage.includes("'--booking-delay':Math.min(index,8)*80+'ms'"),
  'Each card should stagger at the same 80ms interval as staff profiles')
-assert.ok(motion.includes('.route-stage .booking-hero-label{animation:quietRise .5s var(--public-reveal-ease) .1s both}'),
+assert.ok(motion.includes('.route-stage .booking-hero-label{animation:quietRise 1.18s var(--public-reveal-ease) .54s both}'),
  'Subtitle should reveal between heading and verse')
-assert.ok(motion.includes('.route-stage .booking-hero-verse{animation:quietRise .55s var(--public-reveal-ease) .14s both}'),
+assert.ok(motion.includes('.route-stage .booking-hero-verse{animation:quietRise 1.28s var(--public-reveal-ease) .72s both}'),
  'Intro should follow the same cadence as the staff page')
-assert.ok(motion.includes('.route-stage .booking-legend{animation:quietRise .55s var(--public-reveal-ease) .19s both}'),
+assert.ok(motion.includes('.route-stage .booking-legend{animation:quietRise 1.12s var(--public-reveal-ease) .84s both}'),
  'Booking status legend should precede cards')
 assert.ok(motion.includes('.booking-profile,.booking-footnote){animation-play-state:paused}'),
  'Curtain and first-visit intro must pause the booking animations')
@@ -32,4 +32,4 @@ assert.ok(motion.includes('@media(prefers-reduced-motion:reduce){.route-stage,.r
  'Reduced-motion support must remain intact')
 assert.ok(transition.includes('BOOKING_PAGE_READY_EVENT')&&bookingPage.includes('window.requestAnimationFrame(()=>window.dispatchEvent(new Event(BOOKING_PAGE_READY_EVENT)))'),
  'Curtain should reveal the stable reservation shell on first paint, not after three queries')
-console.log('PASS: booking preserves ordered fades while reducing card delay, first-paint curtain and reduced-motion support')
+console.log('PASS: booking matches other public pages in staged fades, first-paint curtain and reduced-motion support')
