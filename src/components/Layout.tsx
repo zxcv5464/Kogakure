@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import { Home, UsersRound, CalendarDays, UtensilsCrossed, Grid2X2, X, AtSign, ArrowUpRight, Compass, Sparkles, CalendarCheck2 } from 'lucide-react'
 import { asset } from '../lib/paths'
-import { prefetchStaffPage } from '../lib/prefetch'
+import { prefetchStaffPage, prefetchShiftsPage } from '../lib/prefetch'
 import SiteBgm from './SiteBgm'
 
 const DISCORD_INVITE='https://discord.gg/f34DSnUgGV'
@@ -99,7 +99,7 @@ export default function Layout({children,onRegisterBgm}:{children:React.ReactNod
      <img src={asset('images/brand/logo-header.webp')} alt="" width="44" height="44"/>
      <span><strong>狐隱</strong><small>KOGAKURE</small></span>
     </Link>
-    <nav ref={desktopNav} className="desktop-nav" aria-label="主要導覽">{links.map(({to,label})=><NavLink key={to} to={to} end={to==='/'} onMouseEnter={to==='/staff'?prefetchStaffPage:undefined} onFocus={to==='/staff'?prefetchStaffPage:undefined} onTouchStart={to==='/staff'?prefetchStaffPage:undefined} className={({isActive})=>isActive?'active':''}>{label}</NavLink>)}<span className={'nav-slider'+(indicator.ready?' is-ready':'')} style={{left:indicator.left,width:indicator.width}} aria-hidden="true"/></nav>
+    <nav ref={desktopNav} className="desktop-nav" aria-label="主要導覽">{links.map(({to,label})=><NavLink key={to} to={to} end={to==='/'} onMouseEnter={to==='/staff'?prefetchStaffPage:to==='/shifts'?prefetchShiftsPage:undefined} onFocus={to==='/staff'?prefetchStaffPage:to==='/shifts'?prefetchShiftsPage:undefined} onTouchStart={to==='/staff'?prefetchStaffPage:to==='/shifts'?prefetchShiftsPage:undefined} onPointerDown={to==='/shifts'?prefetchShiftsPage:undefined} className={({isActive})=>isActive?'active':''}>{label}</NavLink>)}<span className={'nav-slider'+(indicator.ready?' is-ready':'')} style={{left:indicator.left,width:indicator.width}} aria-hidden="true"/></nav>
     <div className="header-socials" aria-label="狐隱社群入口">
      <a className="social-header" target="_blank" rel="noopener noreferrer" href="https://www.threads.com/@kogakure_ffxiv" aria-label="狐隱 Threads" title="官方 Threads"><AtSign size={19}/></a>
      <a className="social-header" target="_blank" rel="noopener noreferrer" href={DISCORD_INVITE} aria-label="狐隱 Discord" title="加入狐隱 Discord"><DiscordMark/></a>
@@ -126,7 +126,7 @@ export default function Layout({children,onRegisterBgm}:{children:React.ReactNod
    </nav>
   </>}
   <nav className="mobile-bottom-nav" aria-label="手機主要導覽">
-   {mobileMain.map(({to,label,icon:Icon})=><NavLink key={to} to={to} end={to==='/'} onMouseEnter={to==='/staff'?prefetchStaffPage:undefined} onFocus={to==='/staff'?prefetchStaffPage:undefined} onTouchStart={to==='/staff'?prefetchStaffPage:undefined} className={({isActive})=>'mobile-bottom-item'+(isActive?' active':'')} onClick={()=>setMoreOpen(false)}><Icon size={22} strokeWidth={1.8}/><span>{label}</span></NavLink>)}
+   {mobileMain.map(({to,label,icon:Icon})=><NavLink key={to} to={to} end={to==='/'} onMouseEnter={to==='/staff'?prefetchStaffPage:to==='/shifts'?prefetchShiftsPage:undefined} onFocus={to==='/staff'?prefetchStaffPage:to==='/shifts'?prefetchShiftsPage:undefined} onTouchStart={to==='/staff'?prefetchStaffPage:to==='/shifts'?prefetchShiftsPage:undefined} onPointerDown={to==='/shifts'?prefetchShiftsPage:undefined} className={({isActive})=>'mobile-bottom-item'+(isActive?' active':'')} onClick={()=>setMoreOpen(false)}><Icon size={22} strokeWidth={1.8}/><span>{label}</span></NavLink>)}
    <button ref={moreButton} type="button" className={'mobile-bottom-item'+(extraActive?' active':moreOpen?' expanded':'')} aria-expanded={moreOpen} aria-controls="mobile-more-menu" onClick={event=>{openedByKeyboard.current=event.detail===0;setMoreOpen(value=>!value)}}>
     <Grid2X2 size={22} strokeWidth={1.8}/><span>更多</span>
    </button>
