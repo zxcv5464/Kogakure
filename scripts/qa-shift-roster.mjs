@@ -23,7 +23,7 @@ for(const path of sources.filter(p=>p.endsWith('.ts')||p.endsWith('.tsx'))){
  assert.equal(ast.parseDiagnostics.length,0,'Invalid TS syntax in '+path+': '+ast.parseDiagnostics.map(d=>ts.flattenDiagnosticMessageText(d.messageText,' ')).join('; '))
 }
 for(const term of [
- "if(id==='shifts')return access.kind==='owner'||(access.kind==='employee'&&access.active)",
+ "if(id==='shifts')return permitted(access,'shifts.manage')||permitted(access,'shifts.attend')",
  '<ShiftManagement access={access}/>','module="shifts"',
 ])assert.ok(shell.includes(term),'Missing shift permission or route '+term)
 assert.ok(app.includes('<Route path="/shifts" element={<ShiftsPage />} />'))

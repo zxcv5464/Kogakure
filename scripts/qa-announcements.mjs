@@ -38,7 +38,7 @@ assert.ok(modules.includes("id: 'announcements'")&&
  !modules.includes("id: 'announcements', title: '公告管理', summary: '館內公告、最新消息與首頁資訊', icon: FileText, status: 'planned'"),
  'Existing planned announcements module must become a real backoffice page')
 assert.ok(admin.includes("const AnnouncementManagement = lazy(")&&
- admin.includes("id==='accounts'||id==='services'||id==='announcements'")&&
+ admin.includes("if(id==='announcements')return permitted(access,'announcements.manage')")&&
  admin.includes('<ProtectedModule access={access} module="announcements">')&&
  routes.includes("'admin/announcements'")&&
  routes.includes("'admin/announcements': '公告管理'"),

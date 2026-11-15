@@ -68,6 +68,10 @@ jobs:
         env:
           VITE_OFFLINE_PREVIEW: 'true'
         run: node scripts/qa-announcements.mjs
+      - name: Verify all delegable backoffice permissions and privilege-escalation guards
+        env:
+          VITE_OFFLINE_PREVIEW: 'true'
+        run: node scripts/qa-complete-admin-permissions.mjs
       - name: Verify owner accounting ledger, date-scoped tea orders and CSV safety
         env:
           VITE_OFFLINE_PREVIEW: 'true'

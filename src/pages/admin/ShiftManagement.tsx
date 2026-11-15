@@ -5,6 +5,7 @@ import {supabase} from '../../lib/supabase'
 import {useRollingShiftWeeks,shiftDateLabel,SHIFT_WEEKDAYS} from '../../lib/shift-calendar'
 import {fetchOwnPreferredShiftName,fetchShifts,listActiveShiftEmployees,markOwnerShiftAttendance,markShiftAttendance,renameOwnShiftAttendance,saveOwnPreferredShiftName,setShiftOpening,unmarkShiftAttendance} from '../../lib/shifts'
 import type {ShiftAttendance,ShiftCalendarData,ShiftEmployee,ShiftOpenDay} from '../../lib/shifts'
+import {permitted} from '../../lib/employee-accounts'
 import type {BackofficeAccess} from '../../lib/employee-accounts'
 import './shift-management.css'
 type ShiftKind='open'|'closed'
@@ -30,8 +31,8 @@ function ShiftDayEditor({date,weekday,today,day,staff,people,access,selfId,owner
  useEffect(()=>{setKind(savedKind);setHours(day?.hours||'');setNote(day?.note||'');setEventTitle(day?.eventTitle||'')},[savedKind,day?.hours,day?.note,day?.eventTitle,date])
  const hasEdits=kind!==savedKind||hours!==(day?.hours||'')||note!==(day?.note||'')||eventTitle!==(day?.eventTitle||'')
  const chosen=people.find(person=>person.id===member)
- const mine=staff.find(x=>x.employeeId===selfId&&x.source===(owner?'owner':'employee'))
- const myDisplayName=owner?ownerName:employeeShiftName
+ const mine=staff.find(x=>x.employeeId===selfId&&x.source===(access.kind==='owner'?'owner':'employee'))
+ const myDisplayName=access.kind==='owner'?ownerName:employeeShiftName
  const nameChanged=Boolean(mine&&myDisplayName.trim()!==mine.name)
  const open=day?.open===true
  const submitted=new Set(staff.map(x=>x.employeeId))
@@ -65,7 +66,7 @@ function ShiftDayEditor({date,weekday,today,day,staff,people,access,selfId,owner
    </li>)}</ul>:<p>目前尚無館員填寫出勤。</p>}
    {date>=today&&<button type="button" className="shift-admin-self"
     disabled={busy||!selfId||(!mine&&!myDisplayName.trim())}
-    onClick={()=>void (mine?onRemove(date,mine):owner?onMarkOwn(date,myDisplayName):onMark(date,{id:selfId,name:myDisplayName}))}>
+    onClick={()=>void (mine?onRemove(date,mine):access.kind==='owner'?onMarkOwn(date,myDisplayName):onMark(date,{id:selfId,name:myDisplayName}))}>
     {mine?'取消我的出勤':'＋ 我會在這天出勤'}
    </button>}
    {date>=today&&mine&&nameChanged&&<button type="button" className="shift-admin-rename"
@@ -106,7 +107,8 @@ export default function ShiftManagement({access}:{access:BackofficeAccess}){
  const [notice,setNotice]=useState<Notice|null>(null)
  const [busy,setBusy]=useState(false)
  const busyRef=useRef(false)
- const owner=access.kind==='owner'
+ const siteOwner=access.kind==='owner'
+ const owner=permitted(access,'shifts.manage')
  function showDay(date:string,button:HTMLButtonElement){
   triggerRef.current=button
   setSelectedDate(date)
@@ -263,13 +265,13 @@ export default function ShiftManagement({access}:{access:BackofficeAccess}){
    </div>
   </header>
   <p className="shift-admin-explain"><CalendarDays size={17}/>本週與未來三週，依台灣時間每週一自動往前更新。歷史排班不會因換週而刪除。</p>
-  {owner&&<div className="shift-admin-owner-identity">
+  {siteOwner&&<div className="shift-admin-owner-identity">
    <label htmlFor="shift-owner-name">我的出勤顯示名稱</label>
    <input id="shift-owner-name" value={ownerName} maxLength={100} disabled={busy}
     onChange={e=>setOwnerName(e.target.value)} placeholder="例：婆婆"/>
    <small>用管理員帳號直接報班，不需要另建員工帳號。名稱會顯示在前台值班名單；登記時會記住此名稱。</small>
   </div>}
-  {!owner&&<div className="shift-admin-owner-identity">
+  {!siteOwner&&<div className="shift-admin-owner-identity">
    <label htmlFor="shift-employee-duty-name">我的出勤顯示名稱</label>
    <input id="shift-employee-duty-name" value={employeeShiftName} maxLength={100} disabled={busy}
     onChange={e=>setEmployeeShiftName(e.target.value)} placeholder="例：狐姬・紫月"/>

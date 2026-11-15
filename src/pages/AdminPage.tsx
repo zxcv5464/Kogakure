@@ -122,9 +122,11 @@ export default function AdminPage() {
 }
 
 function allowed(access:BackofficeAccess,id:string){
- if(id==='accounts'||id==='services'||id==='announcements')return access.kind==='owner'
+ if(id==='accounts')return permitted(access,'accounts.manage')
+ if(id==='services')return permitted(access,'services.manage')
+ if(id==='announcements')return permitted(access,'announcements.manage')
  if(id==='accounting')return permitted(access,'accounting.manage')
- if(id==='shifts')return access.kind==='owner'||(access.kind==='employee'&&access.active)
+ if(id==='shifts')return permitted(access,'shifts.manage')||permitted(access,'shifts.attend')
  if(id==='staff')return permitted(access,'staff.manage')
  if(id==='menu')return permitted(access,'menu.manage')
  if(id==='booking')return permitted(access,'booking.manage')
@@ -199,7 +201,7 @@ function AdminWorkspace({ access,busy, onLogout }: {
     <Route path="/admin/orders" element={<ProtectedModule access={access} module="orders"><Suspense fallback={<div className="admin-module-loading" role="status">正在開啟茶宴訂單管理…</div>}><OrdersManagement/></Suspense></ProtectedModule>}/>
     <Route path="/admin/accounting" element={<ProtectedModule access={access} module="accounting"><Suspense fallback={<div className="admin-module-loading" role="status">正在開啟帳務管理…</div>}><AccountingManagement/></Suspense></ProtectedModule>}/>
      <Route path="/admin/shifts" element={<ProtectedModule access={access} module="shifts"><Suspense fallback={<div className="admin-module-loading" role="status">正在開啟值班排班管理…</div>}><ShiftManagement access={access}/></Suspense></ProtectedModule>}/>
-    <Route path="/admin/accounts" element={<ProtectedModule access={access} module="accounts"><Suspense fallback={<div className="admin-module-loading" role="status">正在開啟員工帳號管理…</div>}><EmployeeAccountsManagement/></Suspense></ProtectedModule>}/>
+    <Route path="/admin/accounts" element={<ProtectedModule access={access} module="accounts"><Suspense fallback={<div className="admin-module-loading" role="status">正在開啟員工帳號管理…</div>}><EmployeeAccountsManagement access={access}/></Suspense></ProtectedModule>}/>
     <Route path="*" element={<Navigate to="/admin" replace/>}/>
    </Routes>
    {active && <div className="admin-workspace-module-footer"><Link to="/admin" onClick={confirmNavigation}>返回管理總覽</Link></div>}

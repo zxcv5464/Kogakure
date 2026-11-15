@@ -33,7 +33,7 @@ for(const required of [
 ]){
  assert.ok(page.includes(required),'Employee login or protected admin UI missing: '+required)
 }
-assert.ok(modules.includes("id: 'accounts'"),'Owner-only account module missing')
+assert.ok(modules.includes("id: 'accounts'"),'Account module missing')
 assert.ok(routes.includes("'admin/accounts'"),'GitHub Pages account deep link missing')
 assert.ok(auth.includes('detectSessionInUrl:true'),'Existing authenticated callback support missing')
 for(const label of [
@@ -67,13 +67,13 @@ assert.ok(!api.includes('SERVICE_ROLE_KEY')&&!page.includes('SERVICE_ROLE_KEY'),
 for(const guard of [
  'service.auth.getUser(token)',
  "service.from('admin_users')",
- 'if(!await isManager(user.id))',
+ 'const scope=await operatorScope(user.id)',
  'service.auth.admin.createUser',
  'service.auth.admin.updateUserById',
  'service.auth.admin.deleteUser',
  "service.from('employee_accounts').insert",
- 'await findEmployee(id)',
- 'await isManager(id)',
+ 'canManageTarget(scope,user.id,id)',
+ 'await isManager(targetId)',
  'email_confirm:true',
  'validatedUsername(body.username)',
  'validatedPassword(body.password)',
@@ -101,8 +101,12 @@ assert.ok(edge.includes("email,password:body.password,email_confirm:true") &&
  'Legacy conversion must set new login credentials with rollback on Auth failure')
 assert.ok(editor.includes('舊版帳號轉換')&&editor.includes('convertLegacyEmployee'),
  'An existing invited employee needs a manager-run migration path')
-assert.ok(edge.includes("if(!await findEmployee(id)||await isManager(id))"),
- 'Owner account must never be a valid delete or password-reset target')
+assert.ok(edge.includes('actorId===targetId||await isManager(targetId)')&&
+ edge.includes("previous.includes('accounts.manage')")&&
+ edge.includes("id!=='accounts.manage'&&actor.grants.has(id)")&&
+ edge.includes('scope=await operatorScope(user.id)')&&
+ edge.includes('canGrant(scope,permissions)'),
+ 'Delegated account managers cannot self-escalate, change owner/peers, or assign unowned privileges')
 assert.ok(edge.includes("service.auth.admin.deleteUser(id)"),
  'Delete must remove the actual Supabase Auth credential')
 assert.ok(usernames.includes('add column if not exists username text'),
@@ -134,7 +138,11 @@ assert.ok(!docs.includes('inviteUserByEmail')&&!docs.includes('建立並寄送�
 const vite=await createServer({server:{middlewareMode:true,hmr:false},appType:'custom'})
 try{
  const mod=await vite.ssrLoadModule('/src/lib/employee-accounts.ts')
- assert.deepEqual(mod.EMPLOYEE_PERMISSIONS.map(x=>x.id),['staff.manage','menu.manage','booking.manage','orders.manage','accounting.manage'])
+ assert.deepEqual(mod.EMPLOYEE_PERMISSIONS.map(x=>x.id),[
+  'accounts.manage','staff.manage','announcements.manage','accounting.manage',
+  'menu.manage','services.manage','orders.manage','booking.manage',
+  'shifts.manage','shifts.attend',
+ ])
  assert.equal(mod.staffLoginEmail('Fox_01'),'fox_01@staff.kogakure.invalid')
  assert.equal(mod.staffLoginEmail(' yueying '),'yueying@staff.kogakure.invalid')
  for(const invalid of ['a','1user','ab','a.b','evil@example.com','a b','john+1'])

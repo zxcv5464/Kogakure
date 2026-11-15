@@ -4,7 +4,7 @@ import {
  EMPLOYEE_PERMISSIONS, STAFF_LOGIN_PATTERN, STAFF_PASSWORD_VALID,
  convertLegacyEmployee, createEmployee, deleteEmployee, listEmployeeAccounts, resetEmployeePassword, updateEmployee,
 } from '../../lib/employee-accounts'
-import type { EmployeeAccount, EmployeePermission } from '../../lib/employee-accounts'
+import type { BackofficeAccess,EmployeeAccount, EmployeePermission } from '../../lib/employee-accounts'
 import { useAdminEditGuard } from './AdminEditGuard'
 import './employee-accounts.css'
 
@@ -16,7 +16,13 @@ const toDraft=(r:EmployeeAccount):Draft=>({
 })
 const pretty=(e:unknown)=>e instanceof Error?e.message:'帳號管理暫時無法使用，請重新整理'
 
-export default function EmployeeAccountsManagement(){
+export default function EmployeeAccountsManagement({access}:{access:BackofficeAccess}){
+ const isOwner=access.kind==='owner'
+ const canGrant=(permission:EmployeePermission)=>
+  isOwner||(permission!=='accounts.manage'&&access.permissions.includes(permission))
+ const canEditAccount=(record:EmployeeAccount)=>
+  isOwner||(!record.permissions.includes('accounts.manage')&&
+   record.permissions.every(permission=>access.permissions.includes(permission)))
  const [accounts,setAccounts]=useState<EmployeeAccount[]>([])
  const [loading,setLoading]=useState(true)
  const [busy,setBusy]=useState(false)
@@ -54,12 +60,17 @@ export default function EmployeeAccountsManagement(){
  }
  function choose(record:EmployeeAccount|null){
   if(busyRef.current)return
+  if(record&&!canEditAccount(record)){
+   setError('此帳號為同級管理員或持有超出自身權限的模組，僅主要管理員可以編輯。')
+   return
+  }
   if(changed&&!window.confirm('尚有未儲存的修改，確定放棄？'))return
   const next=record?toDraft(record):blank()
   setDraft(next);setInitial({...next,permissions:[...next.permissions]})
   resetInputs();setError('');setNotice('')
  }
  function toggle(permission:EmployeePermission,enabled:boolean){
+  if(!canGrant(permission))return
   setDraft(old=>old?{
    ...old,permissions:enabled?
     [...old.permissions.filter(x=>x!==permission),permission]:
@@ -68,6 +79,10 @@ export default function EmployeeAccountsManagement(){
  }
  async function save(){
   if(!draft||busyRef.current|| (!!draft.userId&&!settingsChanged))return
+  if(draft.permissions.some(permission=>!canGrant(permission))){
+   setError('不能指派自己沒有的功能權限或任命其他帳號管理員')
+   return
+  }
   if(draft.displayName.trim().length<1||draft.displayName.trim().length>70){
    setError('請填寫長度 1～70 字的員工顯示名稱');return
   }
@@ -152,8 +167,8 @@ export default function EmployeeAccountsManagement(){
   </header>
   <div className="employee-admin-explainer">
    <Shield size={19}/>
-   <p>只有正式管理員能建立、重設密碼與刪除登入帳號；不寄送邀請郵件。
-    員工只會取得被授予的後台功能。密碼由 Supabase Auth 安全保存，建立後無法查閱原密碼。</p>
+   <p>主要管理員可逐項分發所有後台功能。受託帳號管理員只能管理一般員工，無法任命同級管理員、修改正式管理員或授予自身沒有的權限。
+    帳號不寄送邀請郵件，密碼由 Supabase Auth 安全保存。</p>
   </div>
   {error&&<p role="alert" className="employee-admin-error">{error}</p>}
   {notice&&<p role="status" className="employee-admin-success"><CheckCircle2 size={18}/>{notice}</p>}
@@ -168,7 +183,8 @@ export default function EmployeeAccountsManagement(){
       <span className="employee-admin-avatar"><UserRound size={19}/></span>
       <span className="employee-admin-person-content"><strong>{account.displayName}</strong>
        <small>{account.username.startsWith('legacy_')?'舊版員工帳號 · 請設定新登入名稱':'登入帳號：'+account.username}</small>
-       <em>{account.permissions.map(p=>EMPLOYEE_PERMISSIONS.find(x=>x.id===p)?.label).filter(Boolean).join('、')||'尚未分配模組'}</em>
+       <em>{account.permissions.map(p=>EMPLOYEE_PERMISSIONS.find(x=>x.id===p)?.label).filter(Boolean).join('、')||'尚未分配模組'}
+       {!canEditAccount(account)&&' · 僅供查看（無權編輯）'}</em>
       </span>
       <span className={'employee-admin-status'+(account.active?' is-active':' is-disabled')}>
        {account.active?'使用中':'已停用'}
@@ -205,11 +221,11 @@ export default function EmployeeAccountsManagement(){
      </>}
      <fieldset className="employee-admin-permissions"><legend>後台功能權限</legend>
       {EMPLOYEE_PERMISSIONS.map(permission=><label key={permission.id} className="employee-permission">
-       <input type="checkbox" checked={draft.permissions.includes(permission.id)} disabled={busy}
+       <input type="checkbox" checked={draft.permissions.includes(permission.id)} disabled={busy||!canGrant(permission.id)}
         onChange={e=>toggle(permission.id,e.target.checked)}/>
        <span><strong>{permission.label}</strong><small>{permission.description}</small></span>
       </label>)}
-      <p>沒有授權的功能不會顯示，資料庫也會拒絕未授權的讀寫。帳務管理包含收入、支出、新增、編輯與刪除 Gil 紀錄，請只授予需要處理館內帳務的館員。</p>
+      <p>沒有授權的功能不會顯示，資料庫也會拒絕未經授權的讀寫。值班排班管理可操作全體人員，個人出勤登記僅能登記自己的班次。{isOwner?'帳號管理屬高權限，請審慎分派。':'灰色項目由主要管理員授權，無法將自身沒有的權限分發出去。'}</p>
      </fieldset>
      {draft.userId&&<label className="employee-admin-active">
       <input type="checkbox" checked={draft.active} disabled={busy}

@@ -5,7 +5,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2.86.0'
 
 const siteOrigin = 'https://zxcv5464.github.io'
 const internalDomain = 'staff.kogakure.invalid'
-const allowedPermissions = new Set(['staff.manage','menu.manage','booking.manage','orders.manage','accounting.manage'])
+const allowedPermissions = new Set(['accounts.manage','staff.manage','announcements.manage','accounting.manage','menu.manage','services.manage','orders.manage','booking.manage','shifts.manage','shifts.attend'])
 const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
 const secretKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 const service = createClient(supabaseUrl, secretKey, {
@@ -49,7 +49,7 @@ function validatedUserId(value:unknown):value is string{
 }
 async function findEmployee(id:string){
  const {data,error}=await service.from('employee_accounts')
-  .select('user_id,username,email').eq('user_id',id).maybeSingle()
+  .select('user_id,username,email,permissions,active').eq('user_id',id).maybeSingle()
  if(error)throw error
  return data
 }
@@ -60,6 +60,36 @@ async function isManager(id:string){
  return !!data
 }
 
+/**
+ * Appointed accounts operators can only manage lower-privilege employees.
+ * They cannot edit themselves, a fellow accounts manager, site owners, or
+ * grant a permission absent from their own active account.
+ * The owner alone may assign accounts.manage and promote other operators.
+ */
+async function operatorScope(id:string):Promise<{owner:boolean;grants:Set<string>}|null>{
+ if(await isManager(id))return {owner:true,grants:new Set(allowedPermissions)}
+ const {data,error}=await service.from('employee_accounts')
+  .select('active,permissions').eq('user_id',id).maybeSingle()
+ if(error)throw error
+ const granted=new Set<string>(Array.isArray(data?.permissions)?data.permissions:[])
+ if(!data?.active||!granted.has('accounts.manage'))return null
+ return {owner:false,grants:granted}
+}
+function canGrant(actor:{owner:boolean;grants:Set<string>},permissions:string[]):boolean{
+ return permissions.every(id=>
+  actor.owner || (id!=='accounts.manage'&&actor.grants.has(id))
+ )
+}
+async function canManageTarget(
+ actor:{owner:boolean;grants:Set<string>},actorId:string,targetId:string
+):Promise<boolean>{
+ if(actorId===targetId||await isManager(targetId))return false
+ const target=await findEmployee(targetId)
+ if(!target)return false
+ if(actor.owner)return true
+ const previous=Array.isArray(target.permissions)?target.permissions:[]
+ return !previous.includes('accounts.manage')&&previous.every(p=>actor.grants.has(p))
+}
 Deno.serve(async(req:Request)=>{
  if(req.method==='OPTIONS')return new Response(null,{status:204,headers:cors(req)})
  if(req.method!=='POST')return reply(req,405,{error:'不支援的請求'})
@@ -69,7 +99,8 @@ Deno.serve(async(req:Request)=>{
  try{
   const {data:{user},error:identityError}=await service.auth.getUser(token)
   if(identityError||!user||user.is_anonymous)return reply(req,401,{error:'登入已失效，請重新登入'})
-  if(!await isManager(user.id))return reply(req,403,{error:'只有正式管理員可以管理員工帳號'})
+  const scope=await operatorScope(user.id)
+  if(!scope)return reply(req,403,{error:'此帳號沒有員工帳號管理權限'})
   const raw=await req.text()
   if(raw.length>4096)return reply(req,413,{error:'資料過長'})
   let body:Record<string,unknown>
@@ -82,6 +113,8 @@ Deno.serve(async(req:Request)=>{
    const permissions=validatedPermissions(body.permissions)
    if(!username||!displayName||!permissions||!validatedPassword(body.password))
     return reply(req,400,{error:'請確認登入帳號、姓名、權限及密碼（8～16 字，需包含英文字母與數字）'})
+   if(!canGrant(scope,permissions))
+    return reply(req,403,{error:'無法分配高於自身的管理權限'})
    const {data:existing,error:lookupError}=await service.from('employee_accounts')
     .select('user_id').eq('username',username).maybeSingle()
    if(lookupError)return reply(req,500,{error:'無法確認帳號是否已存在'})
@@ -114,8 +147,10 @@ Deno.serve(async(req:Request)=>{
    const active=body.active
    if(!validatedUserId(id)||!displayName||!permissions||typeof active!=='boolean')
     return reply(req,400,{error:'員工資料或權限格式不正確'})
-   if(!await findEmployee(id)||await isManager(id))
-    return reply(req,404,{error:'找不到可管理的員工帳號'})
+   if(!await canManageTarget(scope,user.id,id))
+    return reply(req,403,{error:'無法管理自身或同級／高階管理員帳號'})
+   if(!canGrant(scope,permissions))
+    return reply(req,403,{error:'無法分配高於自身的管理權限'})
    const {data,error}=await service.from('employee_accounts')
     .update({display_name:displayName,permissions,active})
     .eq('user_id',id).select('user_id').maybeSingle()
@@ -127,8 +162,8 @@ Deno.serve(async(req:Request)=>{
    const id=body.userId
    if(!validatedUserId(id)||!validatedPassword(body.password))
     return reply(req,400,{error:'新密碼需 8～16 字，包含英文字母與數字'})
-   if(!await findEmployee(id)||await isManager(id))
-    return reply(req,404,{error:'找不到可重設密碼的員工帳號'})
+   if(!await canManageTarget(scope,user.id,id))
+    return reply(req,403,{error:'無法重設自身或同級／高階管理員密碼'})
    const {error}=await service.auth.admin.updateUserById(id,{password:body.password})
    if(error)return reply(req,500,{error:'無法重設員工密碼，請稍後再試'})
    return reply(req,200,{ok:true,message:'員工登入密碼已重設，請私下通知本人使用新密碼'})
@@ -140,8 +175,9 @@ Deno.serve(async(req:Request)=>{
    if(!validatedUserId(id)||!username||!validatedPassword(body.password))
     return reply(req,400,{error:'新帳號名稱或密碼不符合規則'})
    const employee=await findEmployee(id)
-   if(!employee||await isManager(id)||!employee.username.startsWith('legacy_'))
-    return reply(req,404,{error:'找不到需要轉換的舊版員工帳號'})
+   if(!employee||!employee.username.startsWith('legacy_')||
+    !await canManageTarget(scope,user.id,id))
+    return reply(req,403,{error:'無法轉換此員工帳號'})
    const {data:duplicate,error:duplicateError}=await service.from('employee_accounts')
     .select('user_id').eq('username',username).maybeSingle()
    if(duplicateError)return reply(req,500,{error:'無法確認新帳號是否可用'})
@@ -165,8 +201,8 @@ Deno.serve(async(req:Request)=>{
   if(body.action==='delete'){
    const id=body.userId
    if(!validatedUserId(id))return reply(req,400,{error:'員工帳號格式不正確'})
-   if(!await findEmployee(id)||await isManager(id))
-    return reply(req,404,{error:'找不到可刪除的員工帳號，管理者帳號不可刪除'})
+   if(!await canManageTarget(scope,user.id,id))
+    return reply(req,403,{error:'無法刪除自身或同級／高階管理員帳號'})
    // auth.users deletion cascades to employee_accounts only. Staff profiles,
    // menu and historical booking tables have no employee-account ownership FK.
    const {error}=await service.auth.admin.deleteUser(id)

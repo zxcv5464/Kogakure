@@ -18,8 +18,10 @@ assert.ok(page.includes("{access.kind==='employee'&&<EmployeeSelfPassword/>}"),
  'Employees must be shown their own security settings without extra module permissions')
 assert.ok(page.includes("{access.kind==='owner'&&<AccountSecurity />}"),
  'The original manager password settings must remain unchanged')
-assert.ok(page.includes("if(id==='accounts')return access.kind==='owner'"),
- 'Staff must not gain administrator account management access')
+assert.ok(page.includes("if(id==='accounts')return permitted(access,'accounts.manage')")&&
+ edge.includes('canManageTarget(scope,user.id,id)')&&
+ edge.includes('actorId===targetId||await isManager(targetId)'),
+ 'Delegated account management must never enable self-promotion, peer edits, or owner changes')
 assert.ok(!component.includes('manage-employee-accounts'),
  'Employees must not be able to call administrator account management actions')
 assert.ok(component.includes('useAdminEditGuard')&&component.includes('setEditing(editing,busy)'),

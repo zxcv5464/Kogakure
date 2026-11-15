@@ -3,11 +3,16 @@ import { configured, supabaseKey, supabaseUrl } from './config'
 import { supabase } from './supabase'
 
 export const EMPLOYEE_PERMISSIONS = [
- { id:'staff.manage',label:'員工名帖',description:'建立／編輯名帖、照片、排序與公開狀態' },
- { id:'menu.manage',label:'茶宴菜單',description:'編輯餐點分類、品項與 Gil 售價' },
- { id:'booking.manage',label:'預約管理',description:'查看旅人預約、接取／婉拒與管理方案' },
- { id:'orders.manage',label:'訂單管理',description:'查看茶宴旅人點單、接單、完成或取消訂單' },
- { id:'accounting.manage',label:'帳務管理',description:'查看 Gil 收支報表、登錄與編輯／刪除帳務明細' },
+ { id:'accounts.manage',label:'員工帳號管理',description:'管理一般員工帳號與密碼，不能任命同級管理員或分發自身沒有的權限' },
+ { id:'staff.manage',label:'員工名帖',description:'建立及編輯名帖、照片、排序與公開狀態' },
+ { id:'announcements.manage',label:'公告管理',description:'館內公告與最新消息，含置頂、發布及下架' },
+ { id:'accounting.manage',label:'帳務管理',description:'收支與薪資計算、發薪紀錄及帳務調整' },
+ { id:'menu.manage',label:'菜單管理',description:'茶宴分類、品項、售價與供應狀態' },
+ { id:'services.manage',label:'服務內容管理',description:'服務項目、圖片、輪播順序及公開狀態' },
+ { id:'orders.manage',label:'訂單管理',description:'茶宴訂單、接單、完成、取消與刪除' },
+ { id:'booking.manage',label:'預約管理',description:'預約審核、方案與指名人員設定' },
+ { id:'shifts.manage',label:'值班排班管理',description:'管理營業時間、活動與全員出勤安排' },
+ { id:'shifts.attend',label:'個人出勤登記',description:'僅能登記、取消與修改自己的出勤資訊' },
 ] as const
 
 export type EmployeePermission = typeof EMPLOYEE_PERMISSIONS[number]['id']

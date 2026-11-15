@@ -49,8 +49,8 @@ assert.ok(lib.includes(".eq('updated_at',service.updatedAt)"),
  'Service writes must detect stale edits')
 assert.ok(lib.includes("storage.from('service-media')"),
  'Service image uploads must use the dedicated bucket')
-assert.ok(shell.includes("if(id==='accounts'||id==='services'||id==='announcements')return access.kind==='owner'"),
- 'Service management must remain owner-only')
+assert.ok(shell.includes("if(id==='services')return permitted(access,'services.manage')"),
+ 'Service management must require explicit delegable access')
 assert.ok(shell.includes('module="services"')&&shell.includes('<ServiceManagement/>'),
  'Admin module must be authorization guarded')
 assert.ok(modules.includes("id: 'services'")&&modules.includes("'/admin/services'"),
