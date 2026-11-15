@@ -29,7 +29,7 @@
 .daily-payroll-member>div>strong{font:.87rem 'Noto Serif TC',serif;color:#f1d8b4;overflow-wrap:anywhere}
 .daily-payroll-member-number{color:#a99a8b;font:.73rem Georgia,serif}
 .daily-payroll-amount{color:#e4c99f;font:600 .99rem Georgia,serif;font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
-.daily-payroll-member button{display:inline-flex;gap:6px;align-items:center;justify-content:center;min-height:37px;padding:7px 11px;border-radius:5px;font:.76rem inherit;cursor:pointer}
+.daily-payroll-member button{display:inline-flex;gap:6px;align-items:center;justify-content:center;min-height:37px;padding:7px 11px;border-radius:5px;font-size:.76rem;font-family:inherit;cursor:pointer}
 .daily-payroll-member button.is-pay{background:#d6b384;color:#231e24;border:1px solid #d6b384}
 .daily-payroll-member button.is-paid{background:rgba(76,125,81,.18);border:1px solid rgba(134,211,146,.27);color:#bbd9c0}
 .daily-payroll-member button:disabled{cursor:not-allowed;opacity:.74}
