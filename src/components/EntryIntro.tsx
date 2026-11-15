@@ -23,7 +23,6 @@ export default function EntryIntro({onEnter,onReveal}:{onEnter?:()=>void;onRevea
   if(!shouldPlay())return 'done'
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches?'ready':'preparing'
  })
- const entryButton=useRef<HTMLButtonElement>(null)
  const logoImage=useRef<HTMLImageElement>(null)
 
  // On a cold first visit, CSS animations used to run before logo-intro.webp
@@ -84,10 +83,6 @@ export default function EntryIntro({onEnter,onReveal}:{onEnter?:()=>void;onRevea
  },[phase])
 
  useEffect(()=>{
-  if(phase==='ready')entryButton.current?.focus({preventScroll:true})
- },[phase])
-
- useEffect(()=>{
   if(phase!=='clear')return
   const timer=window.setTimeout(()=>{setPhase('reveal');onReveal?.()},CLEAR_MS)
   return()=>window.clearTimeout(timer)
@@ -117,7 +112,7 @@ export default function EntryIntro({onEnter,onReveal}:{onEnter?:()=>void;onRevea
    <span id="intro-wordmark" className="intro-wordmark">KOGAKURE</span>
    <span className="intro-divider" aria-hidden="true"/>
    <span id="intro-motto" className="intro-motto">循狐而入，借湯忘憂。</span>
-   <button ref={entryButton} type="button" className="intro-entry-action"
+   <button type="button" className="intro-entry-action"
     disabled={phase!=='ready'} onClick={enterInn}><Music2 size={17} strokeWidth={1.7}/>進入狐隱<ArrowRight size={17} strokeWidth={1.7}/></button>
    <small className="intro-music-note">入館後可於頁首隨時關閉或重新播放 BGM</small>
   </div>
