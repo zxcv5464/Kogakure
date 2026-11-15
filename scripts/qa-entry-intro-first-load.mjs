@@ -139,7 +139,13 @@ try{
  console.log('PASS: first uncached load preps the logo, visibly fades all entrance elements, opens with one click and keeps BGM')
 }finally{
  socket?.close()
+ const chromeClosed=chrome&&chrome.exitCode===null
+  ?new Promise(resolve=>chrome.once('close',resolve)):Promise.resolve()
  chrome?.kill()
  web.kill()
- await rm(profile,{recursive:true,force:true})
+ // Chrome's profile writer can outlive the main window briefly. Wait for
+ // process shutdown and retry cleanup instead of failing a passed UI test.
+ await Promise.race([chromeClosed,sleep(1800)])
+ try{await rm(profile,{recursive:true,force:true,maxRetries:12,retryDelay:250})}
+ catch(error){console.warn('Browser QA passed, but temporary Chrome profile cleanup was incomplete:',error)}
 }
