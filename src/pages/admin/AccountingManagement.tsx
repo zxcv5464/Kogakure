@@ -211,7 +211,7 @@ export default function AccountingManagement(){
       <Save size={16}/>{busy?'儲存中…':editingId?'儲存修改':'新增收支'}
      </button>
     </div>
-    <p className="accounting-editor-hint">金額請輸入正整數 Gil；儲存後才會計入帳務統計。修改與刪除均需管理員身分。</p>
+    <p className="accounting-editor-hint">金額請輸入正整數 Gil；儲存後才會計入帳務統計。新增、修改與刪除均需「帳務管理」權限。</p>
    </form>
   </div>
  </section>
