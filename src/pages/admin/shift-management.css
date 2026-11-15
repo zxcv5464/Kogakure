@@ -80,7 +80,6 @@
 .shift-calendar-legend i{width:10px;height:10px;display:inline-block;border-radius:2px;border:1px solid #c4ad8f}
 .shift-calendar-legend i.is-open{background:#baa071}
 .shift-calendar-legend i.is-closed{background:#716774;border-color:#8d7b87}
-.shift-calendar-legend i.is-unannounced{background:transparent}
 .shift-calendar-legend i.is-today{background:#f3cb8e;border-color:#f3cb8e;border-radius:50%}
 .shift-calendar-scroll{max-width:100%;overflow-x:auto;overflow-y:hidden;scrollbar-color:rgba(210,170,116,.7) transparent;scrollbar-width:thin}
 .shift-calendar-scroll:focus-visible{outline:2px solid #d9b487;outline-offset:3px}
