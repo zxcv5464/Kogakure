@@ -1,0 +1,130 @@
+import {configured} from './config'
+import {supabase} from './supabase'
+import {validVenueDate} from './taipei-date'
+import {fetchAccountingEntries} from './accounting'
+import type {AccountingEntry} from './accounting'
+
+export type SalesSummary={completedCount:number;completedGil:number}
+export type PayrollEmployee={id:string;name:string}
+export type PayrollShare=PayrollEmployee&{amountGil:number}
+export type PayrollAllocation=PayrollShare&{
+ date:string;revenueGil:number;employeeCount:number;paidAt:string|null
+ accountingEntryId:string|null;createdAt:string
+}
+export type DailyPayrollReport={
+ date:string;sales:SalesSummary;manualOtherIncomeGil:number;manualReceiptGil:number
+ revenueGil:number;roster:PayrollEmployee[];allocations:PayrollAllocation[]
+}
+
+const db=()=>{
+ if(!configured||!supabase)throw new Error('帳務資料庫尚未連線')
+ return supabase
+}
+const dateCheck=(date:string)=>{
+ if(!validVenueDate(date)||date<'2020-01-01'||date>'2100-12-31')
+  throw new Error('請選擇有效的營業日期')
+}
+const gil=(value:unknown):number=>{
+ const num=Number(value)
+ if(!Number.isSafeInteger(num)||num<0)throw new Error('Gil 金額超出可統計範圍')
+ return num
+}
+
+/** Accountants can see only aggregates, never guests' itemized order rows. */
+export async function getDailyCompletedSales(date:string):Promise<SalesSummary>{
+ dateCheck(date)
+ const {data,error}=await db().rpc('get_accounting_daily_sales',{p_day:date})
+ if(error)throw new Error(error.message||'無法取得已完成訂單營業額')
+ const raw=Array.isArray(data)?data[0]:data
+ if(!raw)throw new Error('已完成訂單資料沒有回應')
+ return {completedCount:gil(raw.completed_orders),completedGil:gil(raw.total_gil)}
+}
+
+/** Use signed-up EMPLOYEES from this exact business day. Owner shifts are
+ * intentionally excluded: the user requested salaries for employees only. */
+export async function fetchDailyPayrollRoster(date:string):Promise<PayrollEmployee[]>{
+ dateCheck(date)
+ const {data,error}=await db().from('shift_attendance')
+  .select('employee_id,employee_name').eq('shift_date',date)
+  .order('employee_name',{ascending:true})
+ if(error)throw new Error('讀取當日員工排班失敗：'+error.message)
+ const unique=new Map<string,PayrollEmployee>()
+ for(const record of data||[]){
+  if(!unique.has(record.employee_id))
+   unique.set(record.employee_id,{id:record.employee_id,name:record.employee_name})
+ }
+ return [...unique.values()].sort((a,b)=>a.name.localeCompare(b.name,'zh-TW')||a.id.localeCompare(b.id))
+}
+export async function fetchDailyPayrollAllocations(date:string):Promise<PayrollAllocation[]>{
+ dateCheck(date)
+ const {data,error}=await db().from('payroll_allocations')
+  .select('pay_date,employee_id,employee_name,revenue_gil,employee_count,amount_gil,paid_at,accounting_entry_id,created_at')
+  .eq('pay_date',date).order('employee_name',{ascending:true})
+ if(error)throw new Error('讀取分薪紀錄失敗：'+error.message)
+ return (data||[]).map(item=>({
+  date:item.pay_date,id:item.employee_id,name:item.employee_name,
+  revenueGil:gil(item.revenue_gil),employeeCount:Number(item.employee_count),
+  amountGil:gil(item.amount_gil),paidAt:item.paid_at,
+  accountingEntryId:item.accounting_entry_id,createdAt:item.created_at,
+ }))
+}
+
+/** Completed orders and ledger receipts are intentionally separate.
+ * Exclude manually logged tea income from the calculated turnover to avoid
+ * counting the same tea banquet twice. */
+export function sumNonTeaIncome(entries:AccountingEntry[]):number{
+ return entries.filter(x=>x.kind==='income'&&x.category!=='茶宴收入')
+  .reduce((s,x)=>s+x.amountGil,0)
+}
+export function sumRecordedReceipts(entries:AccountingEntry[]):number{
+ return entries.filter(x=>x.kind==='income').reduce((s,x)=>s+x.amountGil,0)
+}
+/** Distribute every whole Gil deterministically. If not divisible, the
+ * remainder is given 1 Gil at a time in stable name/id order. */
+export function calculateEqualPayroll(totalGil:number,people:PayrollEmployee[]):PayrollShare[]{
+ if(!Number.isSafeInteger(totalGil)||totalGil<0)throw new Error('營業額不是有效整數')
+ const unique=new Map<string,PayrollEmployee>()
+ for(const person of people){
+  if(!unique.has(person.id))unique.set(person.id,person)
+ }
+ const sorted=[...unique.values()].sort((a,b)=>
+  a.name.localeCompare(b.name,'zh-TW')||a.id.localeCompare(b.id))
+ if(!sorted.length)return []
+ const base=Math.floor(totalGil/sorted.length)
+ const remainder=totalGil%sorted.length
+ return sorted.map((person,index)=>({
+  ...person,amountGil:base+(index<remainder?1:0),
+ }))
+}
+
+export async function fetchDailyPayrollReport(date:string):Promise<DailyPayrollReport>{
+ dateCheck(date)
+ const [sales,ledger,roster,allocations]=await Promise.all([
+  getDailyCompletedSales(date),
+  fetchAccountingEntries({mode:'day',value:date}),
+  fetchDailyPayrollRoster(date),
+  fetchDailyPayrollAllocations(date),
+ ])
+ const manualOtherIncomeGil=sumNonTeaIncome(ledger)
+ const revenueGil=sales.completedGil+manualOtherIncomeGil
+ if(!Number.isSafeInteger(revenueGil))throw new Error('當日營業額超出可計算範圍')
+ return {
+  date,sales,manualOtherIncomeGil,
+  manualReceiptGil:sumRecordedReceipts(ledger),revenueGil,
+  roster,allocations,
+ }
+}
+export async function createDailyPayroll(date:string):Promise<void>{
+ dateCheck(date)
+ const {data,error}=await db().rpc('create_daily_payroll',{p_day:date})
+ if(error)throw new Error(error.message||'建立分薪清單失敗')
+ if(!Number.isInteger(Number(data))||Number(data)<1)
+  throw new Error('分薪名單未建立，請重新整理確認')
+}
+export async function confirmPayrollPaid(date:string,employeeId:string):Promise<void>{
+ dateCheck(date)
+ if(!/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(employeeId))
+  throw new Error('員工編號不正確')
+ const {error}=await db().rpc('confirm_payroll_paid',{p_day:date,p_employee_id:employeeId})
+ if(error)throw new Error(error.message||'標記發薪失敗')
+}
