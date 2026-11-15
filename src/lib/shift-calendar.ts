@@ -25,7 +25,7 @@ export function rollingShiftWeeks(date:string=taipeiToday()):ShiftWeek[]{
  })
 }
 export function shiftDateLabel(date:string):string{
- const [year,month,day]=date.split('-')
+ const [,month,day]=date.split('-')
  return Number(month)+'/'+Number(day)
 }
 export function useRollingShiftWeeks(){
