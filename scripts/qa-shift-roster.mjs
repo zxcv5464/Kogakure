@@ -4,16 +4,16 @@ import assert from 'node:assert/strict'
 import {readFile} from 'node:fs/promises'
 import {createElement} from 'react'
 import {renderToStaticMarkup} from 'react-dom/server'
-import {MemoryRouter} from 'react-router-dom'
+import {MemoryRouter,matchRoutes} from 'react-router-dom'
 import ts from 'typescript'
 import {createServer} from 'vite'
 const sources=['src/lib/shift-calendar.ts','src/lib/shifts.ts','src/pages/ShiftsPage.tsx',
  'src/pages/admin/ShiftManagement.tsx','src/App.tsx','src/pages/AdminPage.tsx',
- 'src/pages/admin/modules.ts','scripts/prepare-pages.mjs',
+ 'src/pages/admin/modules.ts','scripts/prepare-pages.mjs','src/main.tsx','src/pages/OtherPages.tsx',
  'src/pages/shifts-page.css','src/pages/admin/shift-management.css',
  'supabase/migrations/20261115_09_rolling_four_week_shifts.sql',
  'supabase/migrations/20261115_10_owner_self_attendance.sql']
-const [calendar,lib,page,editor,app,shell,modules,routes,css,adminCss,sql,ownerSql]=await Promise.all(sources.map(path=>readFile(path,'utf8')))
+const [calendar,lib,page,editor,app,shell,modules,routes,main,otherPages,css,adminCss,sql,ownerSql]=await Promise.all(sources.map(path=>readFile(path,'utf8')))
 for(const path of sources.filter(p=>p.endsWith('.ts')||p.endsWith('.tsx'))){
  const source=await readFile(path,'utf8')
  const ast=ts.createSourceFile(path,source,ts.ScriptTarget.Latest,true,path.endsWith('tsx')?ts.ScriptKind.TSX:ts.ScriptKind.TS)
@@ -26,6 +26,19 @@ for(const term of [
 assert.ok(app.includes('<Route path="/shifts" element={<ShiftsPage />} />'))
 assert.ok(modules.includes("id: 'shifts'")&&modules.includes("path: '/admin/shifts', status: 'available'"))
 assert.ok(routes.includes("'admin/shifts'"))
+// GitHub Pages publishes /shifts/ directory index; the browser must restore
+// the canonical React route before rendering, even on a hard refresh.
+const directRoute=await readFile('dist/shifts/index.html','utf8')
+assert.ok(directRoute.includes('值班排班'),'Published /shifts/ entry must have the shift page title')
+assert.ok(directRoute.includes('/Kogakure/'),'Deep-link entry must retain the GitHub Pages deployment base')
+assert.ok(main.includes("current.endsWith('/')")&&main.includes('current.slice(0,-1)'),
+ 'Normalize GitHub Pages trailing slashes before BrowserRouter starts')
+assert.ok(otherPages.includes("const path=useLocation().pathname.replace("),
+ 'Fallback route should handle trailing slashes consistently')
+assert.ok(!otherPages.includes("||pages['/about']"),
+ 'A mismatched route must never show the old house-rules placeholder')
+assert.equal(matchRoutes([{path:'/shifts'},{path:'*'}],'/shifts/')?.[0]?.route.path,'/shifts',
+ 'React Router must resolve a direct /shifts/ refresh to the current shift page')
 for(const term of [
  "create table if not exists public.shift_open_days",
  "create table if not exists public.shift_attendance",
