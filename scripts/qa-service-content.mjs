@@ -24,7 +24,7 @@ const paths=[
 ]
 const [page,gallery,lib,admin,shell,modules,pages,css,adminCss,sql,gallerySql]=await Promise.all(paths.map(p=>readFile(p,'utf8')))
 for(const term of [
- 'fetchServiceContents()','service.slug','service.category','service.paragraphs.map',
+ 'loadPublicServices()','service.slug','service.category','service.paragraphs.map',
  'service.details.map','ServicePhotoGallery',
 ]){
  assert.ok(page.includes(term),'Public service content must be dynamic: '+term)
@@ -75,6 +75,8 @@ assert.ok(adminCss.includes('@media(max-width:850px)'),'Admin form must respond 
 for(const phrase of [
  'slideIntervalMs=5000',
  'window.setInterval',
+ 'IntersectionObserver',
+ 'image.decode().then(ready,ready)',
  "document.visibilityState==='visible'",
  'services-photo-slide',
  "photos.length>1",
