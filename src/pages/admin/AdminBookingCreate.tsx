@@ -14,6 +14,7 @@ export default function AdminBookingCreate({plans,close,onCreated}:Props){
  const [world,setWorld]=useState('')
  const [planId,setPlanId]=useState(plans.find(p=>p.active)?.id||plans[0]?.id||'')
  const [staffIds,setStaffIds]=useState<string[]>([])
+ const selectedPlan=plans.find(p=>p.id===planId)
  const [note,setNote]=useState('')
  const [error,setError]=useState('')
  const [busy,setBusy]=useState(false)
@@ -50,6 +51,9 @@ export default function AdminBookingCreate({plans,close,onCreated}:Props){
   if(busy)return
   if(name.trim().length<2||world.trim().length<2||!planId||!staffIds.length){setError('請填寫角色姓名、伺服器、方案並選擇至少一位館員');return}
   if(staffIds.length>2){setError('每筆預約最多指名 2 位館員（主要指名及追加指名各 1 位）');return}
+  if(staffIds.length>1&&!selectedPlan?.allowJoint){
+   setError('此方案僅開放單人指名，請取消第二位館員');return
+  }
   const picked=staffIds.map(id=>people.find(p=>p.id===id))
   if(picked.some(person=>!person||!staffAcceptsPlan(person,planId))||
     (picked.length===2&&(!picked[0]||!picked[1]||!staffCanJoinBooking(picked[0],picked[1],planId)))){
@@ -77,11 +81,13 @@ export default function AdminBookingCreate({plans,close,onCreated}:Props){
      {plans.map(p=><option key={p.id} value={p.id}>{p.name} · {p.durationMinutes} 分鐘{p.active?'':'（未公開，僅後台可用）'}</option>)}
     </select></label>
     <fieldset><legend>選擇可指名館員（最多 2 位：主要指名＋追加 1 位）</legend>
-     <p>僅可選擇接受此方案的狐姬；兩人同時指名須雙方都已開放。</p>
+     <p>{selectedPlan?.allowJoint
+      ?'僅可選擇接受此方案的狐姬；同時指名須方案與兩位狐姬均允許。'
+      :'此指名方案僅開放單人預約；無法追加第二位狐姬。'}</p>
      {loading?<p role="status">正在取得狐姬名單…</p>:!people.length?<p>目前沒有開放預約展示的館員。</p>:people.map(p=>{
       const compatible=staffAcceptsPlan(p,planId)
       const selectedPartner=people.find(q=>q.id===staffIds[0])
-      const jointOK=!selectedPartner||staffCanJoinBooking(selectedPartner,p,planId)
+      const jointOK=!selectedPartner||staffCanJoinBooking(selectedPartner,p,planId,selectedPlan?.allowJoint)
       const disabled=busy||!compatible||!staffIds.includes(p.id)&&
        (staffIds.length>=2||!jointOK)
       return <label className="booking-admin-create-staff" key={p.id}>

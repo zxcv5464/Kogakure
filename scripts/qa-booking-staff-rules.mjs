@@ -13,8 +13,9 @@ const paths=[
  'supabase/migrations/20261115_29_staff_booking_plan_joint_rules.sql',
  'supabase/migrations/20261115_30_booking_rule_trigger_execute.sql',
  'supabase/migrations/20261115_31_protect_booking_rule_fields.sql',
+ 'supabase/migrations/20261115_32_booking_plan_joint_switch.sql',
 ]
-const [types,staff,bookings,publicPage,admin,manual,staffAdmin,css,sql,grants,fieldGuard]=
+const [types,staff,bookings,publicPage,admin,manual,staffAdmin,css,sql,grants,fieldGuard,planSql]=
  await Promise.all(paths.map(path=>readFile(path,'utf8')))
 for(const path of paths.filter(p=>/\.tsx?$/.test(p))){
  const ast=ts.createSourceFile(path,await readFile(path,'utf8'),
@@ -38,13 +39,13 @@ for(const item of ['setStaffBookingRules','booking-admin-person-rules','可接�
  'setRuleDrafts','invalidatePublicStaffCache','useAdminEditGuard']){
  assert.ok(admin.includes(item),'Booking management cannot edit per-staff plan and joint rules: '+item)
 }
-for(const item of ['staffAcceptsPlan(selected,p.id)','staffCanJoinBooking(selected,extraPerson,p.id)',
- 'applicablePlans.map','staffCanJoinBooking(selected,p,chosenPlanId)',
+for(const item of ['staffAcceptsPlan(selected,p.id)','staffCanJoinBooking(selected,extraPerson,p.id,p.allowJoint)',
+ 'applicablePlans.map','staffCanJoinBooking(selected,p,chosenPlanId,activePlan?.allowJoint)',
  'chosenPlanId','selected.bookingAllowJoint','!applicablePlans.length']){
  assert.ok(publicPage.includes(item),'Guest booking must filter by staff eligibility: '+item)
 }
 assert.ok(manual.includes('staffAcceptsPlan(p,planId)')&&
- manual.includes('staffCanJoinBooking(selectedPartner,p,planId)')&&
+ manual.includes('staffCanJoinBooking(selectedPartner,p,planId,selectedPlan?.allowJoint)')&&
  manual.includes('setStaffIds([])')&&manual.includes('!staffCanJoinBooking(picked[0],picked[1],planId)'),
  'Manual bookings need the same eligibility and double-nomination checks')
 assert.ok(css.includes('.booking-admin-person-rules')&&css.includes('.booking-admin-plan-options'),
@@ -75,6 +76,31 @@ assert.ok(fieldGuard.includes('private.protect_staff_booking_rule_fields')&&
  fieldGuard.includes('new.booking_allow_joint is distinct from old.booking_allow_joint')&&
  fieldGuard.includes("current_user not in ('postgres','service_role')"),
  'Staff profile managers cannot bypass booking-specific rule edits through the general staff table')
+assert.ok(planSql.includes('add column if not exists allow_joint_nomination boolean not null default true')&&
+ planSql.includes('create or replace function private.validate_staff_booking_rules')&&
+ planSql.includes('p.allow_joint_nomination=false')&&
+ planSql.includes("if v_people>1 and exists(")&&
+ !planSql.includes('delete from public.booking_requests'),
+ 'Per-plan simultaneous nomination switch must be enforced by existing booking insert and acceptance triggers')
+assert.ok(bookings.includes('allowJoint:boolean')&&
+ bookings.includes('allow_joint_nomination:boolean')&&
+ bookings.includes('allow_joint_nomination:plan.allowJoint')&&
+ bookings.includes('return planAllowJoint&&primary.bookingAllowJoint&&second.bookingAllowJoint'),
+ 'Database read and save must persist each booking plan joint eligibility')
+assert.ok(admin.includes("allowJoint:true,updatedAt:''")&&
+ admin.includes('開放同時指名（最多兩位狐姬）')&&
+ admin.includes("patchPlan('allowJoint',e.target.checked)")&&
+ admin.includes("p.allowJoint?'可同時指名':'僅限單人'"),
+ 'Create and edit nomination plan must offer same-style toggle and status')
+assert.ok(publicPage.includes("activePlan?.allowJoint&&selected?.bookingAllowJoint")&&
+ publicPage.includes("!activePlan?.allowJoint||!selected.bookingAllowJoint")&&
+ publicPage.includes("此指名方案僅接受單人預約。")&&
+ publicPage.includes("setOthers([]);setWithOthers(false)"),
+ 'Public booking should hide extra nominations for single-only plans and reset when switching')
+assert.ok(manual.includes("staffIds.length>1&&!selectedPlan?.allowJoint")&&
+ manual.includes("此方案僅開放單人指名")&&
+ manual.includes('selectedPlan?.allowJoint'),
+ 'Admin-created bookings must not accept dual bookings for single-only plans')
 assert.ok(!sql.includes('delete from public.booking_requests')&&!sql.includes('drop table public.staff'),
  'Migration must preserve existing reservations and staff')
 const vite=await createServer({server:{middlewareMode:true,hmr:false},appType:'custom'})
@@ -94,6 +120,8 @@ try{
  assert.equal(staffAcceptsPlan(limited,'plan-b'),false)
  assert.equal(staffAcceptsPlan({...limited,bookingAllowedPlanIds:[]},'plan-a'),false)
  assert.equal(staffCanJoinBooking(limited,legacy,'plan-a'),true)
+ assert.equal(staffCanJoinBooking(limited,legacy,'plan-a',false),false)
+ assert.equal(staffCanJoinBooking(limited,legacy,'plan-a',true),true)
  assert.equal(staffCanJoinBooking(limited,legacy,'plan-b'),false)
  assert.equal(staffCanJoinBooking(limited,solo,'plan-a'),false)
  assert.equal(staffCanJoinBooking(solo,limited,'plan-a'),false)

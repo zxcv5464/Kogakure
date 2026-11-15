@@ -4,7 +4,7 @@ import type {Staff} from '../types'
 
 export type BookingPlan = {
  id:string; name:string; description:string; durationMinutes:number;
- priceGil:number|null; sortOrder:number; active:boolean; updatedAt:string
+ priceGil:number|null; sortOrder:number; active:boolean; allowJoint:boolean; updatedAt:string
 }
 export type BookingStatus = 'pending'|'accepted'|'rejected'|'completed'
 export type BookingRequest = {
@@ -15,7 +15,7 @@ export type BookingRequest = {
  staff:{id:string;name:string}[]
 }
 export type StaffPresence = {staffId:string;busyUntil:string|null}
-type PlanRow={id:string;name:string;description:string;duration_minutes:number;price_gil:number|null;sort_order:number;is_active:boolean;updated_at:string}
+type PlanRow={id:string;name:string;description:string;duration_minutes:number;price_gil:number|null;sort_order:number;is_active:boolean;allow_joint_nomination:boolean;updated_at:string}
 type BookingRow={id:string;guest_name:string;guest_world:string;note:string;plan_id:string;plan_name:string;duration_minutes:number;price_gil:number|null;status:BookingStatus;created_at:string;accepted_at:string|null;ends_at:string|null;completed_at:string|null}
 type BookingLinkRow={booking_id:string;staff_id:string;staff_name:string}
 type PresenceRow={staff_id:string;busy_until:string|null}
@@ -34,7 +34,8 @@ export function describeBookingError(error:unknown):string{
 }
 const planFromRow=(p:PlanRow):BookingPlan=>({
  id:p.id,name:p.name,description:p.description,durationMinutes:p.duration_minutes,
- priceGil:p.price_gil,sortOrder:p.sort_order,active:p.is_active,updatedAt:p.updated_at,
+ priceGil:p.price_gil,sortOrder:p.sort_order,active:p.is_active,
+ allowJoint:p.allow_joint_nomination!==false,updatedAt:p.updated_at,
 })
 export async function loadBookingPlans(includeInactive=false):Promise<BookingPlan[]> {
  let query=client().from('booking_plans').select('*').order('sort_order',{ascending:true})
@@ -59,9 +60,9 @@ export function staffAcceptsPlan(staff:Pick<Staff,'bookingAllowedPlanIds'>,planI
 export function staffCanJoinBooking(
  primary:Pick<Staff,'bookingAllowJoint'|'bookingAllowedPlanIds'>,
  second:Pick<Staff,'bookingAllowJoint'|'bookingAllowedPlanIds'>,
- planId:string
+ planId:string,planAllowJoint=true
 ):boolean{
- return primary.bookingAllowJoint&&second.bookingAllowJoint&&
+ return planAllowJoint&&primary.bookingAllowJoint&&second.bookingAllowJoint&&
   staffAcceptsPlan(primary,planId)&&staffAcceptsPlan(second,planId)
 }
 /** Save only booking-specific settings without requiring staff.manage. */
@@ -146,7 +147,8 @@ export async function deleteAdminBooking(id:string):Promise<void>{
 export async function saveBookingPlan(plan:BookingPlan,newPlan:boolean):Promise<void>{
  const db=client()
  const row={id:plan.id,name:plan.name.trim(),description:plan.description.trim(),
-  duration_minutes:plan.durationMinutes,price_gil:plan.priceGil,sort_order:plan.sortOrder,is_active:plan.active}
+  duration_minutes:plan.durationMinutes,price_gil:plan.priceGil,sort_order:plan.sortOrder,is_active:plan.active,
+  allow_joint_nomination:plan.allowJoint}
  const request=newPlan
   ? db.from('booking_plans').insert(row).select('id')
   : db.from('booking_plans').update(row).eq('id',plan.id).eq('updated_at',plan.updatedAt).select('id')

@@ -97,12 +97,12 @@ export default function BookingPage(){
  const statusByStaff=useMemo(()=>new Map(presence.map(p=>[p.staffId,p.busyUntil])),[presence])
  const extraPerson=withOthers?people.find(p=>p.id===others[0]):null
  const applicablePlans=plans.filter(p=>selected&&staffAcceptsPlan(selected,p.id)&&
-  (!extraPerson||staffCanJoinBooking(selected,extraPerson,p.id)))
+  (!extraPerson||staffCanJoinBooking(selected,extraPerson,p.id,p.allowJoint)))
  const chosenPlanId=applicablePlans.some(p=>p.id===planId)?planId:applicablePlans[0]?.id||''
  const activePlan=applicablePlans.find(p=>p.id===chosenPlanId)
  const nominees=resolveBookingNominees(selected,people,others,withOthers)
- const canAddOthers=Boolean(selected?.bookingAllowJoint&&chosenPlanId&&
-  people.some(p=>p.id!==selected?.id&&staffCanJoinBooking(selected!,p,chosenPlanId)))
+ const canAddOthers=Boolean(activePlan?.allowJoint&&selected?.bookingAllowJoint&&chosenPlanId&&
+  people.some(p=>p.id!==selected?.id&&staffCanJoinBooking(selected!,p,chosenPlanId,activePlan.allowJoint)))
 
  function openBooking(person:Staff){
   if(isStaffBusy(statusByStaff.get(person.id),Date.now()))return
@@ -147,9 +147,9 @@ export default function BookingPage(){
    const staff=people.find(p=>p.id===person.id)
    return !staff||!staffAcceptsPlan(staff,chosenPlanId)
   })){setFormError('所選狐姬無法接受這個預約方案，請重新選擇');return}
-  if(ids.length>1&&(!selected.bookingAllowJoint||
+  if(ids.length>1&&(!activePlan?.allowJoint||!selected.bookingAllowJoint||
    !chosen.every(person=>people.find(p=>p.id===person.id)?.bookingAllowJoint))){
-   setFormError('所選狐姬未開放同時指名，請改為單人預約');return
+   setFormError('所選方案或狐姬未開放同時指名，請改為單人預約');return
   }
   if(ids.some(id=>isStaffBusy(statusByStaff.get(id),Date.now()))){setFormError('有受指名人員已進入指名中，請重新選擇');return}
   if(name.trim().length<2||world.trim().length<2||!chosenPlanId){setFormError('請填寫遊戲角色姓名、伺服器並選擇方案');return}
@@ -228,18 +228,18 @@ export default function BookingPage(){
      {!applicablePlans.length&&<p role="status" className="booking-plan-unavailable">這位狐姬目前沒有可接受的方案，或雙人指名的方案不一致；請重新選擇。</p>}
      <label>預約者遊戲角色姓名 <input required minLength={2} maxLength={48} value={name} onChange={e=>setName(e.target.value)} placeholder="請輸入遊戲中的角色姓名" autoComplete="off"/></label>
      <label>所在伺服器 <input required minLength={2} maxLength={48} value={world} onChange={e=>setWorld(e.target.value)} placeholder="例如：利維坦 / Leviathan" autoComplete="off"/></label>
-     <label>指名方案 <select required value={chosenPlanId} onChange={e=>{setPlanId(e.target.value);setOthers([])}}>
+     <label>指名方案 <select required value={chosenPlanId} onChange={e=>{setPlanId(e.target.value);setOthers([]);setWithOthers(false)}}>
       <option value="">請選擇方案</option>
       {applicablePlans.map(p=><option value={p.id} key={p.id}>{p.name} · {p.durationMinutes} 分鐘{p.priceGil===null?'': ' · '+p.priceGil.toLocaleString('en-US')+' Gil'}</option>)}
      </select></label>
      {activePlan&&<p className="booking-plan-note"><Clock3 size={16}/>{activePlan.description||'體驗內容以館方確認為準'} · {activePlan.priceGil===null?'費用請洽館方':'費用 '+activePlan.priceGil.toLocaleString('en-US')+' Gil'}</p>}
-     {selected.bookingAllowJoint?<label className="booking-choice"><input type="checkbox"
+     {selected.bookingAllowJoint&&activePlan?.allowJoint?<label className="booking-choice"><input type="checkbox"
       checked={withOthers} disabled={!canAddOthers&&!withOthers}
       onChange={e=>{setWithOthers(e.target.checked);setOthers([])}}/>是否同時指名其他館員？</label>:
-      <p className="booking-plan-note">這位狐姬僅接受單獨指名。</p>}
-     {selected.bookingAllowJoint&&withOthers&&<fieldset className="booking-additional">
+      <p className="booking-plan-note">{activePlan&&!activePlan.allowJoint?'此指名方案僅接受單人預約。':'這位狐姬僅接受單獨指名。'}</p>}
+     {selected.bookingAllowJoint&&activePlan?.allowJoint&&withOthers&&<fieldset className="booking-additional">
       <legend>追加指名（最多再選 1 位館員）</legend>
-      {people.filter(p=>p.id!==selected.id&&chosenPlanId&&staffCanJoinBooking(selected,p,chosenPlanId)).map(person=>{
+      {people.filter(p=>p.id!==selected.id&&chosenPlanId&&staffCanJoinBooking(selected,p,chosenPlanId,activePlan?.allowJoint)).map(person=>{
        const busy=isStaffBusy(statusByStaff.get(person.id),now)
        return <label key={person.id}><input type="checkbox" checked={others.includes(person.id)} disabled={busy}
         onChange={e=>setOthers(e.target.checked?[person.id]:[])}/>

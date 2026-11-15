@@ -150,3 +150,6 @@
 .booking-admin-rules-save:disabled{opacity:.42;cursor:not-allowed}
 .booking-admin-rules-save:not(:disabled):hover{background:rgba(185,146,92,.21)}
 @media(max-width:600px){.booking-admin-plan-options{margin-left:17px;padding-left:9px}}
+
+/* Keep the new plan-level joint switch as a quiet companion to publish status. */
+.booking-admin-plan-hint{margin:-9px 0 3px;color:#b9ab99;font-size:.75rem;line-height:1.75}

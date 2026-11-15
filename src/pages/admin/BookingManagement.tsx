@@ -18,7 +18,7 @@ const statusNames:Record<BookingStatus,string>={
 }
 const fmt=(date:string|null)=>date ? new Date(date).toLocaleString('zh-TW',{timeZone:'Asia/Taipei',hour12:false,month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'}) : '—'
 const gil=(n:number|null)=>n===null?'未設定費用':n.toLocaleString('en-US')+' Gil'
-const initialPlan=():BookingPlan=>({id:crypto.randomUUID(),name:'',description:'',durationMinutes:30,priceGil:null,sortOrder:100,active:false,updatedAt:''})
+const initialPlan=():BookingPlan=>({id:crypto.randomUUID(),name:'',description:'',durationMinutes:30,priceGil:null,sortOrder:100,active:false,allowJoint:true,updatedAt:''})
 type SelectedPlan={value:BookingPlan;original:BookingPlan;creating:boolean}
 type NomineeRules={allowedPlanIds:string[]|null;allowJoint:boolean}
 const currentRules=(person:Staff):NomineeRules=>({allowedPlanIds:person.bookingAllowedPlanIds,allowJoint:person.bookingAllowJoint})
@@ -311,7 +311,7 @@ export default function BookingManagement(){
   {!loading&&tab==='plans'&&<div className="booking-admin-plans">
    <div className="booking-admin-plan-head"><p>新開放的方案才會顯示在前台。範例方案預設未開放，請確認內容與費用後再啟用。</p><button type="button" onClick={()=>choosePlan(initialPlan(),true)}><Plus size={16}/>新增方案</button></div>
    <div className="booking-admin-plan-layout">
-    <div className="booking-admin-plan-list">{plans.map(p=><button key={p.id} type="button" className={planDraft?.value.id===p.id?'active':''} onClick={()=>choosePlan(p)}><strong>{p.name}</strong><small>{p.durationMinutes} 分鐘 · {gil(p.priceGil)}</small><em>{p.active?'已開放':'草稿'}</em></button>)}</div>
+    <div className="booking-admin-plan-list">{plans.map(p=><button key={p.id} type="button" className={planDraft?.value.id===p.id?'active':''} onClick={()=>choosePlan(p)}><strong>{p.name}</strong><small>{p.durationMinutes} 分鐘 · {gil(p.priceGil)} · {p.allowJoint?'可同時指名':'僅限單人'}</small><em>{p.active?'已開放':'草稿'}</em></button>)}</div>
     <div className="booking-admin-plan-editor">
      {!planDraft?<p>請選擇方案或新增方案，編輯後儲存即可同步前台。</p>:<form onSubmit={e=>{e.preventDefault();void savePlan()}}>
       <h2>{planDraft.creating?'新增指名方案':'編輯指名方案'}</h2>
@@ -321,6 +321,9 @@ export default function BookingManagement(){
        <label>費用（Gil；可留空） <input type="number" min={0} max={999999999} step={1} value={planDraft.value.priceGil??''} onChange={e=>patchPlan('priceGil',e.target.value===''?null:Number(e.target.value))}/></label></div>
       <label>排序 <input type="number" min={0} step={1} value={planDraft.value.sortOrder} onChange={e=>patchPlan('sortOrder',Number(e.target.value))}/></label>
       <label className="booking-admin-plan-toggle"><input type="checkbox" checked={planDraft.value.active} onChange={e=>patchPlan('active',e.target.checked)}/>對旅人開放此方案</label>
+      <label className="booking-admin-plan-toggle"><input type="checkbox" checked={planDraft.value.allowJoint}
+       onChange={e=>patchPlan('allowJoint',e.target.checked)}/>開放同時指名（最多兩位狐姬）</label>
+      <p className="booking-admin-plan-hint">關閉後，此方案僅接受單人指名。即使方案開放，兩位狐姬也都必須同意同時指名。</p>
       <div className="booking-admin-plan-actions">
        {!planDraft.creating&&<button type="button" className="danger" disabled={busy} onClick={()=>void deletePlan()}><Trash2 size={16}/>刪除</button>}
        <button type="button" disabled={busy} onClick={()=>{if(!dirty||window.confirm('放棄修改？'))setPlanDraft(null)}}>取消</button>
