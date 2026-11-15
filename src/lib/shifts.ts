@@ -41,9 +41,33 @@ export async function setShiftOpening(date:string,kind:'open'|'closed'|'unannoun
  if(error)throw new Error(error.message)
  ensureChanged(data,'營業日設定')
 }
+/** Display name is public RP data, never an authorization claim. */
+export function validateShiftName(value:string):string{
+ const trimmed=value.trim()
+ if(!trimmed||trimmed.length>100)throw new Error('出勤顯示名稱請填寫 1～100 字')
+ return trimmed
+}
+/** Only the authenticated user's own shift row can be renamed.
+ * PostgreSQL column GRANT prevents modifying shift_date or identity. */
+export async function renameOwnShiftAttendance(
+ date:string,source:'employee'|'owner',name:string
+):Promise<void>{
+ const displayName=validateShiftName(name)
+ const db=client()
+ const {data:{user},error:userError}=await db.auth.getUser()
+ if(userError||!user)throw new Error('登入狀態已過期，請重新登入')
+ const table=source==='owner'?'shift_owner_attendance':'shift_attendance'
+ const key=source==='owner'?'owner_id':'employee_id'
+ const column=source==='owner'?'display_name':'employee_name'
+ const {data,error}=await db.from(table).update({[column]:displayName})
+  .eq('shift_date',date).eq(key,user.id).select('shift_date')
+ if(error)throw new Error('更新出勤名稱失敗：'+error.message)
+ ensureChanged(data,'更新我的出勤名稱')
+}
 export async function markShiftAttendance(date:string,employee:ShiftEmployee):Promise<void>{
+ const displayName=validateShiftName(employee.name)
  const {data,error}=await client().from('shift_attendance').insert({
-  shift_date:date,employee_id:employee.id,employee_name:employee.name,
+  shift_date:date,employee_id:employee.id,employee_name:displayName,
  }).select('shift_date')
  if(error){
   if(error.code==='23505')throw new Error('這位館員已登記當日出勤，請更新清單')
@@ -52,8 +76,7 @@ export async function markShiftAttendance(date:string,employee:ShiftEmployee):Pr
  ensureChanged(data,'出勤登記')
 }
 export async function markOwnerShiftAttendance(date:string,name:string):Promise<void>{
- const displayName=name.trim()
- if(!displayName||displayName.length>100)throw new Error('請填寫 1～100 字的管理員出勤顯示名稱')
+ const displayName=validateShiftName(name)
  const db=client()
  const {data:{user},error:userError}=await db.auth.getUser()
  if(userError||!user)throw new Error('管理員登入已過期，請重新登入')
