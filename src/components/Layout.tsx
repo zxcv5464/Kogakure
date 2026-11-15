@@ -39,7 +39,7 @@ const pageTitles: Record<string, string> = {
  '/admin': '後台管理',
 }
 
-export default function Layout({children}:{children:React.ReactNode}){
+export default function Layout({children,introReady=true}:{children:React.ReactNode;introReady?:boolean}){
  const [moreOpen,setMoreOpen]=useState(false)
  const location=useLocation()
  const firstExtra=useRef<HTMLAnchorElement>(null)
@@ -94,7 +94,7 @@ export default function Layout({children}:{children:React.ReactNode}){
     </Link>
     <nav ref={desktopNav} className="desktop-nav" aria-label="主要導覽">{links.map(({to,label})=><NavLink key={to} to={to} end={to==='/'} onMouseEnter={to==='/staff'?prefetchStaffPage:undefined} onFocus={to==='/staff'?prefetchStaffPage:undefined} onTouchStart={to==='/staff'?prefetchStaffPage:undefined} className={({isActive})=>isActive?'active':''}>{label}</NavLink>)}<span className={'nav-slider'+(indicator.ready?' is-ready':'')} style={{left:indicator.left,width:indicator.width}} aria-hidden="true"/></nav>
     <a className="social-header" target="_blank" rel="noopener noreferrer" href="https://www.threads.com/@kogakure_ffxiv" aria-label="狐隱 Threads"><AtSign size={19}/></a>
-    <SiteBgm/>
+    <SiteBgm introReady={introReady}/>
    </div>
   </header>
   <main>{children}</main>
