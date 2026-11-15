@@ -53,7 +53,7 @@ async function waitFor(condition,limit=16000){
  throw Error('Timed out waiting for responsive service title')
 }
 try{
- await waitFor(async=>(await fetch(origin+'/Kogakure/')).ok)
+ await waitFor(async ()=>(await fetch(origin+'/Kogakure/')).ok)
  chrome=spawn(chromeBin,[
   '--headless=new','--no-sandbox','--disable-gpu',
   '--no-first-run','--no-default-browser-check',
