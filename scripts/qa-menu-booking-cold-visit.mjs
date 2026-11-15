@@ -94,6 +94,7 @@ try{
  await waitFor(()=>evalJS("!document.querySelector('.entry-intro')"))
 
  // First visit: no menu catalog was cached, so the 2 requests really wait.
+ const menuClick=await evalJS("performance.now()")
  await evalJS("document.querySelector('.desktop-nav a[href$=\"/menu\"]').click()")
  await waitFor(()=>evalJS("!!document.querySelector('.tea-menu-loading-stage')"))
  const menuPending=await evalJS("(()=>({"+
@@ -106,7 +107,11 @@ try{
  assert.equal(menuPending.loading,true)
  assert.equal(menuPending.items,0,'Do not flash demonstration prices during a live read')
  assert.equal(menuPending.queries,2,'Menu needs one read per published table')
- await waitFor(()=>evalJS("!!document.querySelector('.page-transition-curtain.is-revealing')"),3500)
+ await waitFor(()=>evalJS("!!document.querySelector('.page-transition-curtain.is-quick.is-revealing')"),2500)
+ const menuRevealMs=await evalJS("performance.now()")-menuClick
+ assert.ok(menuRevealMs<1800,'Cold menu route should reveal before 1.8 seconds, not await slow Supabase: '+Math.round(menuRevealMs)+'ms')
+ const menuDuration=await evalJS("getComputedStyle(document.querySelector('.page-transition-curtain')).transitionDuration")
+ assert.equal(menuDuration,'0.41s','Quick menu reveal CSS must match the 410ms transition timer')
  assert.equal(await evalJS("!!document.querySelector('.tea-menu-loading-stage')"),true,
   'The curtain must reveal a visible menu header and stable loading area before backend responds')
  await waitFor(()=>evalJS("!document.querySelector('.tea-menu-loading-stage')"),8000)
@@ -116,6 +121,7 @@ try{
  assert.equal(await evalJS("window.__publicPageCalls.filter(url=>url.includes('menu_categories')||url.includes('menu_items')).length"),2)
 
  // First booking visit: 3 new requests (published staff, plans, presence).
+ const bookingClick=await evalJS("performance.now()")
  await evalJS("document.querySelector('.desktop-nav a[href$=\"/booking\"]').click()")
  await waitFor(()=>evalJS("!!document.querySelector('.booking-loading-stage')"))
  const bookingPending=await evalJS("(()=>({"+
@@ -129,7 +135,11 @@ try{
  assert.equal(bookingPending.loading,true)
  assert.equal(bookingPending.cards,0,'Do not imply a staff member is available before presence arrives')
  assert.equal(bookingPending.calls,3,'Three booking read-only calls must be deduplicated')
- await waitFor(()=>evalJS("!!document.querySelector('.page-transition-curtain.is-revealing')"),3500)
+ await waitFor(()=>evalJS("!!document.querySelector('.page-transition-curtain.is-quick.is-revealing')"),2500)
+ const bookingRevealMs=await evalJS("performance.now()")-bookingClick
+ assert.ok(bookingRevealMs<1800,'Cold booking route should reveal before 1.8 seconds, not await slow Supabase: '+Math.round(bookingRevealMs)+'ms')
+ const bookingDuration=await evalJS("getComputedStyle(document.querySelector('.page-transition-curtain')).transitionDuration")
+ assert.equal(bookingDuration,'0.41s','Quick booking reveal CSS must match the 410ms transition timer')
  assert.equal(await evalJS("!!document.querySelector('.booking-loading-stage')"),true,
   'The booking title must be revealed before all three queries settle')
  await waitFor(()=>evalJS("!document.querySelector('.booking-loading-stage')"),8500)
@@ -138,7 +148,7 @@ try{
  assert.equal(await evalJS("document.querySelectorAll('.booking-profile').length"),0)
  assert.equal(await evalJS("window.__publicPageCalls.filter(url=>url.includes('menu_categories')||url.includes('menu_items')).length"),2,
   'Navigating to booking should not re-fetch or remount the menu')
- console.log('PASS: cold tea menu and booking show branded shells before 2/3 slow Supabase reads; no stale prices or false booking cards')
+ console.log('PASS: cold menu and booking reveal quickly ('+Math.round(menuRevealMs)+'ms / '+Math.round(bookingRevealMs)+'ms) before 2/3 slow Supabase reads; no stale prices or false booking cards')
 }finally{
  socket?.close()
  const closed=chrome&&chrome.exitCode===null
