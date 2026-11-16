@@ -40,6 +40,22 @@ assert.ok(!get(files[2]).includes('繼續閱讀')&&
  get(files[2]).includes('hasMore&&<button')&&
  get(files[3]).includes('@keyframes staffScrollArrow'),
  'Staff detail must replace the continue-reading text button with a gold down arrow')
+const staffDialogStyles=get('src/components/staff-dialog-scroll.css')
+const mobileStaffStyles=staffDialogStyles.slice(staffDialogStyles.indexOf('@media (max-width: 570px)'))
+assert.ok(mobileStaffStyles.includes('max-height: calc(94dvh - 54px)')&&
+ mobileStaffStyles.includes('padding-bottom: 58px')&&
+ mobileStaffStyles.includes('.dialog-scroll-footer {\n  position: absolute;')&&
+ mobileStaffStyles.includes('height: auto;')&&
+ mobileStaffStyles.includes('background: none;')&&
+ mobileStaffStyles.includes('border: 0;')&&
+ mobileStaffStyles.includes('.dialog-scroll-footer .dialog-scroll-hint {')&&
+ mobileStaffStyles.includes('background: transparent;')&&
+ mobileStaffStyles.includes('box-shadow: none;')&&
+ mobileStaffStyles.includes('.dialog-scroll-footer.is-complete{display:none}')&&
+ !mobileStaffStyles.includes('height: 62px')&&
+ !mobileStaffStyles.includes('background: linear-gradient(180deg,#24202a,#1c1a21)'),
+ 'Mobile fox-maid detail must have no footer color strip: only a transparent floating gold down arrow')
+
 for(const [path,fragment] of [
  ['src/components/Layout.tsx','<ScrollCue/>'],
  ['src/components/EntryIntro.tsx','<ScrollCue/>'],

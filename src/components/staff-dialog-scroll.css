@@ -44,8 +44,8 @@
  .dialog-scroll-footer.is-complete { display: none; }
 }
 
-/* Mobile: the entire photo and biography scroll inside the dialog, while the
-   footer is a separate strip that NEVER overlaps text. */
+/* Mobile: a single uninterrupted scrolling portrait and biography.
+   Only a transparent, floating downward chevron sits above the lower edge. */
 @media (max-width: 570px) {
  .dialog-overlay .dialog-shell {
   max-height: 94dvh;
@@ -85,7 +85,7 @@
   letter-spacing: .14em;
  }
  .dialog-overlay .staff-dialog {
-  max-height: calc(94dvh - 116px);
+  max-height: calc(94dvh - 54px);
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -101,7 +101,7 @@
   overflow: visible;
   height: auto;
   min-height: 0;
-  padding-bottom: 28px;
+  padding-bottom: 58px;
  }
  .dialog-overlay .dialog-mobile-header .dialog-close {
   position: relative;
@@ -113,18 +113,37 @@
   flex: 0 0 auto;
  }
  .dialog-scroll-footer {
-  position: relative;
+  position: absolute;
   z-index: 10;
+  bottom: 7px;
+  left: 0;
+  right: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 62px;
-  padding: 7px 16px 8px;
-  border-top: 1px solid rgba(222,177,120,.18);
-  background: #1c1a21;
+  width: 100%;
+  height: auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  pointer-events: none;
  }
- .dialog-scroll-footer.has-more {
-  background: linear-gradient(180deg,#24202a,#1c1a21);
+ .dialog-scroll-footer.has-more { background: none; }
+ .dialog-scroll-footer .dialog-scroll-hint {
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: #dfbc85;
+  pointer-events: auto;
+ }
+ .dialog-scroll-footer .dialog-scroll-hint:hover {
+  background: transparent;
+  color: #fff0d5;
  }
 }
 .dialog-overlay .detail-bio,
@@ -152,5 +171,5 @@
 }
 @media(prefers-reduced-motion:reduce){.dialog-scroll-hint svg{animation:none}}
 @media(max-width:570px){
- .dialog-scroll-footer.is-complete{height:0;padding:0;border:0}
-}
+ .dialog-scroll-footer.is-complete{display:none}
+ }
