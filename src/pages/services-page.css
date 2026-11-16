@@ -165,11 +165,8 @@
  box-shadow:0 0 0 3px rgba(205,166,114,.18),0 0 11px rgba(236,192,133,.3);
 }
 .services-photo-dot:focus-visible{outline:2px solid #f0ca95;outline-offset:1px}
-@media(prefers-reduced-motion:reduce){
- .services-photo-slide.is-revealing{transition:none}
- .services-photo-shoji-edges{display:none}
- .services-photo-dot::before{transition:none}
-}
+@media(prefers-reduced-motion:reduce){.services-photo-slide.is-revealing{transition:none}.services-photo-shoji-edges{display:none}}
+@media(prefers-reduced-motion:reduce){.services-photo-dot::before{transition:none}}
 
 .services-photo-placeholder {
  position: absolute;
