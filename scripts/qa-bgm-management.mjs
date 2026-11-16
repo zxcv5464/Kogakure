@@ -74,6 +74,16 @@ assert.ok(!management.includes('bgm-admin-volume')&&
 assert.ok(css.includes('@media(max-width:560px)')&&
  css.includes('.bgm-admin-main')&&css.includes('.bgm-admin-upload'),
  'BGM editor should be responsive on phones')
+assert.ok(lib.includes("from('bgm_track_names')")===false&&
+ lib.includes('savedNameTable')&&
+ lib.includes("from(savedNameTable).select('path,display_name')")&&
+ lib.includes('display_name:file.name')&&
+ lib.includes('renameUploadedBgm(')&&
+ lib.includes('await db().storage.from(BGM_BUCKET).remove([path])')&&
+ management.includes('修改名稱')&&management.includes('saveRenamedFile(file)')&&
+ management.includes('BGM_MAX_FILENAME_LENGTH')&&
+ css.includes('.bgm-admin-rename'),
+ 'Uploaded BGM filenames must be persisted, restored, and manually correctable without replacing audio')
 assert.ok(lib.includes("rpc(")===false&&
  lib.includes("from('site_bgm_settings')")&&
  lib.includes("storage.from(BGM_BUCKET).upload(")&&
@@ -89,6 +99,11 @@ try{
  const base={...mod.DEFAULT_BGM}
  assert.equal(mod.DEFAULT_BGM_URL,'https://bgmer.net/wp-content/uploads/2025/04/456_BPM80.mp3')
  assert.equal(mod.currentAudioUrl(base),mod.DEFAULT_BGM_URL)
+ assert.equal(mod.validateBgmFileName('改和風BGM.m4a'),null)
+ assert.equal(mod.validateBgmFileName('妖狐の湯 - 月光.mp3'),null)
+ assert.ok(mod.validateBgmFileName('../music.mp3'))
+ assert.ok(mod.validateBgmFileName('A'.repeat(256)+'.mp3'))
+ assert.ok(mod.validateBgmFileName('invalid.txt'))
  assert.equal(mod.youtubeVideoId('https://www.youtube.com/watch?v=dQw4w9WgXcQ'),'dQw4w9WgXcQ')
  assert.equal(mod.youtubeVideoId('https://youtu.be/dQw4w9WgXcQ'),'dQw4w9WgXcQ')
  assert.equal(mod.youtubeVideoId('https://music.youtube.com/watch?v=dQw4w9WgXcQ'),'dQw4w9WgXcQ')

@@ -12,11 +12,20 @@ export const DEFAULT_BGM:BgmSettings={
 }
 export const BGM_BUCKET='bgm-media'
 export const BGM_MAX_BYTES=20*1024*1024
+export const BGM_MAX_FILENAME_LENGTH=255
 const MIME_TYPES=new Set([
  'audio/mpeg','audio/mp3','audio/ogg','audio/wav','audio/x-wav',
  'audio/mp4','audio/x-m4a','audio/aac','audio/x-aac','audio/webm','audio/flac','audio/x-flac','audio/wave',
 ])
 const FILE_EXT=/\.(?:mp3|ogg|wav|m4a|aac|webm|flac)$/i
+const SAFE_UPLOAD_PATH=/^tracks\/[a-f0-9-]{36}-[A-Za-z0-9._-]+\.(?:mp3|ogg|wav|m4a|aac|webm|flac)$/i
+const savedNameTable='bgm_track_names'
+export function validateBgmFileName(value:string):string|null{
+ if(!value.trim()||value.length>BGM_MAX_FILENAME_LENGTH)return '檔名需為 1～255 個字元'
+ if(/[\\/\u0000-\u001f\u007f]/.test(value))return '檔名不可包含路徑或控制字元'
+ if(!FILE_EXT.test(value))return '請保留 MP3、OGG、WAV、M4A、AAC、WebM 或 FLAC 副檔名'
+ return null
+}
 const fields='enabled,source_kind,source_url,track_title,volume,repeat_track,updated_at'
 type BgmRow={
  enabled:boolean;source_kind:BgmSource;source_url:string;track_title:string;
@@ -88,27 +97,60 @@ export async function saveBgm(input:BgmSettings):Promise<BgmSettings>{
  return map(data as BgmRow)
 }
 export async function listUploadedBgm():Promise<UploadedBgm[]>{
- const {data,error}=await db().storage.from(BGM_BUCKET).list('tracks',{limit:100,sortBy:{column:'created_at',order:'desc'}})
- if(error)throw new Error('音樂檔案列表讀取失敗：'+error.message)
- return (data||[]).filter(item=>item.name&&FILE_EXT.test(item.name)).map(item=>{
+ // A safe ASCII storage key is different from the user-visible filename.
+ // Store the exact original name separately so Chinese/Japanese characters
+ // survive a refresh and old file URLs never need to change.
+ const [objects,names]=await Promise.all([
+  db().storage.from(BGM_BUCKET).list('tracks',{limit:100,sortBy:{column:'created_at',order:'desc'}}),
+  db().from(savedNameTable).select('path,display_name'),
+ ])
+ if(objects.error)throw new Error('音樂檔案列表讀取失敗：'+objects.error.message)
+ if(names.error)throw new Error('音樂原始檔名讀取失敗：'+names.error.message)
+ const namesByPath=new Map((names.data||[]).map(item=>[item.path,item.display_name]))
+ return (objects.data||[]).filter(item=>item.name&&FILE_EXT.test(item.name)).map(item=>{
   const path='tracks/'+item.name
-  return {path,name:item.name.replace(/^[a-f0-9-]{36}-/i,''),size:item.metadata?.size||0,
-   updatedAt:item.updated_at||item.created_at||'',url:db().storage.from(BGM_BUCKET).getPublicUrl(path).data.publicUrl}
+  return {path,name:namesByPath.get(path)||item.name.replace(/^[a-f0-9-]{36}-/i,''),
+   size:item.metadata?.size||0,updatedAt:item.updated_at||item.created_at||'',
+   url:db().storage.from(BGM_BUCKET).getPublicUrl(path).data.publicUrl}
  })
 }
 export async function uploadBgm(file:File):Promise<UploadedBgm>{
  if(file.size<1||file.size>BGM_MAX_BYTES)throw new Error('音樂檔案需小於 20 MB')
- if(!FILE_EXT.test(file.name)||!MIME_TYPES.has(file.type))throw new Error('只接受 MP3、OGG、WAV、M4A、AAC、WebM 或 FLAC 音樂檔')
+ const invalid=validateBgmFileName(file.name)
+ if(invalid)throw new Error(invalid)
+ if(!MIME_TYPES.has(file.type))throw new Error('只接受 MP3、OGG、WAV、M4A、AAC、WebM 或 FLAC 音樂檔')
+ // The object key remains ASCII-safe and unique; the original filename
+ // is saved in the permission-protected metadata table, never sanitized.
  const safeName=file.name.replace(/[^a-zA-Z0-9._-]/g,'_').slice(-95)
  const path='tracks/'+crypto.randomUUID()+'-'+safeName
  const {error}=await db().storage.from(BGM_BUCKET).upload(path,file,{cacheControl:'3600',upsert:false,contentType:file.type})
  if(error)throw new Error('音樂上傳失敗：'+error.message)
+ const {error:nameError}=await db().from(savedNameTable).upsert(
+  {path,display_name:file.name},{onConflict:'path'})
+ if(nameError){
+  // Do not leave a newly uploaded file that loses its original filename.
+  await db().storage.from(BGM_BUCKET).remove([path])
+  throw new Error('音樂原始檔名無法儲存，上傳已取消：'+nameError.message)
+ }
  return {path,name:file.name,size:file.size,updatedAt:new Date().toISOString(),
   url:db().storage.from(BGM_BUCKET).getPublicUrl(path).data.publicUrl}
 }
+export async function renameUploadedBgm(path:string,name:string):Promise<string>{
+ if(!SAFE_UPLOAD_PATH.test(path))throw new Error('檔案路徑不正確')
+ const nextName=name.trim()
+ const invalid=validateBgmFileName(nextName)
+ if(invalid)throw new Error(invalid)
+ const extension=path.slice(path.lastIndexOf('.')).toLowerCase()
+ if(!nextName.toLowerCase().endsWith(extension))throw new Error('副檔名必須與原音樂檔一致')
+ const {error}=await db().from(savedNameTable).upsert(
+  {path,display_name:nextName,updated_at:new Date().toISOString()},{onConflict:'path'})
+ if(error)throw new Error('無法更新顯示檔名：'+error.message)
+ return nextName
+}
 export async function deleteUploadedBgm(path:string):Promise<void>{
- if(!/^tracks\/[a-f0-9-]{36}-[A-Za-z0-9._-]+\.(mp3|ogg|wav|m4a|aac|webm|flac)$/i.test(path))
-  throw new Error('檔案路徑不正確')
+ if(!SAFE_UPLOAD_PATH.test(path))throw new Error('檔案路徑不正確')
  const {error}=await db().storage.from(BGM_BUCKET).remove([path])
  if(error)throw new Error('無法刪除音樂檔案：'+error.message)
+ const {error:nameError}=await db().from(savedNameTable).delete().eq('path',path)
+ if(nameError)throw new Error('音樂已刪除，但檔名紀錄無法清除：'+nameError.message)
 }

@@ -25,6 +25,12 @@
 .bgm-admin-library h2{display:flex;gap:12px;align-items:baseline}
 .bgm-admin-library h2 small{color:#b4a399;font:400 .72rem sans-serif}
 .bgm-admin-library>div{display:grid;gap:9px}
+.bgm-admin-library-hint{font-size:.76rem;line-height:1.7;color:#b9aa98;margin:0}
+.bgm-admin-file-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+.bgm-admin-rename{width:100%;min-width:0;display:grid;gap:10px}
+.bgm-admin-rename label{display:grid;gap:7px;font-size:.78rem;color:#d8c2a5}
+.bgm-admin-rename input{box-sizing:border-box;width:100%;min-width:0;min-height:40px;padding:9px 12px;border-radius:5px;background:#191b25;color:#e8d6c0;border:1px solid rgba(218,183,134,.35);font:inherit}
+
 .bgm-admin-file{display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid rgba(216,181,129,.14);padding:9px 0;min-width:0}
 .bgm-admin-file>span{font-size:.77rem;overflow-wrap:anywhere;color:#d4c9ba}
 .bgm-admin-file button{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border:1px solid rgba(228,178,135,.32);border-radius:5px;color:#f0c6ac;background:transparent;font-size:.73rem;white-space:nowrap}
@@ -34,4 +40,4 @@
 .bgm-admin-actions .is-primary{background:#d9b985;color:#231e26;font-weight:700}
 .bgm-admin-actions button:disabled{opacity:.43;cursor:not-allowed}
 @media(max-width:900px){.bgm-admin-main{grid-template-columns:1fr}}
-@media(max-width:560px){.bgm-admin{padding:20px 0 35px}.bgm-admin-actions button{flex:1 1 auto}.bgm-admin-section,.bgm-admin-library{padding:15px}}
+@media(max-width:560px){.bgm-admin{padding:20px 0 35px}.bgm-admin-actions button{flex:1 1 auto}.bgm-admin-section,.bgm-admin-library{padding:15px}.bgm-admin-file:not(:has(.bgm-admin-rename)){align-items:flex-start;flex-direction:column}.bgm-admin-file-actions{justify-content:flex-start}}

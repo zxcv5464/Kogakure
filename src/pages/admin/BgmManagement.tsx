@@ -1,10 +1,10 @@
 import {useCallback,useEffect,useMemo,useState} from 'react'
 import type {ChangeEvent,FormEvent} from 'react'
-import {CheckCircle2,Headphones,Music2,RefreshCw,Save,Trash2,UploadCloud} from 'lucide-react'
+import {CheckCircle2,Headphones,Music2,RefreshCw,Save,Trash2,UploadCloud,Pencil,X} from 'lucide-react'
 import {useAdminEditGuard} from './AdminEditGuard'
 import {
- BGM_MAX_BYTES,DEFAULT_BGM,checkBgm,currentAudioUrl,deleteUploadedBgm,
- listUploadedBgm,readAdminBgm,saveBgm,uploadBgm,youtubeVideoId,
+ BGM_MAX_BYTES,BGM_MAX_FILENAME_LENGTH,DEFAULT_BGM,checkBgm,currentAudioUrl,deleteUploadedBgm,
+ listUploadedBgm,readAdminBgm,renameUploadedBgm,saveBgm,uploadBgm,validateBgmFileName,youtubeVideoId,
 } from '../../lib/site-bgm'
 import type {BgmSettings,BgmSource,UploadedBgm} from '../../lib/site-bgm'
 import './bgm-management.css'
@@ -27,9 +27,13 @@ export default function BgmManagement(){
  const [notice,setNotice]=useState('')
  const [error,setError]=useState('')
  const [preview,setPreview]=useState(false)
+ const [editingFilePath,setEditingFilePath]=useState<string|null>(null)
+ const [editingFileName,setEditingFileName]=useState('')
  const {setEditing}=useAdminEditGuard()
  const dirty=useMemo(()=>formValue(draft)!==formValue(original),[draft,original])
- useEffect(()=>setEditing(dirty,busy),[dirty,busy,setEditing])
+ const originalEditedName=files.find(item=>item.path===editingFilePath)?.name
+ const nameDirty=editingFilePath!==null&&editingFileName!==originalEditedName
+ useEffect(()=>setEditing(dirty||nameDirty,busy),[dirty,nameDirty,busy,setEditing])
  useEffect(()=>()=>setEditing(false,false),[setEditing])
  const refresh=useCallback(async()=>{
   const [settings,uploads]=await Promise.all([readAdminBgm(),listUploadedBgm()])
@@ -89,9 +93,27 @@ export default function BgmManagement(){
   try{
    await deleteUploadedBgm(file.path)
    setFiles(old=>old.filter(f=>f.path!==file.path))
+   if(editingFilePath===file.path){setEditingFilePath(null);setEditingFileName('')}
    setDraft(old=>old.url===file.url?{...old,url:'',source:'upload'}:old)
    setNotice('檔案已刪除。')
   }catch(e){setError(e instanceof Error?e.message:'無法刪除音樂')}
+  finally{setBusy(false)}
+ }
+ function beginRename(file:UploadedBgm){
+  if(busy)return
+  setEditingFilePath(file.path);setEditingFileName(file.name);setError('');setNotice('')
+ }
+ async function saveRenamedFile(file:UploadedBgm){
+  if(busy)return
+  const invalid=validateBgmFileName(editingFileName.trim())
+  if(invalid){setError(invalid);return}
+  setBusy(true);setError('');setNotice('')
+  try{
+   const nextName=await renameUploadedBgm(file.path,editingFileName)
+   setFiles(old=>old.map(entry=>entry.path===file.path?{...entry,name:nextName}:entry))
+   setEditingFilePath(null);setEditingFileName('')
+   setNotice('已更新音樂顯示檔名，原音樂與網址不變。')
+  }catch(e){setError(e instanceof Error?e.message:'無法更新音樂名稱')}
   finally{setBusy(false)}
  }
  const youtubeId=draft.source==='youtube'?youtubeVideoId(draft.url):null
@@ -163,11 +185,27 @@ export default function BgmManagement(){
     </div>
     {files.length>0&&<section className="bgm-admin-library">
      <h2>已上傳音樂檔案 <small>共 {files.length} 首</small></h2>
+     <p className="bgm-admin-library-hint">保留上傳時的原始檔名；舊檔案可使用「修改名稱」修正顯示文字，不會變動播放網址。</p>
      <div>{files.map(file=><div className="bgm-admin-file" key={file.path}>
-      <span>{fileLabel(file)}</span>
-      <button type="button" disabled={busy||original.url===file.url}
-       title={original.url===file.url?'此曲目前正在前台使用，請先切換':'刪除上傳的音樂'}
-       onClick={()=>void remove(file)}><Trash2 size={16}/>刪除</button>
+      {editingFilePath===file.path?<div className="bgm-admin-rename">
+       <label>顯示檔名
+        <input type="text" maxLength={BGM_MAX_FILENAME_LENGTH} value={editingFileName}
+         disabled={busy} onChange={event=>setEditingFileName(event.target.value)}/>
+       </label>
+       <div className="bgm-admin-file-actions">
+        <button type="button" disabled={busy||!!validateBgmFileName(editingFileName.trim())}
+         onClick={()=>void saveRenamedFile(file)}><Save size={15}/>儲存名稱</button>
+        <button type="button" disabled={busy} onClick={()=>{setEditingFilePath(null);setEditingFileName('')}}><X size={15}/>取消</button>
+       </div>
+      </div>:<>
+       <span>{fileLabel(file)}</span>
+       <div className="bgm-admin-file-actions">
+        <button type="button" disabled={busy} onClick={()=>beginRename(file)}><Pencil size={15}/>修改名稱</button>
+        <button type="button" disabled={busy||original.url===file.url}
+         title={original.url===file.url?'此曲目前正在前台使用，請先切換':'刪除上傳的音樂'}
+         onClick={()=>void remove(file)}><Trash2 size={16}/>刪除</button>
+       </div>
+      </>}
      </div>)}</div>
     </section>}
     <footer className="bgm-admin-actions">
@@ -175,7 +213,8 @@ export default function BgmManagement(){
       if(window.confirm('放棄尚未發布的 BGM 修改？')){setDraft(original);setPreview(false);setError('')}
      }}>取消修改</button>
      <button type="button" disabled={busy} onClick={()=>{
-      if(dirty&&!window.confirm('重新整理將放棄未儲存的設定，確定？'))return
+      if((dirty||nameDirty)&&!window.confirm('重新整理將放棄未儲存的設定，確定？'))return
+      setEditingFilePath(null);setEditingFileName('')
       setBusy(true);setError('');void refresh().catch(e=>setError(e instanceof Error?e.message:'讀取失敗')).finally(()=>setBusy(false))
      }}><RefreshCw size={16}/>重新整理</button>
      <button type="submit" disabled={busy||!dirty||!!invalid} className="is-primary">
