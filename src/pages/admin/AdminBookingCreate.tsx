@@ -3,6 +3,7 @@ import type { FormEvent } from 'react'
 import { Plus, X } from 'lucide-react'
 import { getStaff } from '../../lib/staff'
 import ScrollCue from '../../components/ScrollCue'
+import TcWorldSelect from '../../components/TcWorldSelect'
 import { createAdminBooking, describeBookingError,staffAcceptsPlan,staffCanJoinBooking,quotaAvailable,loadBookingQuotaUsage } from '../../lib/bookings'
 import type { BookingPlan, BookingQuotaUsage } from '../../lib/bookings'
 import type { Staff } from '../../types'
@@ -50,7 +51,7 @@ export default function AdminBookingCreate({plans,quotaUsage,close,onCreated}:Pr
  async function submit(event:FormEvent){
   event.preventDefault()
   if(busy)return
-  if(name.trim().length<2||world.trim().length<2||!planId||!staffIds.length){setError('請填寫角色姓名、伺服器、方案並選擇至少一位館員');return}
+  if(!name.trim()||!world.trim()||!planId||!staffIds.length){setError('請填寫角色姓名、伺服器、方案並選擇至少一位館員');return}
   if(staffIds.length>2){setError('每筆預約最多指名 2 位館員（主要指名及追加指名各 1 位）');return}
   if(staffIds.length>1&&!selectedPlan?.allowJoint){
    setError('此方案僅開放單人指名，請取消第二位館員');return
@@ -81,8 +82,8 @@ export default function AdminBookingCreate({plans,quotaUsage,close,onCreated}:Pr
    <h2 id="booking-admin-create-title">新增指名申請</h2>
    <p className="booking-admin-create-intro">供館方記錄現場或私訊預約；新增後先列為待審核，點擊接取才會開始計時並更新狐姬狀態。</p>
    <form onSubmit={e=>void submit(e)}>
-    <label>預約者遊戲角色姓名 <input autoFocus required minLength={2} maxLength={48} value={name} onChange={e=>setName(e.target.value)} placeholder="FFXIV 角色姓名"/></label>
-    <label>伺服器 <input required minLength={2} maxLength={48} value={world} onChange={e=>setWorld(e.target.value)} placeholder="例如：Leviathan"/></label>
+    <label>預約者遊戲角色姓名 <input autoFocus required value={name} onChange={e=>setName(e.target.value)} placeholder="FFXIV 角色姓名"/></label>
+    <label>伺服器 <TcWorldSelect value={world} onChange={setWorld}/></label>
     <label>指名方案 <select value={planId} required onChange={e=>{setPlanId(e.target.value);setStaffIds([])}}>
      <option value="">請選擇指名方案</option>
      {plans.map(p=><option key={p.id} value={p.id}>{p.name} · {p.durationMinutes} 分鐘{p.active?'':'（未公開，僅後台可用）'}</option>)}

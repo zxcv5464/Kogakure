@@ -7,6 +7,7 @@ import type { BookingNominee } from '../lib/booking-selection'
 import { BOOKING_PAGE_READY_EVENT } from '../lib/route-events'
 import BookingLoading from '../components/BookingLoading'
 import ScrollCue from '../components/ScrollCue'
+import TcWorldSelect from '../components/TcWorldSelect'
 import { getCachedPublicStaff,loadPublicStaff } from '../lib/public-staff'
 import {loadPublicBookingPlans,loadPublicStaffPresence,peekPublicBookingPlans,peekPublicStaffPresence} from '../lib/public-booking-data'
 import { getStaff } from '../lib/staff'
@@ -166,7 +167,7 @@ export default function BookingPage(){
     return !staff||!quotaAvailable(activePlan,staff,fresh)
    })){setFormError('此方案或狐姬的接受次數已達上限，請選擇其他方案');return}
   }catch{/* Server still validates quotas atomically when the operator accepts. */}
-  if(name.trim().length<2||world.trim().length<2||!chosenPlanId){setFormError('請填寫遊戲角色姓名、伺服器並選擇方案');return}
+  if(!name.trim()||!world.trim()||!chosenPlanId){setFormError('請填寫遊戲角色姓名、伺服器並選擇方案');return}
   setSending(true);setFormError('')
   try{
    const bookingId=await submitNomination({name,world,planId:chosenPlanId,staffIds:ids,note})
@@ -240,8 +241,8 @@ export default function BookingPage(){
     </div> : <form onSubmit={e=>void submit(e)} className="booking-form">
      <div className="booking-selected-person"><img src={selected.thumbnailUrl||selected.imageUrl} alt=""/><span><small>本次指名</small><strong>{selected.name}</strong></span></div>
      {!applicablePlans.length&&<p role="status" className="booking-plan-unavailable">這位狐姬目前沒有可接受的方案，或方案／個人接取次數已滿；請重新選擇。</p>}
-     <label>預約者遊戲角色姓名 <input required minLength={2} maxLength={48} value={name} onChange={e=>setName(e.target.value)} placeholder="請輸入遊戲中的角色姓名" autoComplete="off"/></label>
-     <label>所在伺服器 <input required minLength={2} maxLength={48} value={world} onChange={e=>setWorld(e.target.value)} placeholder="例如：利維坦 / Leviathan" autoComplete="off"/></label>
+     <label>預約者遊戲角色姓名 <input required value={name} onChange={e=>setName(e.target.value)} placeholder="請輸入遊戲中的角色姓名" autoComplete="off"/></label>
+     <label>所在伺服器 <TcWorldSelect value={world} onChange={setWorld}/></label>
      <label>指名方案 <select required value={chosenPlanId} onChange={e=>{setPlanId(e.target.value);setOthers([]);setWithOthers(false)}}>
       <option value="">請選擇方案</option>
       {applicablePlans.map(p=><option value={p.id} key={p.id}>{p.name} · {p.durationMinutes} 分鐘{p.priceGil===null?'': ' · '+p.priceGil.toLocaleString('en-US')+' Gil'}{p.maxUses!==null?' · 餘額 '+Math.max(0,p.maxUses-(quotaUsage.plans[p.id]||0)):''}</option>)}

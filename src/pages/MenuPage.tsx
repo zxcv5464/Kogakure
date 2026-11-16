@@ -6,6 +6,7 @@ import { initialMenu, sortMenu } from '../lib/menu-catalog'
 import {getCachedPublicMenu,loadPublicMenu} from '../lib/public-menu'
 import type { MenuCatalog } from '../lib/menu-catalog'
 import {submitTeaOrder} from '../lib/tea-orders'
+import TcWorldSelect from '../components/TcWorldSelect'
 import { MENU_PAGE_READY_EVENT } from '../lib/route-events'
 import MenuLoading from '../components/MenuLoading'
 import './menu-page.css'
@@ -172,14 +173,12 @@ export default function MenuPage() {
       <p>{isAdding?'此次加點會產生全新訂單編號，與原訂單分開處理。已沿用上次填寫的旅人姓名與伺服器，可自行修改。':'請填寫《FINAL FANTASY XIV》角色姓名與所在伺服器，館方才能辨識您的訂單。'}</p>
       <div className="tea-menu-order-fields">
        <label>旅人角色姓名 <span>必填</span>
-        <input required minLength={2} maxLength={48} autoComplete="off"
+        <input required autoComplete="off"
          value={guestName} onChange={e=>setGuestName(e.target.value)}
          placeholder="請輸入角色姓名" disabled={sending}/>
        </label>
        <label>所在伺服器 <span>必填</span>
-        <input required minLength={2} maxLength={48} autoComplete="off"
-         value={guestWorld} onChange={e=>setGuestWorld(e.target.value)}
-         placeholder="例如：Leviathan" disabled={sending}/>
+        <TcWorldSelect value={guestWorld} onChange={setGuestWorld} disabled={sending}/>
        </label>
       </div>
       {orderError&&<p className="tea-menu-order-error" role="alert">{orderError}</p>}

@@ -17,8 +17,8 @@ const message=(e:unknown)=>e instanceof Error?e.message:'服務連線發生異�
 
 export async function submitTeaOrder(guestName:string,guestWorld:string,items:TeaOrderSelection[]):Promise<string>{
  const name=guestName.trim(),world=guestWorld.trim()
- if(name.length<2||name.length>48||world.length<2||world.length>48)
-  throw new Error('請填寫 2～48 字的旅人姓名與伺服器')
+ if(!name||!world)
+  throw new Error('請填寫旅人角色姓名與所在伺服器')
  if(items.length<1||items.length>20||items.some(x=>!Number.isInteger(x.quantity)||x.quantity<1||x.quantity>99))
   throw new Error('請選擇可供應的茶宴品項及正確數量')
  if(items.reduce((sum,x)=>sum+x.quantity,0)>100)
