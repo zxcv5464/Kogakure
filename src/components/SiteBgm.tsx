@@ -1,82 +1,131 @@
 import {useCallback,useEffect,useRef,useState} from 'react'
-import {Music2,VolumeX} from 'lucide-react'
+import {Music2,VolumeX,X} from 'lucide-react'
+import {
+ DEFAULT_BGM,readPublicBgm,currentAudioUrl,youtubeVideoId,
+} from '../lib/site-bgm'
+import type {BgmSettings} from '../lib/site-bgm'
 import './site-bgm.css'
 
-// The official BGMer recording of the selected "みやびごころ" track.
-// A single audio element lives in the persistent public Layout.
-const AUDIO_URL='https://bgmer.net/wp-content/uploads/2025/04/456_BPM80.mp3'
-const DEFAULT_VOLUME=0.24
-
+// Keep the same compact gold control and single persistent HTMLAudioElement.
+// The site entry still triggers audio.play() synchronously from the actual
+// visitor click. Admin settings change the source, not the player UI.
 type Playback='waiting'|'starting'|'playing'|'blocked'|'off'|'error'
-
 export default function SiteBgm({onRegisterStart}:{onRegisterStart?:(start:()=>void)=>void}){
+ const [settings,setSettings]=useState<BgmSettings>({...DEFAULT_BGM})
+ const current=useRef(settings)
  const [enabled,setEnabled]=useState(true)
  const [playback,setPlayback]=useState<Playback>('waiting')
+ const [youtubeOpen,setYoutubeOpen]=useState(false)
  const audioRef=useRef<HTMLAudioElement>(null)
  const sequence=useRef(0)
 
  const startMusic=useCallback(()=>{
-  const audio=audioRef.current
-  if(!audio)return
+  const config=current.current
+  if(!config.enabled){setEnabled(false);setPlayback('off');return}
   const requestId=++sequence.current
   setEnabled(true)
+  if(config.source==='youtube'){
+   audioRef.current?.pause()
+   setYoutubeOpen(true)
+   // The official, visible iframe may require its own play click on iOS.
+   setPlayback('starting')
+   return
+  }
+  setYoutubeOpen(false)
+  const audio=audioRef.current
+  if(!audio)return
   setPlayback('starting')
-  audio.volume=DEFAULT_VOLUME
-  // Called synchronously by the actual "進入狐隱" button's click handler.
-  // No timeout, React effect or separate gateway is allowed between the
-  // visitor's gesture and play(): Safari/Chrome require transient activation.
+  audio.volume=config.volume
+  // There is NO promise, timeout or React effect between the visitor's
+  // click on 進入狐隱 and this audio.play() call.
   try{
    const request=audio.play()
-   if(request){
-    void request.then(()=>{
-     if(requestId!==sequence.current)return
-     setPlayback('playing')
-    }).catch((error:unknown)=>{
-     if(requestId!==sequence.current)return
-     const name=error instanceof Error?error.name:''
-     setPlayback(name==='NotAllowedError'||name==='AbortError'?'blocked':'error')
-    })
-   }
+   if(request)void request.then(()=>{
+    if(requestId!==sequence.current)return
+    setPlayback('playing')
+   }).catch((error:unknown)=>{
+    if(requestId!==sequence.current)return
+    const name=error instanceof Error?error.name:''
+    setPlayback(name==='NotAllowedError'||name==='AbortError'?'blocked':'error')
+   })
   }catch(error){
    if(requestId!==sequence.current)return
-   const name=error instanceof Error?error.name:''
-   setPlayback(name==='NotAllowedError'?'blocked':'error')
+   setPlayback(error instanceof Error&&error.name==='NotAllowedError'?'blocked':'error')
   }
  },[])
-
- // Give the existing logo intro a direct click-to-play callback; there is no
- // second modal or new playback page. This registration does not start audio.
+ // Persist the existing entrance callback; switching BGM sources must not
+ // recreate or re-register a different entry button.
  useEffect(()=>{onRegisterStart?.(startMusic)},[onRegisterStart,startMusic])
 
+ useEffect(()=>{
+  let live=true
+  async function refresh(){
+   try{
+    const next=await readPublicBgm()
+    if(!live)return
+    const previous=current.current
+    if(previous.updatedAt===next.updatedAt&&previous.source===next.source&&
+      previous.url===next.url&&previous.enabled===next.enabled)return
+    current.current=next
+    setSettings(next)
+    if(next.source!==previous.source||currentAudioUrl(next)!==currentAudioUrl(previous)||
+      !next.enabled){
+     ++sequence.current
+     audioRef.current?.pause()
+     setYoutubeOpen(false)
+     setPlayback(next.enabled?'blocked':'off')
+    }else if(audioRef.current)audioRef.current.volume=next.volume
+   }catch{/* Keep the last playable source when the network is unavailable. */}
+  }
+  void refresh()
+  const interval=window.setInterval(()=>{void refresh()},45000)
+  return()=>{live=false;window.clearInterval(interval)}
+ },[])
+
  function pauseMusic(){
-  ++sequence.current // Ignore any outdated play() promise.
+  ++sequence.current
   audioRef.current?.pause()
+  setYoutubeOpen(false)
   setEnabled(false)
   setPlayback('off')
  }
  function toggle(){
-  if(enabled&&playback==='playing')pauseMusic()
+  if(!settings.enabled)return
+  if(youtubeOpen||enabled&&playback==='playing')pauseMusic()
   else startMusic()
  }
-
- const playing=playback==='playing'
- const status=playing?'播放中':playback==='error'?'音樂載入失敗':
+ const youtubeId=settings.source==='youtube'?youtubeVideoId(settings.url):null
+ const playing=playback==='playing'||youtubeOpen
+ const status=youtubeOpen?'YouTube 已開啟':
+  playback==='playing'?'播放中':playback==='error'?'音樂載入失敗':
   playback==='blocked'?'點擊播放':playback==='starting'?'準備播放':
   playback==='waiting'?'入館後播放':'已關閉'
  return <div className="site-bgm" aria-label="背景音樂控制">
-  <audio ref={audioRef} src={AUDIO_URL} loop preload="auto"
-   onPlaying={()=>{if(enabled)setPlayback('playing')}}
-   onPause={()=>{if(enabled)setPlayback(current=>current==='playing'?'blocked':current)}}
-   onError={()=>{if(enabled)setPlayback('error')}}
+  <audio ref={audioRef} src={currentAudioUrl(settings)||undefined} loop={settings.loop} preload="auto"
+   onPlaying={()=>{if(enabled&&settings.enabled&&settings.source!=='youtube')setPlayback('playing')}}
+   onPause={()=>{if(enabled)setPlayback(previous=>previous==='playing'?'blocked':previous)}}
+   onError={()=>{if(enabled&&settings.source!=='youtube')setPlayback('error')}}
    aria-hidden="true"/>
   <button type="button"
    className={'site-bgm-toggle'+(playing?' is-playing':'')+(playback==='blocked'?' is-blocked':'')}
    aria-label={playing?'關閉背景音樂':'開啟背景音樂'}
    aria-pressed={playing}
-   title={'背景音樂：みやびごころ · '+status}
+   disabled={!settings.enabled}
+   title={'背景音樂：'+settings.title+' · '+(settings.enabled?status:'館方暫停播放')}
    onClick={toggle}>
-   {playback==='off'?<VolumeX size={19} strokeWidth={1.8} aria-hidden="true"/>:
+   {playback==='off'||!settings.enabled?<VolumeX size={19} strokeWidth={1.8} aria-hidden="true"/>:
     <Music2 size={19} strokeWidth={1.8} aria-hidden="true"/>}
   </button>
+  {youtubeOpen&&youtubeId&&<div className="site-bgm-youtube" role="region" aria-label="YouTube 背景音樂">
+   <div className="site-bgm-youtube-heading"><span>{settings.title}</span>
+    <button type="button" aria-label="關閉 YouTube 音樂" onClick={pauseMusic}><X size={17}/></button>
+   </div>
+   <iframe title={'YouTube 音樂：'+settings.title}
+    src={'https://www.youtube-nocookie.com/embed/'+youtubeId+
+     '?playsinline=1&autoplay=1&controls=1'+(settings.loop?'&loop=1&playlist='+youtubeId:'')}
+    allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+    referrerPolicy="strict-origin-when-cross-origin" allowFullScreen/>
+   <small>如未自動開始，請點擊影片內的播放鍵。YouTube 須使用可見的官方播放器。</small>
+  </div>}
  </div>
 }

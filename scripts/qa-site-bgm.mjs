@@ -21,20 +21,24 @@ for(const path of paths.filter(p=>p.endsWith('.tsx'))){
  const parsed=ts.createSourceFile(path,source,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX)
  assert.equal(parsed.parseDiagnostics.length,0,'Invalid TSX: '+path)
 }
-assert.ok(player.includes('https://bgmer.net/wp-content/uploads/2025/04/456_BPM80.mp3'),
- 'Keep playing the selected official BGMer track')
+assert.ok(player.includes("from '../lib/site-bgm'")&&
+ player.includes("DEFAULT_BGM")&&player.includes('currentAudioUrl(settings)'),
+ 'Current persistent player must read its current source from the managed BGM config')
 assert.ok(player.includes('useState(true)')&&player.includes("useState<Playback>('waiting')"),
  'A fresh public visit must be ready for background music')
 assert.ok(!player.includes('localStorage')&&!player.includes('sessionStorage'),
  'Muting a previous visit must not affect the next entrance')
-assert.ok(player.includes('const request=audio.play()')&&player.includes('NotAllowedError'),
- 'Honor actual browser autoplay policy and handle playback rejection')
-assert.ok(player.includes('audio.volume=DEFAULT_VOLUME')&&player.includes('DEFAULT_VOLUME=0.24'),
- 'Keep gentle background volume')
-assert.ok(player.includes('loop preload="auto"'),
- 'Play the official soundtrack continuously using only one audio element')
-assert.ok(player.includes('function pauseMusic()')&&player.includes('audioRef.current?.pause()'),
- 'The public header music control must still be able to stop audio')
+assert.ok(player.includes('const request=audio.play()')&&player.includes('NotAllowedError')&&
+ player.includes('void refresh()')&&player.includes('window.setInterval'),
+ 'Preserve synchronous gesture-based playback and live source refresh')
+assert.ok(player.includes('audio.volume=config.volume')&&
+ player.includes('audioRef.current.volume=next.volume'),
+ 'Managed volume must use the existing HTMLAudioElement')
+assert.ok(player.includes('loop={settings.loop} preload="auto"'),
+ 'The existing player still uses one looping-capable audio element')
+assert.ok(player.includes('function pauseMusic()')&&player.includes('audioRef.current?.pause()')&&
+ player.includes('setYoutubeOpen(false)'),
+ 'The original header control must still stop uploaded audio and visible YouTube')
 assert.ok(player.includes('function toggle()')&&player.includes('else startMusic()'),
  'Visitors can restart background music from the header')
 assert.ok(player.includes('onRegisterStart?.(startMusic)'),
@@ -127,5 +131,6 @@ try{
  assert.ok(markup.includes('loop=""')||markup.includes(' loop'))
  assert.ok(markup.includes('site-bgm-toggle')&&markup.includes('背景音樂'))
  assert.ok(markup.includes('bgmer.net/wp-content/uploads/2025/04/456_BPM80.mp3'))
- console.log('PASS: original logo click starts one looping BGM player; no separate audio screen; mobile, keyboard, stop/restart and clean footer intact')
+ assert.ok(!markup.includes('site-bgm-youtube-heading'),'YouTube iframe only loads after a real visitor click')
+ console.log('PASS: original header player, logo gesture, managed audio, source refresh and visible YouTube; no extra entry screen')
 }finally{await vite.close()}

@@ -6,6 +6,7 @@ export const EMPLOYEE_PERMISSIONS = [
  { id:'accounts.manage',label:'員工帳號管理',description:'管理一般員工帳號與密碼，不能任命同級管理員或分發自身沒有的權限' },
  { id:'staff.manage',label:'員工名帖',description:'建立及編輯名帖、照片、排序與公開狀態' },
  { id:'announcements.manage',label:'公告管理',description:'館內公告與最新消息，含置頂、發布及下架' },
+ { id:'bgm.manage',label:'BGM 管理',description:'控制前台現有 BGM 播放器、上傳音樂或設定音訊與 YouTube 來源' },
  { id:'accounting.manage',label:'帳務管理',description:'收支與薪資計算、發薪紀錄及帳務調整' },
  { id:'menu.manage',label:'菜單管理',description:'茶宴分類、品項、售價與供應狀態' },
  { id:'services.manage',label:'服務內容管理',description:'服務項目、圖片、輪播順序及公開狀態' },

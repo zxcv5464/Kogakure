@@ -10,9 +10,10 @@ const paths=[
  'src/pages/admin/ShiftManagement.tsx',
  'src/pages/admin/modules.ts',
  'supabase/migrations/20261115_28_complete_admin_module_permissions.sql',
+ 'supabase/migrations/20261116_03_bgm_management.sql',
  'supabase/functions/manage-employee-accounts/index.ts',
 ]
-const [accounts,admin,accountEditor,shifts,modules,sql,edge]=
+const [accounts,admin,accountEditor,shifts,modules,sql,bgmSql,edge]=
  await Promise.all(paths.map(p=>readFile(p,'utf8')))
 for(const file of paths.filter(p=>/\.(tsx|ts)$/.test(p))){
  const ast=ts.createSourceFile(file,await readFile(file,'utf8'),
@@ -20,15 +21,20 @@ for(const file of paths.filter(p=>/\.(tsx|ts)$/.test(p))){
  assert.equal(ast.parseDiagnostics.length,0,'Invalid TypeScript in '+file)
 }
 const permissions=[
- 'accounts.manage','staff.manage','announcements.manage','accounting.manage',
+ 'accounts.manage','staff.manage','announcements.manage','bgm.manage','accounting.manage',
  'menu.manage','services.manage','orders.manage','booking.manage',
  'shifts.manage','shifts.attend',
 ]
 for(const id of permissions){
  assert.ok(accounts.includes("id:'"+id+"'"),'Missing frontend grantable permission: '+id)
- assert.ok(sql.includes("'"+id+"'"),'Missing SQL permission allowlist: '+id)
+ assert.ok((id==='bgm.manage'?bgmSql:sql).includes("'"+id+"'"),'Missing SQL permission allowlist: '+id)
  assert.ok(edge.includes("'"+id+"'"),'Missing credential-service permission allowlist: '+id)
 }
+assert.ok(bgmSql.includes('private.check_employee_backoffice_permission')&&
+ bgmSql.includes("'bgm.manage'")&&
+ bgmSql.includes("bucket_id='bgm-media'")&&
+ bgmSql.includes("has_backoffice_permission('bgm.manage')"),
+ 'BGM role must have independent database, media and table-level guards')
 assert.ok(sql.includes('private.check_employee_backoffice_permission')&&
  sql.includes('security definer set search_path')&&
  sql.includes('security invoker set search_path')&&
@@ -36,13 +42,14 @@ assert.ok(sql.includes('private.check_employee_backoffice_permission')&&
  sql.includes('and a.active=true')&&
  sql.includes('p_permission=any(a.permissions)'),
  'Access must use an active authenticated account and recursion-safe private lookup')
-for(const id of ['accounts.manage','services.manage','announcements.manage','shifts.manage']){
+for(const id of ['accounts.manage','services.manage','announcements.manage','bgm.manage','shifts.manage']){
  assert.ok(admin.includes("permitted(access,'"+id+"')"),
   'Admin route must enforce assigned '+id)
 }
 assert.ok(admin.includes("permitted(access,'shifts.attend')")&&
  admin.includes('<ProtectedModule access={access} module="accounts">')&&
  admin.includes('<ProtectedModule access={access} module="announcements">')&&
+ admin.includes('<ProtectedModule access={access} module="bgm">')&&
  admin.includes('<ProtectedModule access={access} module="services">')&&
  admin.includes('<EmployeeAccountsManagement access={access}/>'),
  'Direct routes and all workspaces must be protected')
@@ -90,5 +97,5 @@ try{
  assert.equal(permitted(staff,'services.manage'),false)
  assert.equal(permitted({...staff,active:false},'shifts.attend'),false)
  assert.equal(permitted({kind:'owner',permissions:[]},'accounts.manage'),true)
- console.log('PASS: all 9 admin modules grantable, independent shift self/schedule rights, RLS guards and no delegated privilege escalation')
+ console.log('PASS: all backoffice modules grantable, independent shift self/schedule rights, RLS guards and no delegated privilege escalation')
 }finally{await vite.close()}

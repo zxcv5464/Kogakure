@@ -56,6 +56,10 @@ jobs:
         env:
           VITE_OFFLINE_PREVIEW: 'true'
         run: node scripts/qa-site-bgm.mjs
+      - name: Verify live BGM management, upload library, delegated permissions and YouTube playback
+        env:
+          VITE_OFFLINE_PREVIEW: 'true'
+        run: node scripts/qa-bgm-management.mjs
       - name: Verify cold first-visit logo fade and enter-button animation in Chromium
         run: node scripts/qa-entry-intro-first-load.mjs
       - name: Verify shared rotating scene backgrounds on services and shifts
