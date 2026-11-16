@@ -8,7 +8,7 @@ const files=[
  'src/components/ScrollCue.tsx','src/components/scroll-cue.css',
  'src/components/StaffDialog.tsx','src/components/staff-dialog-scroll.css',
  'src/components/Layout.tsx','src/components/EntryIntro.tsx',
- 'src/pages/BookingPage.tsx','src/pages/admin/BookingManagement.tsx',
+ 'src/pages/BookingPage.tsx','src/pages/booking-page.css','src/pages/admin/BookingManagement.tsx',
  'src/pages/admin/AdminBookingCreate.tsx','src/pages/admin/AccountingManagement.tsx',
  'src/pages/admin/AnnouncementManagement.tsx','src/pages/admin/MenuManagement.tsx',
  'src/pages/admin/StaffManagement.tsx','src/pages/admin/ShiftManagement.tsx',
@@ -34,6 +34,13 @@ assert.ok(get(files[1]).includes('body *{scrollbar-width:none!important')&&
  get(files[1]).includes('.shared-scroll-cue:focus-visible')&&
  get(files[1]).includes('prefers-reduced-motion:reduce'),
  'Native scroll bars must be hidden but arrows retain keyboard operation')
+const bookingCueCss=get('src/pages/booking-page.css')
+assert.ok(bookingCueCss.includes('.booking-modal>.shared-scroll-cue.is-sticky{')&&
+ bookingCueCss.includes('width:44px;height:44px;min-height:44px')&&
+ bookingCueCss.includes('border:0;border-radius:50%;background:transparent;box-shadow:none')&&
+ bookingCueCss.includes('margin:0 0 0 auto')&&
+ get('src/pages/BookingPage.tsx').includes('<ScrollCue/>'),
+ 'Reservation modal cue must be frameless and narrow, not cover the mobile submit button')
 assert.ok(!get(files[2]).includes('繼續閱讀')&&
  get(files[2]).includes('<ChevronDown size={21}')&&
  get(files[2]).includes('aria-label="向下閱讀更多狐姬介紹"')&&
