@@ -139,7 +139,7 @@ const vite=await createServer({server:{middlewareMode:true,hmr:false},appType:'c
 try{
  const mod=await vite.ssrLoadModule('/src/lib/employee-accounts.ts')
  assert.deepEqual(mod.EMPLOYEE_PERMISSIONS.map(x=>x.id),[
-  'accounts.manage','staff.manage','announcements.manage','accounting.manage',
+  'accounts.manage','staff.manage','announcements.manage','bgm.manage','accounting.manage',
   'menu.manage','services.manage','orders.manage','booking.manage',
   'shifts.manage','shifts.attend',
  ])
