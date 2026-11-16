@@ -79,9 +79,10 @@ try{
   'Twelve photos must not render twelve full-size offscreen image elements')
  assert.equal((twelve.match(/class="services-photo-dot(?: is-active)?"/g)||[]).length,12,
   'Twelve-photo gallery must render twelve direct-selection dots')
- assert.ok(!twelve.includes('services-photo-counter')&&!twelve.includes('services-photo-index')&&
-  !twelve.includes('01 / 12'),
-  'Twelve-photo gallery must not show legacy number overlays')
+ assert.ok(twelve.includes('services-photo-counter')&&twelve.includes('01 / 12'),
+  'Twelve-photo gallery must show the current/total counter')
+ assert.ok(!twelve.includes('services-photo-index')&&!twelve.includes('KOGAKURE /'),
+  'The old lower-left brand/index overlay must remain removed')
  const {default:ServicesPage}=await vite.ssrLoadModule('/src/pages/ServicesPage.tsx')
  const html=renderToStaticMarkup(createElement(MemoryRouter,null,createElement(ServicesPage)))
  assert.ok(html.includes('湯浴之儀')&&html.includes('占卜之儀')&&html.includes('留影之儀'),

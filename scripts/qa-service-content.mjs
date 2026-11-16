@@ -127,16 +127,18 @@ try{
   'Two photos must render two clickable indicator dots')
  assert.ok(twoPhotos.includes('aria-current="true"')&&twoPhotos.includes('觀看第 2 張照片'),
   'One dot must indicate the active photo and each dot must be accessible')
- assert.ok(!twoPhotos.includes('services-photo-index')&&!twoPhotos.includes('services-photo-counter')&&
-  !twoPhotos.includes('KOGAKURE /')&&!twoPhotos.includes('01 / 02'),
-  'The gallery must not show brand or numeric text overlays')
+ assert.ok(twoPhotos.includes('services-photo-counter')&&twoPhotos.includes('01 / 02'),
+  'Multiple photos must display the current/total count at top right')
+ assert.ok(!twoPhotos.includes('services-photo-index')&&!twoPhotos.includes('KOGAKURE /'),
+  'The gallery must not restore the old brand/index overlay')
  const onePhoto=renderToStaticMarkup(createElement(ServicePhotoGallery,{
   service:{...previewServices[0],imageUrls:['https://example.invalid/one.webp']},number:'01',
  }))
- assert.ok(!onePhoto.includes('services-photo-dots'),'A single photo must not show navigation dots')
- assert.ok(!gallery.includes('services-photo-index')&&!gallery.includes('services-photo-counter')&&
-  !css.includes('.services-photo-index')&&!css.includes('.services-photo-counter'),
-  'Remove both obsolete overlays and their styles')
+ assert.ok(!onePhoto.includes('services-photo-dots')&&!onePhoto.includes('services-photo-counter'),
+  'A single photo must not show navigation dots or a count')
+ assert.ok(!gallery.includes('services-photo-index')&&!css.includes('.services-photo-index')&&
+  gallery.includes('services-photo-counter')&&css.includes('.services-photo-counter'),
+  'Keep the top-right count without restoring old brand/index styles')
  const {default:ServiceManagement}=await vite.ssrLoadModule('/src/pages/admin/ServiceManagement.tsx')
  assert.equal(typeof ServiceManagement,'function')
  console.log('PASS: published dynamic service pages, polaroid intro, safe editable admin, photo placeholders, RLS and storage')

@@ -132,6 +132,13 @@
 @keyframes servicesShogiRight{0%{left:50%;opacity:0}12%{opacity:.6}85%{opacity:.4}100%{left:100%;opacity:0}}
 /* Quiet, compact ink-gold navigation; visual dots stay small while
    each button retains a larger hit area for touch and keyboard users. */
+.services-photo-counter{
+ position:absolute;z-index:3;top:20px;right:21px;
+ padding:5px 9px;border:1px solid rgba(222,186,143,.24);
+ border-radius:3px;background:rgba(20,16,28,.59);color:#f1d7b5;
+ font:.7rem Georgia,'Times New Roman',serif;letter-spacing:.13em;
+ font-variant-numeric:tabular-nums;pointer-events:none;
+}
 .services-photo-dots{
  position:absolute;z-index:4;left:50%;bottom:9px;transform:translateX(-50%);
  width:max-content;max-width:calc(100% - 20px);
@@ -281,6 +288,7 @@
  .services-photo-placeholder > svg { width: 29px; height: 29px; }
  .services-photo-placeholder strong { font-size: 1.06rem; }
  .services-photo-placeholder > span:not(.services-photo-halo) { font-size: .71rem; }
+ .services-photo-counter { top:12px;right:12px;font-size:.66rem }
  .services-photo-dots { bottom:8px;max-width:calc(100% - 16px);padding:1px 3px }
  .services-photo-dot { flex-basis:22px;width:22px;height:24px;min-width:22px;min-height:24px }
  .services-copy { padding: 28px 12px 21px; }

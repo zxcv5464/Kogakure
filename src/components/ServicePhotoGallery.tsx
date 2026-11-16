@@ -152,6 +152,9 @@ export default function ServicePhotoGallery({service,number}:{service:ServiceEnt
      <span>{service.photoLabel||service.category+'照片'} · 圖片預留區</span>
     </div>
   }
+  {photos.length>1&&<span className="services-photo-counter" aria-hidden="true">
+   {String(current+1).padStart(2,'0')} / {String(photos.length).padStart(2,'0')}
+  </span>}
   {photos.length>1&&<div className="services-photo-dots" role="group"
    aria-label={service.category+'照片切換'}>
    {photos.map((_,index)=><button key={index} type="button"
