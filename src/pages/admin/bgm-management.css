@@ -16,11 +16,6 @@
 .bgm-admin-upload{display:grid;gap:12px}
 .bgm-admin-upload-button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px;max-width:max-content;padding:10px 16px;border:1px solid rgba(221,184,130,.46);border-radius:5px;background:rgba(166,127,79,.12);color:#efd5b1;cursor:pointer;font-size:.8rem}
 .bgm-admin-upload-button input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
-.bgm-admin-volume{display:grid;gap:12px}
-.bgm-admin-volume label{display:flex!important;align-items:center;gap:8px;font-size:.82rem}
-.bgm-admin-volume strong{margin-left:auto;font-variant-numeric:tabular-nums}
-.bgm-admin-volume input{width:100%;accent-color:#d9b782;cursor:pointer}
-.bgm-admin-volume small{color:#a7a1a0;font-size:.73rem}
 .bgm-admin-section p{margin:0;color:#bbaea2;font-size:.77rem;line-height:1.75}
 .bgm-admin-section audio{width:100%;min-width:0}
 .bgm-admin-preview-button{padding:11px;border-radius:5px;color:#efd5b0;background:rgba(175,132,74,.16);border:1px solid rgba(219,177,127,.42)}

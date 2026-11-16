@@ -65,6 +65,12 @@ for(const token of [
 ]){
  assert.ok(management.includes(token),'Manager must support live settings, uploads, direct URLs and YouTube: '+token)
 }
+assert.ok(!management.includes('bgm-admin-volume')&&
+ !management.includes('type="range"')&&
+ !management.includes("patch('volume'")&&
+ !css.includes('.bgm-admin-volume')&&
+ lib.includes('volume:DEFAULT_BGM.volume'),
+ 'BGM admin must hide volume controls and publish the fixed default 24% volume')
 assert.ok(css.includes('@media(max-width:560px)')&&
  css.includes('.bgm-admin-main')&&css.includes('.bgm-admin-upload'),
  'BGM editor should be responsive on phones')

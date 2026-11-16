@@ -1,6 +1,6 @@
 import {useCallback,useEffect,useMemo,useState} from 'react'
 import type {ChangeEvent,FormEvent} from 'react'
-import {CheckCircle2,Headphones,Music2,RefreshCw,Save,Trash2,UploadCloud,Volume2} from 'lucide-react'
+import {CheckCircle2,Headphones,Music2,RefreshCw,Save,Trash2,UploadCloud} from 'lucide-react'
 import {useAdminEditGuard} from './AdminEditGuard'
 import {
  BGM_MAX_BYTES,DEFAULT_BGM,checkBgm,currentAudioUrl,deleteUploadedBgm,
@@ -15,7 +15,7 @@ const sourceNames:Record<BgmSource,string>={
 const fileLabel=(file:UploadedBgm)=>file.name+' · '+(file.size/1048576).toFixed(1)+' MB'
 const formValue=(config:BgmSettings)=>JSON.stringify({
  enabled:config.enabled,source:config.source,url:config.url,
- title:config.title,volume:config.volume,loop:config.loop,
+ title:config.title,loop:config.loop,
 })
 
 export default function BgmManagement(){
@@ -143,13 +143,6 @@ export default function BgmManagement(){
        <input type="text" maxLength={120} value={draft.title} disabled={busy}
         onChange={e=>patch('title',e.target.value)}/>
       </label>
-      <div className="bgm-admin-volume">
-       <label><Volume2 size={17}/>音量 <strong>{Math.round(draft.volume*100)}%</strong></label>
-       <input type="range" min={0} max={100} step={1} value={Math.round(draft.volume*100)}
-        disabled={busy||draft.source==='youtube'}
-        onChange={e=>patch('volume',Number(e.target.value)/100)}/>
-       {draft.source==='youtube'&&<small>YouTube 音量請於官方嵌入播放器調整。</small>}
-      </div>
       <label className="bgm-admin-check"><input type="checkbox" checked={draft.loop} disabled={busy}
        onChange={e=>patch('loop',e.target.checked)}/><span>循環播放目前曲目</span></label>
      </div>

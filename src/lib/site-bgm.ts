@@ -82,7 +82,7 @@ export async function saveBgm(input:BgmSettings):Promise<BgmSettings>{
  if(problem)throw new Error(problem)
  const {data,error}=await db().from('site_bgm_settings').update({
   enabled:input.enabled,source_kind:input.source,source_url:input.source==='default'?'':input.url.trim(),
-  track_title:input.title.trim(),volume:input.volume,repeat_track:input.loop,
+  track_title:input.title.trim(),volume:DEFAULT_BGM.volume,repeat_track:input.loop,
  }).eq('id',1).select(fields).single()
  if(error||!data)throw new Error('背景音樂設定無法儲存：'+(error?.message||'無權修改'))
  return map(data as BgmRow)
