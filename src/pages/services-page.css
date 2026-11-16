@@ -138,31 +138,32 @@
 .services-photo-shoji-edges i:last-child{animation:servicesShogiRight 1450ms cubic-bezier(.62,0,.12,1) both}
 @keyframes servicesShogiLeft{0%{left:50%;opacity:0}12%{opacity:.6}85%{opacity:.4}100%{left:0;opacity:0}}
 @keyframes servicesShogiRight{0%{left:50%;opacity:0}12%{opacity:.6}85%{opacity:.4}100%{left:100%;opacity:0}}
+/* Quiet, compact ink-gold navigation; visual dots stay small while
+   each button retains a larger hit area for touch and keyboard users. */
 .services-photo-dots{
- position:absolute;z-index:4;left:50%;bottom:12px;transform:translateX(-50%);
- width:max-content;max-width:calc(100% - 24px);
- display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:0 2px;
- padding:3px 8px;border:1px solid rgba(223,184,135,.21);border-radius:999px;
- background:rgba(18,15,25,.64);backdrop-filter:blur(5px);
- box-shadow:0 4px 18px rgba(0,0,0,.16);
+ position:absolute;z-index:4;left:50%;bottom:9px;transform:translateX(-50%);
+ width:max-content;max-width:calc(100% - 20px);
+ display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:0;
+ padding:2px 5px;border:0;border-radius:999px;
+ background:rgba(18,15,25,.38);
 }
 .services-photo-dot{
- display:grid;place-items:center;flex:0 0 27px;
- width:27px;height:28px;min-width:27px;min-height:28px;
+ display:grid;place-items:center;flex:0 0 23px;
+ width:23px;height:24px;min-width:23px;min-height:24px;
  margin:0;padding:0;border:0;border-radius:50%;background:transparent;
  cursor:pointer;-webkit-tap-highlight-color:transparent;
 }
 .services-photo-dot::before{
- content:'';display:block;width:6px;height:6px;border-radius:50%;
- border:1px solid rgba(233,201,159,.68);background:rgba(229,203,169,.15);
- transition:background .22s ease,border-color .22s ease,transform .22s ease,box-shadow .22s ease;
+ content:'';display:block;width:4px;height:4px;border-radius:50%;
+ border:1px solid rgba(227,198,155,.58);background:rgba(218,190,150,.12);
+ transition:background .22s ease,border-color .22s ease,box-shadow .22s ease;
 }
 .services-photo-dot:hover::before{
- background:rgba(244,210,160,.65);border-color:rgba(255,225,184,.9);transform:scale(1.2);
+ background:rgba(232,195,145,.5);border-color:rgba(244,219,180,.86);
 }
 .services-photo-dot.is-active::before{
- background:#e8c391;border-color:#f4dbb4;transform:scale(1.2);
- box-shadow:0 0 0 3px rgba(205,166,114,.18),0 0 11px rgba(236,192,133,.3);
+ background:#e8c391;border-color:#e8c391;
+ box-shadow:0 0 5px rgba(232,195,145,.24);
 }
 .services-photo-dot:focus-visible{outline:2px solid #f0ca95;outline-offset:1px}
 @media(prefers-reduced-motion:reduce){.services-photo-slide.is-revealing{transition:none}.services-photo-shoji-edges{display:none}}
@@ -288,8 +289,8 @@
  .services-photo-placeholder > svg { width: 29px; height: 29px; }
  .services-photo-placeholder strong { font-size: 1.06rem; }
  .services-photo-placeholder > span:not(.services-photo-halo) { font-size: .71rem; }
- .services-photo-dots { bottom:10px;max-width:calc(100% - 16px);padding:2px 6px }
- .services-photo-dot { flex-basis:25px;width:25px;height:27px;min-width:25px;min-height:27px }
+ .services-photo-dots { bottom:8px;max-width:calc(100% - 16px);padding:1px 4px }
+ .services-photo-dot { flex-basis:22px;width:22px;height:24px;min-width:22px;min-height:24px }
  .services-copy { padding: 28px 12px 21px; }
  .services-copy h2 { font-size: 1.43rem; }
  .services-description p { font-size: .91rem; line-height: 1.95; }
