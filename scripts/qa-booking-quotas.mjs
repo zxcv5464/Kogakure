@@ -18,12 +18,17 @@ for(const p of files.filter(p=>/\.tsx?$/.test(p))){
   p.endsWith('tsx')?ts.ScriptKind.TSX:ts.ScriptKind.TS)
  assert.equal(ast.parseDiagnostics.length,0,'Invalid TS source: '+p)
 }
-assert.ok(photoCss.includes('height:clamp(230px,52vw,405px)')&&
- photoCss.includes('height:clamp(200px,69vw,310px)')&&
- photoCss.includes('clip-path:none!important')&&
- photoCss.includes('.services-photo-shoji-edges{display:none}')&&
- gallery.includes('services-photo-slides')&&gallery.includes('services-photo-slide.is-visible')===false,
- 'Small-screen image containers need real heights and Safari-safe nonclipped image layers')
+const responsiveCss=photoCss.slice(photoCss.indexOf('@media (max-width: 850px)'))
+assert.ok(responsiveCss.includes('height:clamp(230px,52vw,405px)')&&
+ responsiveCss.includes('height:clamp(200px,69vw,310px)')&&
+ !responsiveCss.includes('clip-path:none!important')&&
+ !responsiveCss.includes('transition:opacity .55s ease')&&
+ !responsiveCss.includes('.services-photo-shoji-edges{display:none}')&&
+ photoCss.includes('.services-photo-slide.is-revealing{transition:clip-path 1450ms')&&
+ photoCss.includes('@keyframes servicesShogiLeft')&&
+ photoCss.includes('@keyframes servicesShogiRight')&&
+ gallery.includes('services-photo-slides'),
+ 'Mobile frames must retain stable height and share the desktop center-opening shoji transition')
 assert.ok(types.includes('bookingPlanCaps: Record<string,number>')&&
  demo.includes('bookingPlanCaps:{}')&&
  staff.includes('booking_plan_caps:_planCaps')&&
