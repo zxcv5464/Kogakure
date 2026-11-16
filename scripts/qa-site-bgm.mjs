@@ -45,8 +45,11 @@ assert.ok(!css.includes('.site-bgm-entry-backdrop')&&!css.includes('.site-bgm-en
  'Obsolete separate-player-screen CSS must be removed')
 assert.ok(layout.includes('<SiteBgm onRegisterStart={onRegisterBgm}/>'),
  'The persistent public layout must expose its one audio player to the entrance')
-assert.ok(layout.includes('bgmer.net/music/456'),
- 'Soundtrack credit must remain visible in public footer')
+assert.ok(!layout.includes('site-bgm-credit')&&
+ !layout.includes('背景音樂：')&&
+ !layout.includes('みやびごころ · BGMer')&&
+ !css.includes('.site-bgm-credit'),
+ 'Footer must no longer show the soundtrack label or its unused style')
 assert.ok(app.includes('const startMusic=useRef<()=>void>')&&
  app.includes('const registerBgm=useCallback('),
  'Keep a stable, directly callable music starter across the logo and header')
@@ -124,5 +127,5 @@ try{
  assert.ok(markup.includes('loop=""')||markup.includes(' loop'))
  assert.ok(markup.includes('site-bgm-toggle')&&markup.includes('背景音樂'))
  assert.ok(markup.includes('bgmer.net/wp-content/uploads/2025/04/456_BPM80.mp3'))
- console.log('PASS: original logo click starts one looping BGM player; no separate audio screen; mobile, keyboard, stop/restart and attribution intact')
+ console.log('PASS: original logo click starts one looping BGM player; no separate audio screen; mobile, keyboard, stop/restart and clean footer intact')
 }finally{await vite.close()}

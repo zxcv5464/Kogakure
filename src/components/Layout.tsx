@@ -116,7 +116,7 @@ export default function Layout({children,onRegisterBgm}:{children:React.ReactNod
     <div><div className="footer-brand">狐隱 <span>KOGAKURE</span></div><p>世有百鬼，夜有萬境。循狐而入，借湯忘憂。</p></div>
     <div className="footer-side"><span>FFXIV · 利維坦 · 白銀鄉 6-7</span><a href="https://www.threads.com/@kogakure_ffxiv" target="_blank" rel="noopener noreferrer">官方 Threads <ArrowUpRight size={15}/></a><a href={DISCORD_INVITE} target="_blank" rel="noopener noreferrer">官方 Discord <ArrowUpRight size={15}/></a></div>
    </div>
-   <div className="copyright">本網站為 Final Fantasy XIV 玩家 RP 店鋪非官方網站。<span className="site-bgm-credit">背景音樂：<a href="https://bgmer.net/music/456" target="_blank" rel="noopener noreferrer">みやびごころ · BGMer</a></span></div>
+   <div className="copyright">本網站為 Final Fantasy XIV 玩家 RP 店鋪非官方網站。</div>
   </footer>
 
   {moreOpen&&<>

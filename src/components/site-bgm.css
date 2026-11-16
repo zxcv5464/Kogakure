@@ -16,6 +16,3 @@
 .site-bgm-toggle.is-playing{border-color:var(--border);background:rgba(205,169,119,.08)}
 .site-bgm-toggle.is-blocked{border-style:dashed}
 @media(prefers-reduced-motion:reduce){.site-bgm-toggle{transition:none}}
-.site-bgm-credit{display:block;margin-top:5px;color:#a8a19c;font-size:.72rem}
-.site-bgm-credit a{color:#c7aa85;text-decoration:underline;text-underline-offset:3px}
-.site-bgm-credit a:hover{color:#efd2a7}
