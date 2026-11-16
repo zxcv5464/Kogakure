@@ -94,7 +94,8 @@ try{
  assert.equal(mod.checkBgm({...base,source:'direct',url:'https://example.org/index.html'})!==null,true)
  assert.equal(mod.checkBgm({...base,source:'direct',url:'http://example.org/track.mp3'})!==null,true)
  const {default:BgmManagement}=await vite.ssrLoadModule('/src/pages/admin/BgmManagement.tsx')
- const html=renderToStaticMarkup(createElement(BgmManagement))
+ const {AdminEditGuardProvider}=await vite.ssrLoadModule('/src/pages/admin/AdminEditGuard.tsx')
+ const html=renderToStaticMarkup(createElement(AdminEditGuardProvider,null,createElement(BgmManagement)))
  assert.ok(html.includes('正在讀取館內音樂設定')&&html.includes('背景音樂管理'))
  console.log('PASS: existing header player, visible YouTube embed, authorized upload/library and BGM editor')
 }finally{await vite.close()}
