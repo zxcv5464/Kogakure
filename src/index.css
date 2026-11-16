@@ -43,6 +43,18 @@ html{scroll-behavior:smooth;scrollbar-width:none}body{margin:0;min-width:320px;s
 .mobile-more-panel .mobile-extra-link:nth-of-type(2){animation-delay:.16s}
 .mobile-more-panel .mobile-extra-link:nth-of-type(3){animation-delay:.23s}
 .mobile-more-panel .mobile-extra-link:nth-of-type(4){animation-delay:.29s}
+.mobile-more-panel .mobile-extra-link:nth-of-type(5){animation-delay:.36s}
+/* Keep all five mobile menu entries, including Discord, on the same
+   gold hover/press and icon motion treatment. */
+.mobile-more-panel .mobile-extra-link{transition:background-color .22s ease,color .22s ease,border-color .22s ease}
+.mobile-more-panel .mobile-extra-link>svg{transition:color .22s ease,transform .22s ease}
+.mobile-more-panel .mobile-extra-link:is(:hover,:focus-visible){background:rgba(216,181,129,.095);color:#f6d8a9}
+.mobile-more-panel .mobile-extra-link:is(:hover,:focus-visible)>svg:first-child{transform:translateY(-1px);color:#f4d39b}
+.mobile-more-panel .mobile-extra-link:is(:hover,:focus-visible)>svg:last-child{transform:translate(2px,-2px)}
+.mobile-more-panel .mobile-extra-link:active{background:rgba(216,181,129,.16);color:#ffdfb1}
+@media(prefers-reduced-motion:reduce){
+ .mobile-more-panel .mobile-extra-link,.mobile-more-panel .mobile-extra-link>svg{transition:none!important}
+}
 @media(prefers-reduced-motion:reduce){.desktop-nav .nav-slider,.mobile-bottom-item svg,.mobile-bottom-item span{transition:none!important}.mobile-more-backdrop,.mobile-more-panel,.mobile-more-panel .mobile-extra-link{animation:none!important}}
 
 

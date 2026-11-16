@@ -21,6 +21,17 @@ assert.ok(layout.includes('className="header-socials"')&&
  'Desktop Discord icon must share the exact Threads circular style')
 assert.ok(layout.includes('官方 Discord')&&layout.includes('className="mobile-extra-link mobile-social-link"'),
  'Mobile more menu must contain a Discord entry matching Threads')
+assert.equal((layout.match(/<a className="mobile-extra-link mobile-social-link"/g)||[]).length,2,
+ 'Threads and Discord must share the same mobile-more link treatment')
+assert.equal((layout.match(/<NavLink key=\{to\} to=\{to\} ref=\{index===0\?firstExtra:undefined\} className=/g)||[]).length,1,
+ 'Keep the three internal mobile-more links in front of the two social links')
+assert.ok(css.includes('.mobile-more-panel .mobile-extra-link:nth-of-type(4){animation-delay:.29s}')&&
+ css.includes('.mobile-more-panel .mobile-extra-link:nth-of-type(5){animation-delay:.36s}')&&
+ css.includes('.mobile-more-panel .mobile-extra-link:is(:hover,:focus-visible)')&&
+ css.includes('.mobile-more-panel .mobile-extra-link:active')&&
+ css.includes('.mobile-more-panel .mobile-extra-link>svg{transition:')&&
+ css.includes('prefers-reduced-motion:reduce'),
+ 'Fifth Discord link must share all mobile-menu stagger, icon, touch and accessible reduced-motion effects')
 assert.ok(css.includes('.header-socials{display:flex')&&
  css.includes('@media(max-width:850px){.header-socials{display:none}}')&&
  css.includes('.header-inner>.header-actions')&&
