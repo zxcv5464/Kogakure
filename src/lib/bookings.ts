@@ -4,7 +4,7 @@ import type {Staff} from '../types'
 
 export type BookingPlan = {
  id:string; name:string; description:string; durationMinutes:number;
- priceGil:number|null; sortOrder:number; active:boolean; allowJoint:boolean; updatedAt:string
+ priceGil:number|null; sortOrder:number; active:boolean; allowJoint:boolean; maxUses:number|null; updatedAt:string
 }
 export type BookingStatus = 'pending'|'accepted'|'rejected'|'completed'
 export type BookingRequest = {
@@ -15,7 +15,29 @@ export type BookingRequest = {
  staff:{id:string;name:string}[]
 }
 export type StaffPresence = {staffId:string;busyUntil:string|null}
-type PlanRow={id:string;name:string;description:string;duration_minutes:number;price_gil:number|null;sort_order:number;is_active:boolean;allow_joint_nomination:boolean;updated_at:string}
+export type BookingQuotaUsage={plans:Record<string,number>;staff:Record<string,number>}
+const emptyUsage=():BookingQuotaUsage=>({plans:{},staff:{}})
+export const quotaAvailable=(plan:Pick<BookingPlan,'id'|'maxUses'>,
+ staff:Pick<Staff,'id'|'bookingPlanCaps'>,usage:BookingQuotaUsage):boolean=>
+ (plan.maxUses===null||(usage.plans[plan.id]||0)<plan.maxUses)&&
+ (staff.bookingPlanCaps[plan.id]===undefined||
+  (usage.staff[staff.id+':'+plan.id]||0)<staff.bookingPlanCaps[plan.id])
+/** Aggregate counts of accepted/completed bookings; returns no guest data. */
+export async function loadBookingQuotaUsage():Promise<BookingQuotaUsage>{
+ const {data,error}=await client().rpc('get_booking_quota_usage')
+ if(error)throw error
+ return data&&typeof data==='object'?{
+  plans:data.plans&&typeof data.plans==='object'?data.plans:{},
+  staff:data.staff&&typeof data.staff==='object'?data.staff:{},
+ }:emptyUsage()
+}
+/** Set individual staff/plan limits; absent keys mean unlimited. */
+export async function setStaffBookingPlanCaps(staffId:string,caps:Record<string,number>):Promise<void>{
+ const {data,error}=await client().rpc('set_staff_booking_plan_caps',{p_staff_id:staffId,p_caps:caps})
+ if(error)throw error
+ if(data!==true)throw new Error('狐姬方案次數限制未成功儲存')
+}
+type PlanRow={id:string;name:string;description:string;duration_minutes:number;price_gil:number|null;sort_order:number;is_active:boolean;allow_joint_nomination:boolean;max_accepted_bookings:number|null;updated_at:string}
 type BookingRow={id:string;guest_name:string;guest_world:string;note:string;plan_id:string;plan_name:string;duration_minutes:number;price_gil:number|null;status:BookingStatus;created_at:string;accepted_at:string|null;ends_at:string|null;completed_at:string|null}
 type BookingLinkRow={booking_id:string;staff_id:string;staff_name:string}
 type PresenceRow={staff_id:string;busy_until:string|null}
@@ -35,7 +57,7 @@ export function describeBookingError(error:unknown):string{
 const planFromRow=(p:PlanRow):BookingPlan=>({
  id:p.id,name:p.name,description:p.description,durationMinutes:p.duration_minutes,
  priceGil:p.price_gil,sortOrder:p.sort_order,active:p.is_active,
- allowJoint:p.allow_joint_nomination!==false,updatedAt:p.updated_at,
+ allowJoint:p.allow_joint_nomination!==false,maxUses:p.max_accepted_bookings??null,updatedAt:p.updated_at,
 })
 export async function loadBookingPlans(includeInactive=false):Promise<BookingPlan[]> {
  let query=client().from('booking_plans').select('*').order('sort_order',{ascending:true})
@@ -64,6 +86,16 @@ export function staffCanJoinBooking(
 ):boolean{
  return planAllowJoint&&primary.bookingAllowJoint&&second.bookingAllowJoint&&
   staffAcceptsPlan(primary,planId)&&staffAcceptsPlan(second,planId)
+}
+/** Save plan eligibility, joint preference and per-plan count limits atomically. */
+export async function setStaffBookingSettings(
+ staffId:string,allowedPlanIds:string[]|null,allowJoint:boolean,caps:Record<string,number>
+):Promise<void>{
+ const {data,error}=await client().rpc('set_staff_booking_settings',{
+  p_staff_id:staffId,p_allowed_plan_ids:allowedPlanIds,p_allow_joint:allowJoint,p_caps:caps,
+ })
+ if(error)throw error
+ if(data!==true)throw new Error('狐姬預約設定尚未完成，請重新整理')
 }
 /** Save only booking-specific settings without requiring staff.manage. */
 export async function setStaffBookingRules(staffId:string,allowedPlanIds:string[]|null,allowJoint:boolean):Promise<void>{
@@ -148,7 +180,7 @@ export async function saveBookingPlan(plan:BookingPlan,newPlan:boolean):Promise<
  const db=client()
  const row={id:plan.id,name:plan.name.trim(),description:plan.description.trim(),
   duration_minutes:plan.durationMinutes,price_gil:plan.priceGil,sort_order:plan.sortOrder,is_active:plan.active,
-  allow_joint_nomination:plan.allowJoint}
+  allow_joint_nomination:plan.allowJoint,max_accepted_bookings:plan.maxUses}
  const request=newPlan
   ? db.from('booking_plans').insert(row).select('id')
   : db.from('booking_plans').update(row).eq('id',plan.id).eq('updated_at',plan.updatedAt).select('id')

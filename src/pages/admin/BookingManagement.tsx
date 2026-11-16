@@ -3,9 +3,9 @@ import { Bell, Check, CheckCircle2, Clock3, ExternalLink, Plus, RefreshCw, Save,
 import { Link } from 'react-router-dom'
 import {
  countdown, decideBooking, deleteAdminBooking, describeBookingError, loadAdminBookings,
- loadBookingPlans, removeBookingPlan, saveBookingPlan, setBookingNomineeVisibility, setStaffBookingRules, watchBookingChanges,
+ loadBookingPlans, removeBookingPlan, saveBookingPlan, setBookingNomineeVisibility, setStaffBookingSettings,loadBookingQuotaUsage,watchBookingChanges,
 } from '../../lib/bookings'
-import type { BookingPlan, BookingRequest, BookingStatus } from '../../lib/bookings'
+import type { BookingPlan, BookingRequest, BookingStatus, BookingQuotaUsage } from '../../lib/bookings'
 import type { Staff } from '../../types'
 import { getStaff } from '../../lib/staff'
 import { invalidatePublicStaffCache } from '../../lib/public-staff'
@@ -19,11 +19,13 @@ const statusNames:Record<BookingStatus,string>={
 }
 const fmt=(date:string|null)=>date ? new Date(date).toLocaleString('zh-TW',{timeZone:'Asia/Taipei',hour12:false,month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'}) : '—'
 const gil=(n:number|null)=>n===null?'未設定費用':n.toLocaleString('en-US')+' Gil'
-const initialPlan=():BookingPlan=>({id:crypto.randomUUID(),name:'',description:'',durationMinutes:30,priceGil:null,sortOrder:100,active:false,allowJoint:true,updatedAt:''})
+const initialPlan=():BookingPlan=>({id:crypto.randomUUID(),name:'',description:'',durationMinutes:30,priceGil:null,sortOrder:100,active:false,allowJoint:true,maxUses:null,updatedAt:''})
 type SelectedPlan={value:BookingPlan;original:BookingPlan;creating:boolean}
-type NomineeRules={allowedPlanIds:string[]|null;allowJoint:boolean}
-const currentRules=(person:Staff):NomineeRules=>({allowedPlanIds:person.bookingAllowedPlanIds,allowJoint:person.bookingAllowJoint})
+type NomineeRules={allowedPlanIds:string[]|null;allowJoint:boolean;caps:Record<string,number>}
+const currentRules=(person:Staff):NomineeRules=>({allowedPlanIds:person.bookingAllowedPlanIds,allowJoint:person.bookingAllowJoint,caps:{...person.bookingPlanCaps}})
 const rulesEqual=(a:NomineeRules,b:NomineeRules)=>a.allowJoint===b.allowJoint&&
+ Object.keys(a.caps).length===Object.keys(b.caps).length&&
+ Object.keys(a.caps).every(k=>a.caps[k]===b.caps[k])&&
  (a.allowedPlanIds===null&&b.allowedPlanIds===null||
   a.allowedPlanIds!==null&&b.allowedPlanIds!==null&&
   a.allowedPlanIds.length===b.allowedPlanIds.length&&a.allowedPlanIds.every(id=>b.allowedPlanIds?.includes(id)))
@@ -41,6 +43,7 @@ export default function BookingManagement(){
  const [focused,setFocused]=useState<string|null>(null)
  const [planDraft,setPlanDraft]=useState<SelectedPlan|null>(null)
  const [ruleDrafts,setRuleDrafts]=useState<Record<string,NomineeRules>>({})
+ const [quotaUsage,setQuotaUsage]=useState<BookingQuotaUsage>({plans:{},staff:{}})
  const [now,setNow]=useState(Date.now())
  const lastSeen=useRef(new Set<string>())
  const didLoad=useRef(false)
@@ -53,13 +56,13 @@ export default function BookingManagement(){
  useEffect(()=>()=>setEditing(false,false),[setEditing])
 
  const refresh=useCallback(async()=>{
-  const [requests,updatedPlans,updatedNominees]=await Promise.all([loadAdminBookings(),loadBookingPlans(true),getStaff(true)])
+  const [requests,updatedPlans,updatedNominees,usage]=await Promise.all([loadAdminBookings(),loadBookingPlans(true),getStaff(true),loadBookingQuotaUsage().catch(()=>({plans:{},staff:{}}))])
   if(didLoad.current){
    const newcomers=requests.filter(r=>r.status==='pending'&&!lastSeen.current.has(r.id))
    if(newcomers.length)setIncoming(newcomers[0])
   } else didLoad.current=true
   lastSeen.current=new Set(requests.map(r=>r.id))
-  setBookings(requests);setPlans(updatedPlans);setNominees(updatedNominees);setError('')
+  setBookings(requests);setPlans(updatedPlans);setNominees(updatedNominees);setQuotaUsage(usage);setError('')
  },[])
  useEffect(()=>{
   let alive=true
@@ -108,13 +111,13 @@ export default function BookingManagement(){
   if(!setting||rulesEqual(setting,currentRules(person)))return
   busyRef.current=true;setBusy(true);setError('');setNotice('')
   try{
-   await setStaffBookingRules(person.id,setting.allowedPlanIds,setting.allowJoint)
+   await setStaffBookingSettings(person.id,setting.allowedPlanIds,setting.allowJoint,setting.caps)
    setNominees(old=>old.map(p=>p.id===person.id
-    ?{...p,bookingAllowedPlanIds:setting.allowedPlanIds,bookingAllowJoint:setting.allowJoint}:p))
+    ?{...p,bookingAllowedPlanIds:setting.allowedPlanIds,bookingAllowJoint:setting.allowJoint,bookingPlanCaps:setting.caps}:p))
    setRuleDrafts(old=>{const next={...old};delete next[person.id];return next})
    invalidatePublicStaffCache()
    try{await refresh()}catch{/* Persisted; visible local state remains authoritative until next refresh. */}
-   setNotice(person.name+' 的接受方案與同時指名設定已儲存，新的預約會套用最新規則。')
+   setNotice(person.name+' 的方案、同時指名及次數限制已儲存；尚未接取的預約會使用最新限制。')
   }catch(e){setError(describeBookingError(e))}
   finally{busyRef.current=false;setBusy(false)}
  }
@@ -175,11 +178,12 @@ export default function BookingManagement(){
   if(!planDraft||busyRef.current)return
   const p=planDraft.value
   if(p.name.trim().length<2||p.name.trim().length>70||!Number.isInteger(p.durationMinutes)||p.durationMinutes<5||p.durationMinutes>240||
-   (p.priceGil!==null&&(!Number.isSafeInteger(p.priceGil)||p.priceGil<0||p.priceGil>999999999))){
-   setError('請確認方案名稱、時長（5～240 分鐘）及 Gil 金額');return
+   (p.priceGil!==null&&(!Number.isSafeInteger(p.priceGil)||p.priceGil<0||p.priceGil>999999999))||
+   (p.maxUses!==null&&(!Number.isInteger(p.maxUses)||p.maxUses<1||p.maxUses>100000))){
+   setError('請確認方案名稱、時長、Gil 金額及數量上限（1～100000 筆）');return
   }
   busyRef.current=true;setBusy(true);setError('')
-  try{await saveBookingPlan(p,planDraft.creating);await refresh();setPlanDraft(null);setNotice('方案已儲存；新申請會使用更新後的方案，既有訂單保留當時的時間及金額。')}
+  try{await saveBookingPlan(p,planDraft.creating);await refresh();setPlanDraft(null);setNotice('方案已儲存；新申請及尚未接取的預約會套用數量限制，既有訂單保留當時的時間及金額。')}
   catch(e){setError(describeBookingError(e))}
   finally{busyRef.current=false;setBusy(false)}
  }
@@ -297,6 +301,27 @@ export default function BookingManagement(){
          </label>)}
         {!rules.allowedPlanIds.length&&<p>未選擇方案：這位狐姬暫不接受任何新方案。</p>}
        </div>}
+       <div className="booking-admin-staff-quota">
+        <strong>各方案可接受次數</strong>
+        <small>未設定即無限制；依成功接取（含完成）的累計次數計算，待審核不佔名額。</small>
+        {plans.map(plan=><div key={plan.id} className="booking-admin-staff-quota-row">
+         <span>{plan.name}<small>已接取 {quotaUsage.staff[person.id+':'+plan.id]||0} 筆</small></span>
+         <select aria-label={person.name+' '+plan.name+' 次數限制'} disabled={busy}
+          value={rules.caps[plan.id]===undefined?'unlimited':'limited'}
+          onChange={e=>editNomineeRules(person,r=>{
+           const caps={...r.caps}
+           if(e.target.value==='unlimited')delete caps[plan.id]
+           else caps[plan.id]=1
+           return {...r,caps}
+          })}>
+          <option value="unlimited">無限制</option><option value="limited">限制次數</option>
+         </select>
+         {rules.caps[plan.id]!==undefined&&<input type="number" min={0} max={100000} step={1}
+          aria-label={person.name+' '+plan.name+' 可接受次數上限'} disabled={busy}
+          value={rules.caps[plan.id]}
+          onChange={e=>editNomineeRules(person,r=>({...r,caps:{...r.caps,[plan.id]:Number(e.target.value)}}))}/>}
+        </div>)}
+       </div>
        <label className="booking-admin-rules-choice">
         <input type="checkbox" checked={rules.allowJoint} disabled={busy}
          onChange={e=>editNomineeRules(person,r=>({...r,allowJoint:e.target.checked}))}/>
@@ -312,7 +337,7 @@ export default function BookingManagement(){
   {!loading&&tab==='plans'&&<div className="booking-admin-plans">
    <div className="booking-admin-plan-head"><p>新開放的方案才會顯示在前台。範例方案預設未開放，請確認內容與費用後再啟用。</p><button type="button" onClick={()=>choosePlan(initialPlan(),true)}><Plus size={16}/>新增方案</button></div>
    <div className="booking-admin-plan-layout">
-    <div className="booking-admin-plan-list">{plans.map(p=><button key={p.id} type="button" className={planDraft?.value.id===p.id?'active':''} onClick={()=>choosePlan(p)}><strong>{p.name}</strong><small>{p.durationMinutes} 分鐘 · {gil(p.priceGil)} · {p.allowJoint?'可同時指名':'僅限單人'}</small><em>{p.active?'已開放':'草稿'}</em></button>)}</div>
+    <div className="booking-admin-plan-list">{plans.map(p=><button key={p.id} type="button" className={planDraft?.value.id===p.id?'active':''} onClick={()=>choosePlan(p)}><strong>{p.name}</strong><small>{p.durationMinutes} 分鐘 · {gil(p.priceGil)} · {p.allowJoint?'可同時指名':'僅限單人'} · {p.maxUses===null?'無限制':'已接取 '+(quotaUsage.plans[p.id]||0)+'/'+p.maxUses}</small><em>{p.active?'已開放':'草稿'}</em></button>)}</div>
     <div className="booking-admin-plan-editor">
      {!planDraft?<p>請選擇方案或新增方案，編輯後儲存即可同步前台。</p>:<form onSubmit={e=>{e.preventDefault();void savePlan()}}>
       <h2>{planDraft.creating?'新增指名方案':'編輯指名方案'}</h2>
@@ -324,6 +349,20 @@ export default function BookingManagement(){
       <label className="booking-admin-plan-toggle"><input type="checkbox" checked={planDraft.value.active} onChange={e=>patchPlan('active',e.target.checked)}/>對旅人開放此方案</label>
       <label className="booking-admin-plan-toggle"><input type="checkbox" checked={planDraft.value.allowJoint}
        onChange={e=>patchPlan('allowJoint',e.target.checked)}/>開放同時指名（最多兩位狐姬）</label>
+      <div className="booking-admin-quota-field">
+       <label>方案接受數量
+        <select value={planDraft.value.maxUses===null?'unlimited':'limited'}
+         onChange={e=>patchPlan('maxUses',e.target.value==='unlimited'?null:Math.max(1,planDraft.value.maxUses||1))}>
+         <option value="unlimited">無限制</option><option value="limited">限制接受筆數</option>
+        </select>
+       </label>
+       {planDraft.value.maxUses!==null&&<label>可接取上限
+        <input type="number" min={1} max={100000} step={1} required
+         value={planDraft.value.maxUses}
+         onChange={e=>patchPlan('maxUses',e.target.value===''?0:Number(e.target.value))}/>
+       </label>}
+       <small>累計接取（含已完成）：{quotaUsage.plans[planDraft.value.id]||0} 筆；待審核不佔名額。</small>
+      </div>
       <p className="booking-admin-plan-hint">關閉後，此方案僅接受單人指名。即使方案開放，兩位狐姬也都必須同意同時指名。</p>
       <div className="booking-admin-plan-actions">
        {!planDraft.creating&&<button type="button" className="danger" disabled={busy} onClick={()=>void deletePlan()}><Trash2 size={16}/>刪除</button>}
@@ -334,7 +373,7 @@ export default function BookingManagement(){
     </div>
    </div>
   </div>}
-  {creatingBooking&&<AdminBookingCreate plans={plans} close={()=>setCreatingBooking(false)} onCreated={onManualCreated}/>}
+  {creatingBooking&&<AdminBookingCreate plans={plans} quotaUsage={quotaUsage} close={()=>setCreatingBooking(false)} onCreated={onManualCreated}/>}
   {selectedBooking&&<div className="booking-admin-detail-backdrop" onMouseDown={e=>{if(e.currentTarget===e.target)setFocused(null)}}>
    <div className="booking-admin-detail" role="dialog" aria-modal="true" aria-labelledby="booking-admin-detail-title">
     <button type="button" className="booking-admin-close" aria-label="關閉詳細資料" onClick={()=>setFocused(null)}><X size={20}/></button>

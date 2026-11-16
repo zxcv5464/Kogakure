@@ -3,12 +3,12 @@ import type { FormEvent } from 'react'
 import { Plus, X } from 'lucide-react'
 import { getStaff } from '../../lib/staff'
 import ScrollCue from '../../components/ScrollCue'
-import { createAdminBooking, describeBookingError,staffAcceptsPlan,staffCanJoinBooking } from '../../lib/bookings'
-import type { BookingPlan } from '../../lib/bookings'
+import { createAdminBooking, describeBookingError,staffAcceptsPlan,staffCanJoinBooking,quotaAvailable,loadBookingQuotaUsage } from '../../lib/bookings'
+import type { BookingPlan, BookingQuotaUsage } from '../../lib/bookings'
 import type { Staff } from '../../types'
 
-type Props={plans:BookingPlan[];close:()=>void;onCreated:(id:string)=>Promise<void>}
-export default function AdminBookingCreate({plans,close,onCreated}:Props){
+type Props={plans:BookingPlan[];quotaUsage:BookingQuotaUsage;close:()=>void;onCreated:(id:string)=>Promise<void>}
+export default function AdminBookingCreate({plans,quotaUsage,close,onCreated}:Props){
  const [people,setPeople]=useState<Staff[]>([])
  const [loading,setLoading]=useState(true)
  const [name,setName]=useState('')
@@ -56,12 +56,18 @@ export default function AdminBookingCreate({plans,close,onCreated}:Props){
    setError('此方案僅開放單人指名，請取消第二位館員');return
   }
   const picked=staffIds.map(id=>people.find(p=>p.id===id))
+  if(selectedPlan&&picked.some(person=>!person||!quotaAvailable(selectedPlan,person,quotaUsage))){
+   setError('此方案或狐姬已達接取次數上限');return
+  }
   if(picked.some(person=>!person||!staffAcceptsPlan(person,planId))||
     (picked.length===2&&(!picked[0]||!picked[1]||!staffCanJoinBooking(picked[0],picked[1],planId)))){
    setError('指名人員未開放此方案或不接受同時指名，請重新選擇');return
   }
   setBusy(true);setError('')
   try{
+   const recent=await loadBookingQuotaUsage()
+   if(!selectedPlan||picked.some(person=>!person||!quotaAvailable(selectedPlan,person,recent)))
+    throw new Error('此方案或狐姬的接取次數已滿，請重新選擇')
    const id=await createAdminBooking({name,world,planId,staffIds,note})
    await onCreated(id)
   }catch(e){setError(describeBookingError(e))}
@@ -86,7 +92,7 @@ export default function AdminBookingCreate({plans,close,onCreated}:Props){
       ?'僅可選擇接受此方案的狐姬；同時指名須方案與兩位狐姬均允許。'
       :'此指名方案僅開放單人預約；無法追加第二位狐姬。'}</p>
      {loading?<p role="status">正在取得狐姬名單…</p>:!people.length?<p>目前沒有開放預約展示的館員。</p>:people.map(p=>{
-      const compatible=staffAcceptsPlan(p,planId)
+      const compatible=staffAcceptsPlan(p,planId)&&(!selectedPlan||quotaAvailable(selectedPlan,p,quotaUsage))
       const selectedPartner=people.find(q=>q.id===staffIds[0])
       const jointOK=!selectedPartner||staffCanJoinBooking(selectedPartner,p,planId,selectedPlan?.allowJoint)
       const disabled=busy||!compatible||!staffIds.includes(p.id)&&
@@ -94,7 +100,7 @@ export default function AdminBookingCreate({plans,close,onCreated}:Props){
       return <label className="booking-admin-create-staff" key={p.id}>
        <input type="checkbox" checked={staffIds.includes(p.id)} disabled={disabled}
         onChange={e=>setStaffIds(old=>e.target.checked?[...old,p.id]:old.filter(id=>id!==p.id))}/>
-       <span>{p.name}</span><small>{!compatible?'未接受此方案':!jointOK?'未開放同時指名':p.role}</small>
+       <span>{p.name}</span><small>{!compatible?'方案不適用或次數已滿':!jointOK?'未開放同時指名':p.role}</small>
       </label>
      })}
     </fieldset>

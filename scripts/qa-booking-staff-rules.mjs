@@ -33,7 +33,7 @@ assert.ok(staff.includes('booking_allowed_plan_ids:_allowedPlans')&&
  'Ordinary profile changes must not accidentally overwrite concurrent booking rule updates')
 assert.ok(staffAdmin.includes('bookingAllowedPlanIds:null,bookingAllowJoint:true'),
  'New staff must default to all plans and allow joint nominations')
-for(const item of ['setStaffBookingRules','booking-admin-person-rules','可接受指名方案',
+for(const item of ['setStaffBookingSettings','booking-admin-person-rules','可接受指名方案',
  '接受所有方案（包含日後新增的方案）','僅接受指定方案',
  '開放與其他狐姬同時指名','儲存此狐姬設定',
  'setRuleDrafts','invalidatePublicStaffCache','useAdminEditGuard']){
@@ -87,7 +87,7 @@ assert.ok(bookings.includes('allowJoint:boolean')&&
  bookings.includes('allow_joint_nomination:plan.allowJoint')&&
  bookings.includes('return planAllowJoint&&primary.bookingAllowJoint&&second.bookingAllowJoint'),
  'Database read and save must persist each booking plan joint eligibility')
-assert.ok(admin.includes("allowJoint:true,updatedAt:''")&&
+assert.ok(admin.includes("allowJoint:true,maxUses:null,updatedAt:''")&&
  admin.includes('開放同時指名（最多兩位狐姬）')&&
  admin.includes("patchPlan('allowJoint',e.target.checked)")&&
  admin.includes("p.allowJoint?'可同時指名':'僅限單人'"),

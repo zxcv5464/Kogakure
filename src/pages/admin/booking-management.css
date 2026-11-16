@@ -153,3 +153,35 @@
 
 /* Keep the new plan-level joint switch as a quiet companion to publish status. */
 .booking-admin-plan-hint{margin:-9px 0 3px;color:#b9ab99;font-size:.75rem;line-height:1.75}
+
+/* Limited booking allocations: compact, full-width fields on all screens. */
+.booking-admin-quota-field{display:grid;grid-template-columns:minmax(0,1fr) minmax(140px,.7fr);
+ gap:11px;padding:13px 14px;border:1px solid rgba(218,184,140,.25);border-radius:6px;background:rgba(30,27,38,.48)}
+.booking-admin-quota-field>label{display:grid;gap:7px;min-width:0;color:#e4ceb0;font-size:.81rem;line-height:1.6}
+.booking-admin-quota-field>small{grid-column:1/-1;color:#b6a99b;line-height:1.7;font-size:.73rem}
+.booking-admin-quota-field select,.booking-admin-quota-field input,
+.booking-admin-staff-quota-row :is(select,input){
+ width:100%;min-width:0;max-width:100%;box-sizing:border-box;min-height:39px;
+ padding:8px 10px;border:1px solid rgba(222,183,133,.36);border-radius:5px;
+ background:#1b1d27;color:#f0d9b9;font:inherit;font-size:.79rem;
+}
+.booking-admin-staff-quota{display:grid;gap:10px;min-width:0;padding-top:14px;
+ border-top:1px solid rgba(216,181,129,.22)}
+.booking-admin-staff-quota>strong{font-size:.82rem;color:#edcfad}
+.booking-admin-staff-quota>small{font-size:.73rem;line-height:1.7;color:#b8a89a}
+.booking-admin-staff-quota-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(105px,125px) minmax(70px,95px);
+ gap:8px;align-items:center;min-width:0}
+.booking-admin-staff-quota-row>span{font-size:.77rem;line-height:1.5;color:#ddc8ae;overflow-wrap:anywhere}
+.booking-admin-staff-quota-row>span>small{display:block;font-size:.68rem;color:#aa9b8e}
+.booking-admin-staff-quota-row select{grid-column:2}
+.booking-admin-staff-quota-row input{grid-column:3}
+@media(max-width:600px){
+ .booking-admin-quota-field{grid-template-columns:minmax(0,1fr)}
+ .booking-admin-staff-quota-row{grid-template-columns:minmax(0,1fr) minmax(95px,125px) minmax(75px,85px)}
+}
+@media(max-width:400px){
+ .booking-admin-staff-quota-row{grid-template-columns:minmax(0,1fr) minmax(85px,110px)}
+ .booking-admin-staff-quota-row>span{grid-column:1/-1}
+ .booking-admin-staff-quota-row select{grid-column:1}
+ .booking-admin-staff-quota-row input{grid-column:2}
+}

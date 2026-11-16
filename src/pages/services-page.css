@@ -253,7 +253,11 @@
  .services-feature { grid-template-columns: minmax(0, 1fr); gap: 0; padding: 17px; }
  .services-feature:nth-child(even) .services-photo,
  .services-feature:nth-child(even) .services-copy { order: initial; }
- .services-photo { min-height: 0; max-height: none; aspect-ratio: 4 / 2.65; }
+ .services-photo { width:100%; min-height:230px; height:clamp(230px,52vw,405px); max-height:none; aspect-ratio:auto; align-self:auto; }
+ /* Safari mobile can clip both absolute image layers during a shoji reveal. */
+ .services-photo-slide,.services-photo-slide.is-visible,.services-photo-slide.is-previous{clip-path:none!important}
+ .services-photo-slide.is-revealing{transition:opacity .55s ease}
+ .services-photo-shoji-edges{display:none}
  .services-copy { padding: 31px clamp(4px, 3vw, 25px) 24px; }
 }
 @media (max-width: 480px) {
@@ -265,7 +269,7 @@
  .services-shortcuts a { padding: 7px 16px; font-size: .78rem; }
  .services-content { width: calc(100% - 24px); }
  .services-feature { padding: 11px; margin-bottom: 26px; }
- .services-photo { aspect-ratio: 4 / 3; }
+ .services-photo { min-height:200px; height:clamp(200px,69vw,310px); aspect-ratio:auto; }
  .services-photo-placeholder { gap: 8px; }
  .services-photo-placeholder > svg { width: 29px; height: 29px; }
  .services-photo-placeholder strong { font-size: 1.06rem; }

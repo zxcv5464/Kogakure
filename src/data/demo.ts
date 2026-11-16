@@ -19,6 +19,7 @@ export const demoStaff: Staff[] = [
   bookingVisible:true,
   bookingAllowedPlanIds:null,
   bookingAllowJoint:true,
+  bookingPlanCaps:{},
   sortOrder:1,
  },
  {
@@ -37,6 +38,7 @@ export const demoStaff: Staff[] = [
   bookingVisible:true,
   bookingAllowedPlanIds:null,
   bookingAllowJoint:true,
+  bookingPlanCaps:{},
   sortOrder:2,
  },
 ]

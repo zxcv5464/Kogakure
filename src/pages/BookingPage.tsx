@@ -11,10 +11,10 @@ import { getCachedPublicStaff,loadPublicStaff } from '../lib/public-staff'
 import {loadPublicBookingPlans,loadPublicStaffPresence,peekPublicBookingPlans,peekPublicStaffPresence} from '../lib/public-booking-data'
 import { getStaff } from '../lib/staff'
 import {
- describeBookingError, isStaffBusy,staffAcceptsPlan,staffCanJoinBooking,
+ describeBookingError, isStaffBusy,staffAcceptsPlan,staffCanJoinBooking,quotaAvailable,loadBookingQuotaUsage,
  submitNomination, watchBookingChanges,
 } from '../lib/bookings'
-import type { BookingPlan, StaffPresence } from '../lib/bookings'
+import type { BookingPlan, StaffPresence,BookingQuotaUsage } from '../lib/bookings'
 import type { Staff } from '../types'
 import './booking-page.css'
 
@@ -34,6 +34,7 @@ export default function BookingPage(){
  const [people,setPeople]=useState<Staff[]>(()=>getCachedPublicStaff()?.filter(p=>p.published&&p.bookingVisible)??[])
  const [plans,setPlans]=useState<BookingPlan[]>(()=>peekPublicBookingPlans()??[])
  const [presence,setPresence]=useState<StaffPresence[]>(()=>peekPublicStaffPresence()??[])
+ const [quotaUsage,setQuotaUsage]=useState<BookingQuotaUsage>({plans:{},staff:{}})
  const [loading,setLoading]=useState(()=>!(configured&&getCachedPublicStaff()&&peekPublicBookingPlans()&&peekPublicStaffPresence()))
  const [error,setError]=useState('')
  const [now,setNow]=useState(Date.now())
@@ -54,6 +55,7 @@ export default function BookingPage(){
  useEffect(()=>{
   if(!configured){setLoading(false);setError('預約系統尚未連線，請洽館方。');return}
   let live=true
+  void loadBookingQuotaUsage().then(q=>{if(live)setQuotaUsage(q)}).catch(()=>{})
   Promise.all([loadPublicStaff(),loadPublicBookingPlans(),loadPublicStaffPresence()])
    .then(([staff,loadedPlans,status])=>{
     if(!live)return
@@ -79,6 +81,7 @@ export default function BookingPage(){
   let live=true
   const refresh=()=>{
    void loadPublicStaffPresence({force:true}).then(p=>{if(live)setPresence(p)}).catch(()=>{})
+   void loadBookingQuotaUsage().then(q=>{if(live)setQuotaUsage(q)}).catch(()=>{})
    // Plans are editable in the admin console; refresh while this page is open.
    void getStaff().then(rows=>{if(live)setPeople(rows.filter(p=>p.published&&p.bookingVisible))}).catch(()=>{})
    void loadPublicBookingPlans({force:true}).then(updated=>{
@@ -98,17 +101,19 @@ export default function BookingPage(){
  const statusByStaff=useMemo(()=>new Map(presence.map(p=>[p.staffId,p.busyUntil])),[presence])
  const extraPerson=withOthers?people.find(p=>p.id===others[0]):null
  const applicablePlans=plans.filter(p=>selected&&staffAcceptsPlan(selected,p.id)&&
-  (!extraPerson||staffCanJoinBooking(selected,extraPerson,p.id,p.allowJoint)))
+  quotaAvailable(p,selected,quotaUsage)&&
+  (!extraPerson||(staffCanJoinBooking(selected,extraPerson,p.id,p.allowJoint)&&
+   quotaAvailable(p,extraPerson,quotaUsage))))
  const chosenPlanId=applicablePlans.some(p=>p.id===planId)?planId:applicablePlans[0]?.id||''
  const activePlan=applicablePlans.find(p=>p.id===chosenPlanId)
  const nominees=resolveBookingNominees(selected,people,others,withOthers)
  const canAddOthers=Boolean(activePlan?.allowJoint&&selected?.bookingAllowJoint&&chosenPlanId&&
-  people.some(p=>p.id!==selected?.id&&staffCanJoinBooking(selected!,p,chosenPlanId,activePlan.allowJoint)))
+  people.some(p=>p.id!==selected?.id&&staffCanJoinBooking(selected!,p,chosenPlanId,activePlan.allowJoint)&&quotaAvailable(activePlan,p,quotaUsage)))
 
  function openBooking(person:Staff){
   if(isStaffBusy(statusByStaff.get(person.id),Date.now()))return
   returnFocus.current=document.activeElement as HTMLElement
-  setSelected(person);setPlanId(plans.find(p=>staffAcceptsPlan(person,p.id))?.id||'')
+  setSelected(person);setPlanId(plans.find(p=>staffAcceptsPlan(person,p.id)&&quotaAvailable(p,person,quotaUsage))?.id||'')
   setOthers([]);setWithOthers(false);setResult('');setFormError('');setSubmittedNominees([])
  }
  function close(){
@@ -153,6 +158,14 @@ export default function BookingPage(){
    setFormError('所選方案或狐姬未開放同時指名，請改為單人預約');return
   }
   if(ids.some(id=>isStaffBusy(statusByStaff.get(id),Date.now()))){setFormError('有受指名人員已進入指名中，請重新選擇');return}
+  try{
+   const fresh=await loadBookingQuotaUsage()
+   setQuotaUsage(fresh)
+   if(!activePlan||chosen.some(person=>{
+    const staff=people.find(p=>p.id===person.id)
+    return !staff||!quotaAvailable(activePlan,staff,fresh)
+   })){setFormError('此方案或狐姬的接受次數已達上限，請選擇其他方案');return}
+  }catch{/* Server still validates quotas atomically when the operator accepts. */}
   if(name.trim().length<2||world.trim().length<2||!chosenPlanId){setFormError('請填寫遊戲角色姓名、伺服器並選擇方案');return}
   setSending(true);setFormError('')
   try{
@@ -181,7 +194,7 @@ export default function BookingPage(){
     {people.map((person,index)=>{
      const busyUntil=statusByStaff.get(person.id)
      const busy=isStaffBusy(busyUntil,now)
-     const acceptsAnyPlan=plans.some(plan=>staffAcceptsPlan(person,plan.id))
+     const acceptsAnyPlan=plans.some(plan=>staffAcceptsPlan(person,plan.id)&&quotaAvailable(plan,person,quotaUsage))
      return <article className={'booking-profile effect-'+person.effect+(person.thumbnailUrl.includes('-crop.webp')?' has-manual-crop':'')} key={person.id}
       style={{'--accent':person.themeColor||'#c4ac83','--booking-delay':Math.min(index,8)*80+'ms'} as CSSProperties}>
       <button className="booking-profile-action" type="button"
@@ -226,12 +239,12 @@ export default function BookingPage(){
      <button className="booking-primary" type="button" onClick={close}>返回狐隱</button>
     </div> : <form onSubmit={e=>void submit(e)} className="booking-form">
      <div className="booking-selected-person"><img src={selected.thumbnailUrl||selected.imageUrl} alt=""/><span><small>本次指名</small><strong>{selected.name}</strong></span></div>
-     {!applicablePlans.length&&<p role="status" className="booking-plan-unavailable">這位狐姬目前沒有可接受的方案，或雙人指名的方案不一致；請重新選擇。</p>}
+     {!applicablePlans.length&&<p role="status" className="booking-plan-unavailable">這位狐姬目前沒有可接受的方案，或方案／個人接取次數已滿；請重新選擇。</p>}
      <label>預約者遊戲角色姓名 <input required minLength={2} maxLength={48} value={name} onChange={e=>setName(e.target.value)} placeholder="請輸入遊戲中的角色姓名" autoComplete="off"/></label>
      <label>所在伺服器 <input required minLength={2} maxLength={48} value={world} onChange={e=>setWorld(e.target.value)} placeholder="例如：利維坦 / Leviathan" autoComplete="off"/></label>
      <label>指名方案 <select required value={chosenPlanId} onChange={e=>{setPlanId(e.target.value);setOthers([]);setWithOthers(false)}}>
       <option value="">請選擇方案</option>
-      {applicablePlans.map(p=><option value={p.id} key={p.id}>{p.name} · {p.durationMinutes} 分鐘{p.priceGil===null?'': ' · '+p.priceGil.toLocaleString('en-US')+' Gil'}</option>)}
+      {applicablePlans.map(p=><option value={p.id} key={p.id}>{p.name} · {p.durationMinutes} 分鐘{p.priceGil===null?'': ' · '+p.priceGil.toLocaleString('en-US')+' Gil'}{p.maxUses!==null?' · 餘額 '+Math.max(0,p.maxUses-(quotaUsage.plans[p.id]||0)):''}</option>)}
      </select></label>
      {activePlan&&<p className="booking-plan-note"><Clock3 size={16}/>{activePlan.description||'體驗內容以館方確認為準'} · {activePlan.priceGil===null?'費用請洽館方':'費用 '+activePlan.priceGil.toLocaleString('en-US')+' Gil'}</p>}
      {selected.bookingAllowJoint&&activePlan?.allowJoint?<label className="booking-choice"><input type="checkbox"
@@ -240,7 +253,7 @@ export default function BookingPage(){
       <p className="booking-plan-note">{activePlan&&!activePlan.allowJoint?'此指名方案僅接受單人預約。':'這位狐姬僅接受單獨指名。'}</p>}
      {selected.bookingAllowJoint&&activePlan?.allowJoint&&withOthers&&<fieldset className="booking-additional">
       <legend>追加指名（最多再選 1 位館員）</legend>
-      {people.filter(p=>p.id!==selected.id&&chosenPlanId&&staffCanJoinBooking(selected,p,chosenPlanId,activePlan?.allowJoint)).map(person=>{
+      {people.filter(p=>p.id!==selected.id&&chosenPlanId&&staffCanJoinBooking(selected,p,chosenPlanId,activePlan?.allowJoint)&&activePlan&&quotaAvailable(activePlan,p,quotaUsage)).map(person=>{
        const busy=isStaffBusy(statusByStaff.get(person.id),now)
        return <label key={person.id}><input type="checkbox" checked={others.includes(person.id)} disabled={busy}
         onChange={e=>setOthers(e.target.checked?[person.id]:[])}/>

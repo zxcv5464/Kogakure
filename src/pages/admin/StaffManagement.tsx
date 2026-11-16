@@ -23,7 +23,7 @@ function blankStaff(sortOrder = 1024): Staff {
   id: crypto.randomUUID(), name: '', role: '接待者', tagline: '', bio: '',
   imageUrl: '', thumbnailUrl: '', themeColor: '#82c8bc',
   effect: 'foxfire', socials: [], services: [], published: false, bookingVisible: true,
-  bookingAllowedPlanIds:null,bookingAllowJoint:true,sortOrder,
+  bookingAllowedPlanIds:null,bookingAllowJoint:true,bookingPlanCaps:{},sortOrder,
  }
 }
 function cloneStaff(staff: Staff): Staff {
