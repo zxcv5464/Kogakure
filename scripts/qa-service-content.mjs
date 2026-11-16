@@ -81,13 +81,20 @@ for(const phrase of [
  'services-photo-slide',
  "photos.length>1",
 ])assert.ok(gallery.includes(phrase),'Timed service slideshow missing: '+phrase)
+assert.ok(gallery.includes('onClick={()=>choosePhoto(index)}')&&
+ gallery.includes('const requestSlide=useCallback')&&
+ gallery.includes('cancelTransition()')&&
+ gallery.includes('navigationEpoch')&&
+ css.includes('.services-photo-dot.is-active::before')&&
+ css.includes('.services-photo-dot:focus-visible'),
+ 'Photo dots must allow direct selection, reset autoplay, and remain keyboard-accessible')
 assert.ok(css.includes('.services-photo-slide.is-visible')&&css.includes('.services-photo-slide.is-previous')
  &&css.includes('transition:clip-path 1450ms')&&css.includes('clip-path:inset(0 50% 0 50%)')
  &&css.includes('servicesShogiLeft')&&css.includes('servicesShogiRight')
  &&css.includes('prefers-reduced-motion:reduce')&&css.includes('transition:none'),
  'Service gallery needs center-opening shoji reveal, retained outgoing photo and reduced-motion accessibility')
 assert.ok(gallery.includes('previous:Layer|null')&&gallery.includes('previous:null,revealing:false')
- &&gallery.includes('window.clearTimeout(transitionTimer)')&&gallery.includes('services-photo-shoji-edges'),
+ &&gallery.includes('window.clearTimeout(run.transitionTimer)')&&gallery.includes('services-photo-shoji-edges'),
  'The previous image must stay visible behind each fully decoded shoji reveal')
 for(const term of ['multiple disabled={busy','function choosePhotos','function movePhoto','function removePhoto',
  'maxServicePhotos=12','for(const photo of photoSlots)','const record={...draft,paragraphs,details,imageUrls,imageUrl:imageUrls[0]||null,imageCrops:photoSlots.map(photo=>photo.crop)}','const uploadedPaths:string[]=[]']){
@@ -116,11 +123,20 @@ try{
  }))
  assert.equal((twoPhotos.match(/class="services-photo-slide(?: is-visible)?"/g)||[]).length,2,
   'Two uploaded photos must render as crossfade layers')
- assert.ok(twoPhotos.includes('services-photo-counter'),'Multiple photos must show current position')
+ assert.equal((twoPhotos.match(/class="services-photo-dot(?: is-active)?"/g)||[]).length,2,
+  'Two photos must render two clickable indicator dots')
+ assert.ok(twoPhotos.includes('aria-current="true"')&&twoPhotos.includes('觀看第 2 張照片'),
+  'One dot must indicate the active photo and each dot must be accessible')
+ assert.ok(!twoPhotos.includes('services-photo-index')&&!twoPhotos.includes('services-photo-counter')&&
+  !twoPhotos.includes('KOGAKURE /')&&!twoPhotos.includes('01 / 02'),
+  'The gallery must not show brand or numeric text overlays')
  const onePhoto=renderToStaticMarkup(createElement(ServicePhotoGallery,{
   service:{...previewServices[0],imageUrls:['https://example.invalid/one.webp']},number:'01',
  }))
- assert.ok(!onePhoto.includes('services-photo-counter'),'A single photo must not show a slideshow counter')
+ assert.ok(!onePhoto.includes('services-photo-dots'),'A single photo must not show navigation dots')
+ assert.ok(!gallery.includes('services-photo-index')&&!gallery.includes('services-photo-counter')&&
+  !css.includes('.services-photo-index')&&!css.includes('.services-photo-counter'),
+  'Remove both obsolete overlays and their styles')
  const {default:ServiceManagement}=await vite.ssrLoadModule('/src/pages/admin/ServiceManagement.tsx')
  assert.equal(typeof ServiceManagement,'function')
  console.log('PASS: published dynamic service pages, polaroid intro, safe editable admin, photo placeholders, RLS and storage')

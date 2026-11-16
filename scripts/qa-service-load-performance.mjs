@@ -77,9 +77,11 @@ try{
  }))
  assert.equal((twelve.match(/class="services-photo-slide(?: is-visible)?"/g)||[]).length,2,
   'Twelve photos must not render twelve full-size offscreen image elements')
- assert.ok(twelve.includes('01 / 12'),'First image should still display slideshow position')
- assert.ok(twelve.includes('services-photo-counter'),
-  'Rotating gallery needs its original counter')
+ assert.equal((twelve.match(/class="services-photo-dot(?: is-active)?"/g)||[]).length,12,
+  'Twelve-photo gallery must render twelve direct-selection dots')
+ assert.ok(!twelve.includes('services-photo-counter')&&!twelve.includes('services-photo-index')&&
+  !twelve.includes('01 / 12'),
+  'Twelve-photo gallery must not show legacy number overlays')
  const {default:ServicesPage}=await vite.ssrLoadModule('/src/pages/ServicesPage.tsx')
  const html=renderToStaticMarkup(createElement(MemoryRouter,null,createElement(ServicesPage)))
  assert.ok(html.includes('湯浴之儀')&&html.includes('占卜之儀')&&html.includes('留影之儀'),
