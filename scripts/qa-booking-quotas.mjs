@@ -9,8 +9,9 @@ const files=[
  'src/pages/BookingPage.tsx','src/pages/admin/BookingManagement.tsx',
  'src/pages/admin/AdminBookingCreate.tsx','src/pages/admin/booking-management.css',
  'supabase/migrations/20261116_01_booking_quota_limits.sql',
+ 'supabase/migrations/20261116_02_private_quota_definers.sql',
 ]
-const [photoCss,gallery,types,demo,staff,lib,publicPage,admin,manual,adminCss,sql]=
+const [photoCss,gallery,types,demo,staff,lib,publicPage,admin,manual,adminCss,sql,hardening]=
  await Promise.all(files.map(p=>readFile(p,'utf8')))
 for(const p of files.filter(p=>/\.tsx?$/.test(p))){
  const ast=ts.createSourceFile(p,await readFile(p,'utf8'),ts.ScriptTarget.Latest,true,
@@ -68,6 +69,12 @@ for(const item of [
 ]){
  assert.ok(sql.includes(item),'Migration missing secure quota invariant: '+item)
 }
+assert.ok(hardening.includes('private.set_staff_booking_plan_caps_impl')&&
+ hardening.includes('private.get_booking_quota_usage_impl')&&
+ hardening.includes("public.get_booking_quota_usage()")&&
+ hardening.includes('security invoker set search_path')&&
+ hardening.includes('grant execute on function private.get_booking_quota_usage_impl() to anon,authenticated'),
+ 'Privileged quota reads/writes must live in private functions and public RPCs remain invoker-only')
 assert.ok(!sql.includes('delete from public.booking_requests')&&
  !sql.includes('truncate table')&&!sql.includes('update public.booking_requests'),
  'Historical reservations must never be rewritten when enabling caps')
