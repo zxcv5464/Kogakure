@@ -41,7 +41,7 @@ try{
   ['伊弗利特','迦樓羅','利維坦','鳳凰','奧汀','巴哈姆特','泰坦'])
  const html=renderToStaticMarkup(createElement(mod.default,{value:'利維坦',onChange:()=>{}}))
  assert.equal((html.match(/<option /g)||[]).length,8,'Placeholder + all seven current Worlds')
- assert.ok(html.includes('<select required')&&html.includes('value="利維坦"')===false)
+ assert.ok(html.includes('<select required')&&html.includes('value="利維坦"')&&html.includes('selected=""'))
  assert.ok(html.includes('selected=""')&&html.includes('利維坦'),'Controlled select must preserve its selection')
  assert.ok(html.includes('請選擇所在伺服器'))
  console.log('PASS: official TC World list, consistent dropdowns, unlimited guest name inputs and backend migration')
