@@ -254,10 +254,9 @@
  .services-feature:nth-child(even) .services-photo,
  .services-feature:nth-child(even) .services-copy { order: initial; }
  .services-photo { width:100%; min-height:230px; height:clamp(230px,52vw,405px); max-height:none; aspect-ratio:auto; align-self:auto; }
- /* Safari mobile can clip both absolute image layers during a shoji reveal. */
- .services-photo-slide,.services-photo-slide.is-visible,.services-photo-slide.is-previous{clip-path:none!important}
- .services-photo-slide.is-revealing{transition:opacity .55s ease}
- .services-photo-shoji-edges{display:none}
+ /* The explicit mobile frame height keeps photos visible in Safari.
+    Do not override the shared shoji clip-path or hide its gold seams:
+    the same center-opening transition must run on every screen size. */
  .services-copy { padding: 31px clamp(4px, 3vw, 25px) 24px; }
 }
 @media (max-width: 480px) {

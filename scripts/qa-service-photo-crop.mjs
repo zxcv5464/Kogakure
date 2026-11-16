@@ -71,6 +71,20 @@ assert.ok(css.includes('@media(max-width:760px)')&&
 assert.ok(gallery.includes('servicePhotoFrameStyle(photoCrops[photoIndex])')&&
  publicCss.includes('.services-photo-slide{'),
  'The public gallery must use the saved photo-specific crop')
+const responsiveCss=publicCss.slice(publicCss.indexOf('@media (max-width: 850px)'))
+assert.ok(publicCss.includes('.services-photo-slide.is-revealing{transition:clip-path 1450ms')&&
+ publicCss.includes('@keyframes servicesShogiLeft')&&publicCss.includes('@keyframes servicesShogiRight')&&
+ publicCss.includes('.services-photo-shoji-edges i:first-child')&&
+ publicCss.includes('.services-photo-shoji-edges i:last-child'),
+ 'All viewports must use the original 1450ms center-opening shoji transition and fox-gold seams')
+assert.ok(responsiveCss.includes('height:clamp(230px,52vw,405px)')&&
+ responsiveCss.includes('height:clamp(200px,69vw,310px)')&&
+ !responsiveCss.includes('clip-path:none!important')&&
+ !responsiveCss.includes('transition:opacity .55s ease')&&
+ !responsiveCss.includes('.services-photo-shoji-edges{display:none}'),
+ 'Mobile photos need their explicit nonzero height without overriding the desktop shoji animation')
+assert.ok(publicCss.includes('@media(prefers-reduced-motion:reduce){.services-photo-slide.is-revealing{transition:none}.services-photo-shoji-edges{display:none}}'),
+ 'System reduced-motion users must keep the accessible no-animation transition')
 assert.ok(sql.includes('add column if not exists image_crops jsonb not null default')&&
  sql.includes('jsonb_array_length(image_crops)<=12'),
  'The crop migration should be backward compatible with bounded metadata')
