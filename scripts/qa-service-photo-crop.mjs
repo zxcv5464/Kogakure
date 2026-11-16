@@ -54,7 +54,8 @@ assert.ok(cropEditor.includes('圈選照片顯示範圍')&&
  cropEditor.includes('setPointerCapture')&&
  cropEditor.includes('onPointerCancel={pointerUp}'),
  'The original-photo selection box must respond to mouse and touch dragging')
-assert.ok(cropEditor.includes('type="range" min="1" max="3"')&&
+assert.ok(cropEditor.includes('type="range" min="0.5" max="3"')&&
+ cropEditor.includes('完整顯示照片')&&cropEditor.includes('zoom:0.95')&&
  cropEditor.includes('水平位置')&&cropEditor.includes('垂直位置'),
  'Cropping needs independently adjustable zoom and both alignment axes')
 assert.ok(cropEditor.includes('套用顯示範圍')&&cropEditor.includes('儲存服務'),
@@ -105,12 +106,23 @@ try{
  assert.deepEqual(normalizeServiceCrops([],2),[
   {x:50,y:50,zoom:1},{x:50,y:50,zoom:1},
  ])
+ assert.deepEqual(normalizeServiceCrop({x:50,y:50,zoom:0.2}),{x:50,y:50,zoom:0.5},
+  'Photos may zoom out to 50% but not below the supported minimum')
+ assert.deepEqual(normalizeServiceCrop({x:20,y:80,zoom:0.75}),{x:20,y:80,zoom:0.75},
+  'Sub-100% fit mode must survive normalization and database round trips')
  assert.deepEqual(normalizeServiceCrops([{x:23,y:81,zoom:1.4}],2),[
   {x:23,y:81,zoom:1.4},{x:50,y:50,zoom:1},
  ])
  assert.deepEqual(servicePhotoFrameStyle({x:75,y:25,zoom:2}),{
   width:'200%',height:'200%',left:'-75%',top:'-25%',objectPosition:'75% 25%',
  },'Frame must pan through full available overflow after zoom')
+ assert.deepEqual(servicePhotoFrameStyle({x:50,y:50,zoom:0.75}),{
+  width:'75%',height:'75%',left:'12.5%',top:'12.5%',
+  objectPosition:'50% 50%',objectFit:'contain',
+ },'Zoomed-out photos must contain the entire original and remain centered')
+ assert.deepEqual(servicePhotoSelectionRect(1000,1000,{x:50,y:50,zoom:0.75}),
+  {left:0,top:0,width:100,height:100},
+  'Full-image mode must allow the whole original inside the selection area')
  const full=servicePhotoSelectionRect(1600,900,{x:50,y:50,zoom:1})
  const zoomed=servicePhotoSelectionRect(1600,900,{x:100,y:0,zoom:2})
  assert.ok(Math.abs(full.height-100)<.001&&full.width<50)
@@ -126,6 +138,16 @@ try{
  assert.ok(markup.includes('left:-75%')&&markup.includes('top:-25%')&&markup.includes('object-position:75% 25%'),
   'Public photo should render with saved focal crop metadata')
  assert.ok(markup.includes('alt='),'Cropped photos must retain alt text')
+ const fitted=renderToStaticMarkup(createElement(ServicePhotoGallery,{
+  service:{...previewServices[0],imageUrls:['https://example.invalid/photo.webp'],
+   imageCrops:[{x:50,y:50,zoom:0.75}]},number:'01',
+ }))
+ assert.ok(fitted.includes('object-fit:contain')&&fitted.includes('width:75%'),
+  'Public gallery must match the editor fit preview without cropping original photos')
+ assert.ok(css.includes('.service-admin-crop-fit-mode')&&
+  cropEditor.includes('service-admin-crop-original')&&
+  cropEditor.includes("crop.zoom<1"),
+  'The crop editor must offer full-image mode and explain possible margins')
  const legacy=renderToStaticMarkup(createElement(ServicePhotoGallery,{
   service:{...previewServices[0],imageUrls:['https://example.invalid/photo.webp'],
    imageCrops:[]},number:'01',

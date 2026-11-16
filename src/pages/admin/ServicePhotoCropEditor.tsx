@@ -61,6 +61,8 @@ export default function ServicePhotoCropEditor({
   if(!(bounds.width>0&&bounds.height>0))return
   const pointX=((event.clientX-bounds.left)/bounds.width)*100
   const pointY=((event.clientY-bounds.top)/bounds.height)*100
+  // In full-image mode the entire original is kept, with no drag crop.
+  if(crop.zoom<1)return
   // x/y describe the available movement, so the selection never extends
   // outside the original image, even at maximum zoom.
   setCrop(prev=>normalizeServiceCrop({
@@ -70,7 +72,7 @@ export default function ServicePhotoCropEditor({
   }))
  }
  function pointerDown(event:PointerEvent<HTMLDivElement>){
-  if(event.button!==0||!natural.width||!natural.height)return
+  if(event.button!==0||!natural.width||!natural.height||crop.zoom<1)return
   dragging.current=true
   event.currentTarget.setPointerCapture(event.pointerId)
   moveSelection(event)
@@ -92,13 +94,13 @@ export default function ServicePhotoCropEditor({
     <button type="button" ref={closeRef} onClick={onCancel} aria-label="關閉照片範圍設定"><X size={20}/></button>
    </div>
    <p id="service-crop-instructions" className="service-admin-crop-instructions">
-    拖曳金色選取框，調整想呈現的區域；使用縮放調整框線大小。右側會即時預覽前台效果，原始照片不會被裁切或覆蓋。
+    拖曳金色選取框調整裁切範圍，或將縮放調至 100% 以下，完整顯示原始照片。右側會即時預覽前台效果，原始照片不會被裁切或覆蓋。
    </p>
    <div className="service-admin-crop-grid">
     <div className="service-admin-crop-source">
      <h3>原始照片 · 可拖曳圈選</h3>
      <div className="service-admin-crop-source-scroller">
-      <div className="service-admin-crop-original"
+      <div className={'service-admin-crop-original'+(crop.zoom<1?' is-full-image':'')}
        style={{
         aspectRatio:natural.width&&natural.height?natural.width+'/'+natural.height:'4/3',
         width:natural.width&&natural.height
@@ -116,18 +118,26 @@ export default function ServicePhotoCropEditor({
          setPhotoFailed(false)
         }}
         onError={()=>setPhotoFailed(true)}/>
-       {!!natural.width&&<span className="service-admin-crop-selection"
+       {!!natural.width&&<span className={'service-admin-crop-selection'+(crop.zoom<1?' is-full-image':'')}
         style={{left:rect.left+'%',top:rect.top+'%',width:rect.width+'%',height:rect.height+'%'}} aria-hidden="true">
-        <span className="service-admin-crop-crosshair"/>
+        {crop.zoom>=1&&<span className="service-admin-crop-crosshair"/>}
        </span>}
       </div>
      </div>
      {photoFailed&&<p className="service-admin-crop-load-error" role="alert">圖片載入失敗，請檢查照片連結。</p>}
      <div className="service-admin-crop-controls">
       <label>取景縮放 <strong>{Math.round(crop.zoom*100)}%</strong>
-       <input type="range" min="1" max="3" step="0.05" value={crop.zoom}
+       <input type="range" min="0.5" max="3" step="0.05" value={crop.zoom}
         onChange={event=>setCrop(prev=>normalizeServiceCrop({...prev,zoom:Number(event.target.value)}))}/>
       </label>
+      <div className="service-admin-crop-fit-mode">
+       <button type="button" onClick={()=>setCrop(prev=>normalizeServiceCrop({...prev,zoom:0.95,x:50,y:50}))}>
+        完整顯示照片
+       </button>
+       <small>{crop.zoom<1
+        ?'完整顯示模式：保留全景，依照片比例可能出現深色留白。'
+        :'縮至 100% 以下即可完整顯示照片，不再裁切邊緣。'}</small>
+      </div>
       <label>水平位置 <strong>{Math.round(crop.x)}%</strong>
        <input type="range" min="0" max="100" step="1" value={crop.x}
         onChange={event=>setCrop(prev=>({...prev,x:Number(event.target.value)}))}/>
@@ -144,7 +154,7 @@ export default function ServicePhotoCropEditor({
      <div className="service-admin-crop-preview is-desktop"><img src={photoUrl} style={frameStyle} alt="桌機版服務照片裁切預覽"/></div>
      <p>手機服務照片（橫幅）</p>
      <div className="service-admin-crop-preview is-mobile"><img src={photoUrl} style={frameStyle} alt="手機版服務照片裁切預覽"/></div>
-     <small>各裝置會依照片容器比例自動填滿；此設定會保留同一個取景焦點。</small>
+     <small>100% 以上會依容器比例填滿裁切；低於 100% 則會完整顯示照片，必要時以深色背景留白。桌機與手機使用相同縮放和焦點設定。</small>
     </div>
    </div>
    <div className="service-admin-crop-actions">
