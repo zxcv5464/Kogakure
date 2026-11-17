@@ -45,7 +45,7 @@ assert.ok(backdropCss.includes('transition: opacity 2400ms')&&backdropCss.includ
 const wash='linear-gradient(180deg,rgba(13,12,22,.69)0%,rgba(15,13,24,.77)52%,rgba(16,14,25,.87)100%)'
 const serviceRoot=serviceCss.split('.services-page {')[1]?.split('\n}')[0]??''
 const shiftRoot=shiftCss.split('.shift-page{')[1]?.split('}')[0]??''
-const memoriesRoot=memoriesCss.split('.memories-page{')[1]?.split('}')[0]??''
+const memoriesRoot=memoriesCss.split('\n.memories-page{')[1]?.split('}')[0]??''
 const staffRoot=staffCss.split('.site > main .staff-page {')[1]?.split('\n}')[0]??''
 for(const [name,root] of [['services',serviceRoot],['shifts',shiftRoot]]){
  const normalized=root.replace(/\s+/g,'')
