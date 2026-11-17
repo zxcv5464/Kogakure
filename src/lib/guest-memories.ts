@@ -14,22 +14,27 @@ const err=(error:{message:string}|null,context:string)=>{if(error)throw new Erro
 export const formatExpiry=(expires:string)=>new Date(expires).toLocaleString('zh-TW',{timeZone:'Asia/Taipei',hour12:false,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})
 export const isExpired=(expires:string)=>Date.parse(expires)<=Date.now()
 function tokenToCode(raw:string){return raw.toUpperCase().match(/.{1,8}/g)?.join('-')||raw}
-async function hashToken(token:string){
- const bytes=new TextEncoder().encode(token.toLowerCase())
- const hash=await crypto.subtle.digest('SHA-256',bytes)
- return Array.from(new Uint8Array(hash)).map(n=>n.toString(16).padStart(2,'0')).join('')
-}
 export async function createKeepsake(guestLabel:string,note:string):Promise<{claim:KeepsakeClaim;code:string}>{
  if(guestLabel.trim().length<1||guestLabel.trim().length>100)throw new Error('請輸入 1～100 字的旅人稱呼')
  if(note.length>400)throw new Error('交付備註最多 400 字')
  const random=crypto.getRandomValues(new Uint8Array(16))
  const token=Array.from(random).map(n=>n.toString(16).padStart(2,'0')).join('')
- const sha=await hashToken(token)
- const {data,error}=await db().from('keepsake_claims')
-  .insert({guest_label:guestLabel.trim(),note:note.trim(),token_sha256:sha})
-  .select('id,guest_label,note,created_at,expires_at').single()
+ const {data:id,error}=await db().rpc('create_keepsake_claim',{
+  p_guest_label:guestLabel.trim(),p_note:note.trim(),p_code:token,
+ })
  err(error,'建立交付單失敗')
+ if(typeof id!=='string')throw new Error('交付單建立後無法取得編號')
+ const {data,error:readError}=await db().from('keepsake_claims')
+  .select('id,guest_label,note,created_at,expires_at').eq('id',id).single()
+ err(readError,'交付單建立後無法讀取')
  return {claim:{...(data as Omit<KeepsakeClaim,'keepsake_photos'>),keepsake_photos:[]},code:tokenToCode(token)}
+}
+/** Code is decrypted by a permission-checked RPC only when an operator clicks Reveal. */
+export async function revealKeepsakeCode(claimId:string):Promise<string>{
+ const {data,error}=await db().rpc('reveal_keepsake_claim_code',{p_claim_id:claimId})
+ err(error,'無法取得領取碼')
+ if(typeof data!=='string'||!data)throw new Error('此交付單已過期或尚未存有可還原的領取碼')
+ return data
 }
 export async function uploadKeepsakePhoto(claimId:string,file:File):Promise<void>{
  const allowed=new Map([['image/jpeg','jpg'],['image/png','png'],['image/webp','webp']])
