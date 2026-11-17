@@ -12,7 +12,7 @@
  margin:0;
  padding:76px clamp(12px,2.5vw,30px) 112px;
  color:#f1e7dc;
- background:linear-gradient(180deg,rgba(12,12,21,.90) 0%,rgba(17,15,26,.98) 100%);
+ background:transparent;
 }
 .memories-hero{text-align:center;margin:0 auto 35px;max-width:740px}
 .memories-hero .eyebrow,.memories-section-title .eyebrow,.memories-admin .eyebrow{letter-spacing:.22em;color:#c2a077;font-size:.73rem}
