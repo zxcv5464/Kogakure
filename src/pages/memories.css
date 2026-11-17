@@ -1,16 +1,18 @@
 /* 狐隱 · 旅人繪卷 — deep ink, antique gold, restrained foxfire. */
-/* Full-bleed translucent ink wash, matching services and shifts.
-   Let the shared seven-scene backdrop crossfade behind the entire page. */
+/* Match the booking page's dark translucent veil, without obscuring
+   content or stopping the shared background scene crossfade. On tall
+   viewports the veil must continue through the footer boundary. */
+.site:has(.memories-page){display:flex;flex-direction:column;min-height:100vh;min-height:100dvh}
+.site:has(.memories-page)>main{display:flex;flex-direction:column;flex:1;min-height:0}
+.site:has(.memories-page) .memories-page{flex:1}
 .memories-page{
+ position:relative;
  width:100%;
  min-width:0;
- min-height:75vh;
  margin:0;
  padding:76px clamp(12px,2.5vw,30px) 112px;
  color:#f1e7dc;
- background:
-  radial-gradient(ellipse at 52% 1%,rgba(126,91,117,.16),transparent 47%),
-  linear-gradient(180deg,rgba(13,12,22,.69) 0%,rgba(15,13,24,.77) 52%,rgba(16,14,25,.87) 100%);
+ background:linear-gradient(180deg,rgba(12,12,21,.90) 0%,rgba(17,15,26,.98) 100%);
 }
 .memories-hero{text-align:center;margin:0 auto 35px;max-width:740px}
 .memories-hero .eyebrow,.memories-section-title .eyebrow,.memories-admin .eyebrow{letter-spacing:.22em;color:#c2a077;font-size:.73rem}
