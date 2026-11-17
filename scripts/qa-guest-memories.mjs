@@ -1,6 +1,7 @@
 // KOGAKURE public photo delivery and moderated feedback: structural regression.
 import assert from 'node:assert/strict'
 import {readFile} from 'node:fs/promises'
+import ts from 'typescript'
 
 const files=[
  'src/App.tsx','src/components/Layout.tsx','src/pages/AdminPage.tsx',
@@ -13,6 +14,15 @@ const files=[
 ]
 const [app,layout,admin,modules,permissions,publicPage,manager,api,routes,sql,edge,accountsEdge]=
  await Promise.all(files.map(path=>readFile(path,'utf8')))
+for(const path of [
+ 'src/pages/MemoriesPage.tsx','src/pages/admin/MemoriesManagement.tsx',
+ 'src/lib/guest-memories.ts','src/pages/AdminPage.tsx',
+]){
+ const source=await readFile(path,'utf8')
+ const ast=ts.createSourceFile(path,source,ts.ScriptTarget.Latest,true,
+  path.endsWith('.tsx')?ts.ScriptKind.TSX:ts.ScriptKind.TS)
+ assert.equal(ast.parseDiagnostics.length,0,'Invalid syntax in '+path)
+}
 const has=(source,fragments,label)=>{
  for(const fragment of fragments)assert.ok(source.includes(fragment),label+': '+fragment)
 }
