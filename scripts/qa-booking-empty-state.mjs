@@ -3,11 +3,12 @@
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 
-const [css, motion, page, layout] = await Promise.all([
+const [css, motion, page, layout, sharedVeil] = await Promise.all([
  'src/pages/booking-page.css',
  'src/components/route-motion.css',
  'src/pages/BookingPage.tsx',
  'src/components/Layout.tsx',
+ 'src/components/page-transition.css',
 ].map(file => readFile(file, 'utf8')))
 
 assert.ok(css.includes('.site:has(.booking-page){display:flex;flex-direction:column;min-height:100vh;min-height:100dvh}'),
@@ -18,8 +19,9 @@ assert.ok(css.includes('.site:has(.booking-page) .booking-page{flex:1}'),
  'The booking background should cover its full main-area height')
 assert.ok(!css.includes('.site{display:flex;flex-direction:column;min-height:100dvh}'),
  'Do not change the height/layout behavior of unrelated pages')
-assert.ok(css.includes('rgba(17,15,26,.98)'),
- 'The background should end opaque enough to hide underlying scene photos')
+assert.ok(css.includes('background:transparent')&&
+ sharedVeil.replace(/\s+/g,'').includes('linear-gradient(180deg,rgba(13,12,21,.75),rgba(14,13,21,.95))'),
+ 'The centralized public backdrop must cover empty booking screens with the same dark veil as tea and shifts')
 assert.ok(layout.includes('<main>{children}</main>') && layout.includes('<footer className="site-footer">'),
  'The footer must remain outside the booking section')
 assert.ok(page.includes('!loading&&!error&&!people.length&&<div className="booking-notice"'),
