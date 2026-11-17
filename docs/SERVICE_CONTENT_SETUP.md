@@ -17,10 +17,10 @@
 - 編輯未儲存時切換項目／離開後台會提醒；資料更新帶 `updated_at` 條件，避免覆蓋其他管理員剛剛完成的修改。
 
 ## 權限
-- **目前只有正式網站管理員**可以進入後台服務編輯及上傳照片；員工帳號縱有其他模組的管理權限，仍不能更改服務內容。
-- RLS：訪客只能 SELECT 已公開服務；INSERT、UPDATE、DELETE 全部需要登入且 `is_site_admin()` 為 true；正式管理員才能查看草稿。
-- Storage：`service-media` 為公開顯示圖片的 bucket，但 SELECT／INSERT／DELETE 物件清單權限只提供已授權的管理員；瀏覽器訪客只能以公開圖片網址讀取檔案。
-- 不更動現有員工權限、帳號 Edge Function、茶宴／預約／名帖的資料結構。
+- **正式管理員與獲明確授予 `services.manage` 的有效員工**可進入服務編輯及上傳照片；其他員工即使有別的模組權限，也不能更改服務內容。
+- RLS：訪客只能 SELECT 已公開服務；INSERT、UPDATE、DELETE 與草稿讀取必須具正式管理員身分或 `services.manage` 授權；權限在資料庫核對，不只依前端頁面是否顯示。
+- Storage：`service-media` 為公開顯示圖片的 bucket，物件管理僅授予正式管理員及具 `services.manage` 的員工；瀏覽器訪客只能以公開圖片網址讀取檔案。
+- 後續 `20261115_28_complete_admin_module_permissions.sql` 已擴充服務委派權限；正式部署務必確認套用順序與 RLS，而不是僅執行最初服務 migration。
 
 ## 部署
 - 程式：`src/pages/ServicesPage.tsx`、`src/lib/service-content.ts`、`src/pages/admin/ServiceManagement.tsx`，並在 `AdminPage`、`modules.ts` 加入權限保護和側邊欄連結。
