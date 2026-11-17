@@ -78,8 +78,16 @@ export default function SiteBgm({onRegisterStart}:{onRegisterStart?:(start:()=>v
    }catch{/* Keep the last playable source when the network is unavailable. */}
   }
   void refresh()
-  const interval=window.setInterval(()=>{void refresh()},45000)
-  return()=>{live=false;window.clearInterval(interval)}
+  // Do not poll Supabase while this tab is hidden. A visible tab refreshes
+  // immediately on return, and checks less often during normal listening.
+  const refreshWhenVisible=()=>{if(document.visibilityState==='visible')void refresh()}
+  const interval=window.setInterval(refreshWhenVisible,120000)
+  document.addEventListener('visibilitychange',refreshWhenVisible)
+  return()=>{
+   live=false
+   window.clearInterval(interval)
+   document.removeEventListener('visibilitychange',refreshWhenVisible)
+  }
  },[])
 
  function pauseMusic(){
@@ -101,7 +109,7 @@ export default function SiteBgm({onRegisterStart}:{onRegisterStart?:(start:()=>v
   playback==='blocked'?'點擊播放':playback==='starting'?'準備播放':
   playback==='waiting'?'入館後播放':'已關閉'
  return <div className="site-bgm" aria-label="背景音樂控制">
-  <audio ref={audioRef} src={currentAudioUrl(settings)||undefined} loop={settings.loop} preload="auto"
+  <audio ref={audioRef} src={currentAudioUrl(settings)||undefined} loop={settings.loop} preload="metadata"
    onPlaying={()=>{if(enabled&&settings.enabled&&settings.source!=='youtube')setPlayback('playing')}}
    onPause={()=>{if(enabled)setPlayback(previous=>previous==='playing'?'blocked':previous)}}
    onError={()=>{if(enabled&&settings.source!=='youtube')setPlayback('error')}}
