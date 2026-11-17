@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import { useLocation } from 'react-router-dom'
 import { asset } from '../lib/paths'
 import './scene-backdrop.css'
 
@@ -21,9 +20,7 @@ const INITIAL_SCENE: Record<string, number> = {
 type Layer = 0 | 1
 type BackdropState = { sources: [string, string]; active: Layer }
 
-export default function SceneBackdrop({ introReady }: { introReady: boolean }) {
- const location = useLocation()
- const path = location.pathname
+export default function SceneBackdrop({ introReady, path }: { introReady: boolean; path: string }) {
  const startIndex = INITIAL_SCENE[path] ?? 0
  const nextIndex = useRef(startIndex)
  const previousPath = useRef(path)
