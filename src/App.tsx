@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Route, Routes, useLocation } from 'react-router-dom'
 import Layout from './components/Layout'
 import AdminLayout from './components/AdminLayout'
@@ -8,6 +8,7 @@ import StaffLoading from './components/StaffLoading'
 import { HomePage, OtherPage } from './pages/OtherPages'
 import MenuPage from './pages/MenuPage'
 import {configured} from './lib/config'
+import {PUBLIC_ROUTE_MOUNTED_EVENT} from './lib/route-events'
 import {prefetchBookingPage,prefetchMenuPage} from './lib/prefetch'
 
 const AdminPage = lazy(() => import('./pages/AdminPage'))
@@ -31,6 +32,15 @@ export default function App() {
   </Suspense>
  </AdminLayout>
  return <PublicApp />
+}
+
+// A Suspense sibling commits only after the current lazy route (and its CSS)
+// has loaded. Do not reveal the page curtain while the fallback is showing.
+function PublicRouteMounted({path}:{path:string}){
+ useLayoutEffect(()=>{
+  window.dispatchEvent(new CustomEvent(PUBLIC_ROUTE_MOUNTED_EVENT,{detail:path}))
+ },[path])
+ return null
 }
 
 function PublicApp() {
@@ -82,6 +92,7 @@ function PublicApp() {
        <Route path="/shifts" element={<ShiftsPage />} />
        <Route path="*" element={<OtherPage />} />
       </Routes>
+      <PublicRouteMounted path={location.pathname}/>
      </Suspense>
     )}
    </PageTransition>
