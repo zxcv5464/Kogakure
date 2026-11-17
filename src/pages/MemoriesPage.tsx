@@ -18,7 +18,7 @@ export default function MemoriesPage(){
  const [entries,setEntries]=useState<Feedback[]>([])
  const [feedbackError,setFeedbackError]=useState('')
  const [name,setName]=useState('')
- const [anonymous,setAnonymous]=useState(true)
+ const [anonymous,setAnonymous]=useState(false)
  const [message,setMessage]=useState('')
  const [sent,setSent]=useState(false)
  const [submitting,setSubmitting]=useState(false)
@@ -82,7 +82,10 @@ export default function MemoriesPage(){
 
   {tab==='keepsake'?<section className="memories-panel" role="tabpanel">
    <div className="memories-section-title"><p className="eyebrow">THE KEEPSAKE ARCHIVE</p><h2>狐影留帖</h2>
-    <p>將今夜的月色收進相片。請輸入館方交付的專屬領取碼，取回屬於你的留影。</p></div>
+    <div className="memories-keepsake-intro">
+     <p>將今夜的月色，輕輕收進相片。</p>
+     <p>請輸入館方交付的專屬領取碼，<span>取回屬於你的留影。</span></p>
+    </div></div>
    <form className="memories-claim-form" onSubmit={e=>void fetchPhotos(e)}>
     <label htmlFor="keepsake-claim-code"><KeyRound size={18}/>專屬領取碼</label>
     <input id="keepsake-claim-code" type="text" autoComplete="off"
