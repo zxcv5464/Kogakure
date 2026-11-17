@@ -6,3 +6,6 @@ export const BOOKING_PAGE_READY_EVENT = 'kogakure:booking-page-ready'
 
 // The public four-week calendar mounts its 28 stable date cells before the route fade reveals it.
 export const SHIFT_PAGE_READY_EVENT = 'kogakure:shift-page-ready'
+
+// Emitted only when a lazy public route and its stylesheet have committed.
+export const PUBLIC_ROUTE_MOUNTED_EVENT = 'kogakure:public-route-mounted'
