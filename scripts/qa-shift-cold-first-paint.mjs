@@ -102,6 +102,11 @@ try{
    "count:days.length,disabled:days.filter(d=>d.disabled).length,"+
    "statuses:days.map(d=>d.querySelector('.shift-status')?.textContent),"+
    "fallback:!!document.querySelector('.empty-staff'),"+
+   "shellFade:getComputedStyle(shell).animationName,"+
+   "shellDuration:getComputedStyle(shell).animationDuration,"+
+   "weekFade:getComputedStyle(document.querySelector('.shift-week')).animationName,"+
+   "covering:!!document.querySelector('.route-stage.is-covering'),"+
+   "playState:getComputedStyle(shell).animationPlayState,"+
    "calls:window.__mockShiftCalls};"+
   "})()")
  assert.equal(before.count,28,'The full calendar must mount before network replies')
@@ -110,14 +115,21 @@ try{
  assert.ok(before.statuses.every(s=>s==='讀取中'),'Unknown days must not appear closed')
  assert.equal(before.fallback,false,'Never show the general lazy-route fallback')
  assert.equal(before.calls,3,'Exactly three read-only shift-table schedule queries expected')
+ assert.equal(before.shellFade,'quietFade','The month calendar shell must have a real CSS fade animation')
+ assert.equal(before.shellDuration,'1.12s','The calendar should use the shared gentle public fade timing')
+ assert.equal(before.weekFade,'quietFade','Week rows must retain opacity-only entrance effects')
+ if(before.covering)assert.equal(before.playState,'paused',
+  'Calendar entrance must not finish while route curtain covers it')
  await waitFor(()=>evaluate("!!document.querySelector('.page-transition-curtain.is-revealing')"),3700)
  const during=await evaluate("(()=>{const shell=document.querySelector('.shift-calendar-shell');return{"+
   "count:document.querySelectorAll('.shift-day').length,"+
   "busy:shell?.getAttribute('aria-busy'),"+
+  "fadeState:getComputedStyle(shell).animationPlayState,"+
   "fallback:!!document.querySelector('.empty-staff')};})()")
  assert.equal(during.count,28)
  assert.equal(during.busy,'true','Reveal the ready calendar, not an empty frame')
  assert.equal(during.fallback,false)
+ assert.equal(during.fadeState,'running','Calendar must start fading when the route veil reveals it')
  await waitFor(()=>evaluate("document.querySelector('.shift-calendar-shell')?.getAttribute('aria-busy')==='false'"),9000)
  const after=await evaluate("(()=>{const days=[...document.querySelectorAll('.shift-day')];return{"+
   "sameShell:document.querySelector('.shift-calendar-shell')===window.__firstShell,"+
@@ -133,7 +145,7 @@ try{
  assert.equal(after.disabled,0,'Confirmed dates are selectable')
  assert.equal(after.calls,3,'Do not duplicate the initial fetch')
  assert.equal(after.error,false,'Mocked successful fetch should show no error')
- console.log('PASS: first shifts visit paints 28 neutral days before slow Supabase; curtain waits for the first paint; data updates cells without remount')
+ console.log('PASS: first shifts visit paints 28 neutral days, pauses calendar fade under curtain, reveals it smoothly and updates data without remount')
 }finally{
  socket?.close()
  const closed=chrome&&chrome.exitCode===null
