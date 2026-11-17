@@ -5,7 +5,7 @@ import type {Feedback,Pickup} from '../lib/guest-memories'
 import './memories.css'
 
 export default function MemoriesPage(){
- const [tab,setTab]=useState<'keepsake'|'feedback'>(()=>window.location.hash.startsWith('#code=')?'keepsake':'keepsake')
+ const [tab,setTab]=useState<'keepsake'|'feedback'>('keepsake')
  const [code,setCode]=useState(()=>{
   const match=window.location.hash.match(/^#code=(.+)$/)
   if(!match)return ''
@@ -15,7 +15,6 @@ export default function MemoriesPage(){
  const [lookupBusy,setLookupBusy]=useState(false)
  const [lookupError,setLookupError]=useState('')
  const [entries,setEntries]=useState<Feedback[]>([])
- const [feedbackBusy,setFeedbackBusy]=useState(false)
  const [feedbackError,setFeedbackError]=useState('')
  const [name,setName]=useState('')
  const [anonymous,setAnonymous]=useState(true)
