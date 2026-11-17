@@ -13,10 +13,11 @@ const files=[
  'supabase/migrations/20261117_01_guest_memories.sql',
  'supabase/migrations/20261117_02_keepsake_code_retrieval.sql',
  'supabase/migrations/20261117_03_manual_keepsake_claim_codes.sql',
+ 'supabase/migrations/20261117_04_rate_limit_short_keepsake_claims.sql',
  'supabase/functions/guest-keepsakes/index.ts',
  'supabase/functions/manage-employee-accounts/index.ts',
 ]
-const [app,layout,admin,modules,permissions,publicPage,manager,api,routes,sql,codeSql,manualSql,edge,accountsEdge]=
+const [app,layout,admin,modules,permissions,publicPage,manager,api,routes,sql,codeSql,manualSql,limitSql,edge,accountsEdge]=
  await Promise.all(files.map(path=>readFile(path,'utf8')))
 for(const path of [
  'src/pages/MemoriesPage.tsx','src/pages/admin/MemoriesManagement.tsx',
@@ -133,14 +134,16 @@ assert.ok(!publicPage.includes('const [anonymous,setAnonymous]=useState(true)'),
  'Guest feedback must not silently default to anonymous')
 has(manager,[
  'generateKeepsakeCode(claim.created_at,claim.keepsake_photos.length)',
- '重新產生隨機碼',
+ '重新產生4位數字',
  '確認修改領取碼',
  'window.confirm(',
 ],'Existing claim edits require explicit confirmation')
 has(api,[
  'export function generateKeepsakeCode(',
  "timeZone:'Asia/Taipei'",
- 'crypto.getRandomValues(new Uint8Array(10))',
+ 'crypto.getRandomValues(new Uint8Array(2))',
+ "String(number).padStart(4,'0')",
+ "value<60000",
  "String(photoCount).padStart(2,'0')",
 ],'Date, uploaded count, and strong random-code generation')
 
@@ -161,13 +164,34 @@ runInNewContext(compiled,{exports:isolatedExports,crypto:webcrypto,Intl,Date,Arr
 const codeFns=isolatedExports
 const testCode=codeFns.generateKeepsakeCode('2026-11-17T18:34:00Z',3)
 const secondCode=codeFns.generateKeepsakeCode('2026-11-17T18:34:00Z',3)
-assert.match(testCode,/^20261118-03-[A-F0-9]{20}$/,'Taipei-local delivery date and padded photo count')
+assert.match(testCode,/^20261118-03-[0-9]{4}$/,'Taipei-local delivery date and exactly four decimal digits')
 assert.notEqual(testCode,secondCode,'Codes must be cryptographically randomized on each generation')
 assert.equal(codeFns.validateKeepsakeCode(testCode),testCode,'Proposed codes must pass claim RPC validation')
 assert.match(codeFns.generateKeepsakeCode('2026-11-17T00:00:00Z',125),
- /^20261117-125-[A-F0-9]{20}$/,'Keep the actual photo count above 99')
+ /^20261117-125-[0-9]{4}$/,'Keep the actual photo count above 99')
 assert.throws(()=>codeFns.generateKeepsakeCode('invalid',2),'Invalid dates must not become claim codes')
 assert.throws(()=>codeFns.generateKeepsakeCode('2026-11-17T00:00:00Z',-1),'Negative photo counts must fail')
+has(limitSql,[
+ 'create table if not exists private.keepsake_lookup_quota',
+ 'alter table private.keepsake_lookup_quota enable row level security',
+ 'private.keepsake_lookup_quota',
+ 'create or replace function public.reserve_keepsake_lookup(',
+ 'insert into private.keepsake_lookup_quota(',
+ 'hits<=8 else hits<=20',
+ 'grant execute on function public.reserve_keepsake_lookup(text,text) to service_role',
+ 'revoke all on function public.reserve_keepsake_lookup(text,text)',
+ 'create or replace function public.purge_keepsake_lookup_quota()',
+],'Private per-client and prefix-wide anti-enumeration budget')
+has(edge,[
+ "rpc('reserve_keepsake_lookup'",
+ "rpc('purge_keepsake_lookup_quota')",
+ "data:allowed",
+ "'short:'+token.slice(0,-4)",
+ "if(allowed!==true)return reply(",
+ "429,origin",
+],'Public album lookup must enforce numeric short-code anti-brute-force limits')
+assert.ok(!edge.includes('const digest=await crypto.subtle.digest'),
+ 'Public album lookup should reuse one consistent SHA-256 helper for tokens and hashed quota keys')
 assert.ok(!api.includes('crypto.getRandomValues(new Uint8Array(16))'),
  'Backoffice must require staff-chosen code rather than issuing automatic random tokens')
 assert.ok(!api.includes("token_sha256:sha"),
