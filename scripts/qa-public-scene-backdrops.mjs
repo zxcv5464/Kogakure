@@ -1,87 +1,90 @@
-// Ensure public pages keep the shared rotating photography and their intended
-// translucent ink washes, including full-height dark veils on roster and memories.
-// Static checks only; no browser, external URLs or production data changes.
+// Shared public scene and ink veil regression tests. The dark veil must
+// exist in the eagerly loaded transition layer, before any lazy route CSS.
 import assert from 'node:assert/strict'
 import {readFile} from 'node:fs/promises'
 
-const [backdrop,backdropCss,transition,app,serviceCss,shiftCss,memoriesCss,staffCss,servicePage,shiftPage]=
+const read=path=>readFile(path,'utf8')
+const [app,transition,transitionCss,scene,sceneCss,events,motion,servicePage,shiftPage,...pageCss]=
  await Promise.all([
+  'src/App.tsx',
+  'src/components/PageTransition.tsx',
+  'src/components/page-transition.css',
   'src/components/SceneBackdrop.tsx',
   'src/components/scene-backdrop.css',
-  'src/components/PageTransition.tsx',
-  'src/App.tsx',
-  'src/pages/services-page.css',
-  'src/pages/shifts-page.css',
-  'src/pages/memories.css',
-  'src/pages/staff-page.css',
+  'src/lib/route-events.ts',
+  'src/components/route-motion.css',
   'src/pages/ServicesPage.tsx',
   'src/pages/ShiftsPage.tsx',
- ].map(p=>readFile(p,'utf8')))
+  'src/pages/about-page.css',
+  'src/pages/services-page.css',
+  'src/pages/staff-page.css',
+  'src/pages/shifts-page.css',
+  'src/pages/menu-page.css',
+  'src/pages/booking-page.css',
+  'src/pages/memories.css',
+ ].map(read))
 
-assert.ok(backdrop.includes('Array.from({ length: 7 }'),'Expected the seven venue background photos')
-assert.ok(backdrop.includes("'/services': 2")&&backdrop.includes("'/shifts': 4"),
- 'Service and shifts routes must participate in the shared scene loop')
-assert.ok(backdrop.includes('window.setInterval(')&&backdrop.includes('5000)'),
- 'Shared background must keep its five-second photo cycling')
-assert.ok(backdrop.includes('preload.onload')&&backdrop.includes('setBackdrop(previous =>'),
- 'Switch only after next shared background photo has loaded')
-assert.ok(backdrop.includes('requestId !== latestRequest')&&
- backdrop.includes('visibleScene.current === nextImage')&&
- backdrop.indexOf('const requestId = ++latestRequest') < backdrop.indexOf('if (visibleScene.current === nextImage) return'),
- 'Invalidate older image requests even when returning to a photograph already shown')
-assert.ok(backdrop.includes('!introReady')&&backdrop.includes('[path, introReady]'),
- 'Background rotation must wait until the entrance animation is finished')
-assert.ok(backdrop.includes("prefers-reduced-motion: reduce")&&backdrop.includes("document.visibilityState !== 'visible'"),
- 'Respect reduced motion and pause while the browser is hidden')
-assert.ok(transition.includes('<SceneBackdrop introReady={introReady} />'),
- 'Render one shared backdrop above the public routes, not one timer per page')
-assert.ok(app.includes('path="/services"')&&app.includes('path="/shifts"'),
- 'Both public routes must remain mounted inside the public shell')
-assert.ok(backdropCss.includes('transition: opacity 2400ms')&&backdropCss.includes('.scene-backdrop__photo.is-active'),
- 'Background imagery must still crossfade instead of abruptly switching')
-
-// Services and shifts use the lighter scene wash; memories uses a darker veil.
-// Removing the opaque colors is what makes the already-running images visible.
-const wash='linear-gradient(180deg,rgba(13,12,22,.69)0%,rgba(15,13,24,.77)52%,rgba(16,14,25,.87)100%)'
-const serviceRoot=serviceCss.split('.services-page {')[1]?.split('\n}')[0]??''
-const shiftRoot=shiftCss.split('.shift-page{')[1]?.split('}')[0]??''
-const memoriesRoot=memoriesCss.split('\n.memories-page{')[1]?.split('}')[0]??''
-const staffRoot=staffCss.split('.site > main .staff-page {')[1]?.split('\n}')[0]??''
-for(const [name,root] of [['services',serviceRoot],['shifts',shiftRoot]]){
- const normalized=root.replace(/\s+/g,'')
- assert.ok(normalized.includes(wash),name+' page must use the shared translucent scene wash')
- assert.ok(!/linear-gradient\(180deg,#/.test(normalized),
-  name+' page may not conceal the rotating scene behind opaque hex colors')
+const roots=[
+ ['/about','house rules',pageCss[0],'\n.house-rules-page {'],
+ ['/services','services',pageCss[1],'\n.services-page {'],
+ ['/staff','staff roster',pageCss[2],'\n.site > main .staff-page {'],
+ ['/shifts','shifts',pageCss[3],'\n.shift-page{'],
+ ['/menu','tea menu',pageCss[4],'\n.tea-menu-page{'],
+ ['/booking','bookings',pageCss[5],'\n.booking-page{'],
+ ['/memories','traveler memories',pageCss[6],'\n.memories-page{'],
+]
+for(const [path,name,css,selector] of roots){
+ const section=css.split(selector)[1]?.split('}')[0]
+ assert.ok(section,name+' must retain its own page container')
+ assert.match(section,/background:\s*transparent\s*;/,
+  name+' must not stack a second gradient over the shared site veil')
+ assert.ok(app.includes('path="'+path+'"'),name+' public route must remain present')
 }
-assert.ok(servicePage.includes('ServicePhotoGallery')&&serviceCss.includes('.services-photo-slide.is-visible'),
- 'Independent service photo carousel must be preserved')
-assert.ok(shiftPage.includes('shift-calendar-weekdays')&&shiftPage.includes('shift-selected-detail'),
- 'Monthly roster and selected-day details must not be replaced')
-// Memories are intentionally darker than the service and shift scene wash:
- // match the translucent ink veil used by the booking page.
-const memoriesVeil='linear-gradient(180deg,rgba(12,12,21,.90)0%,rgba(17,15,26,.98)100%)'
-assert.ok(memoriesRoot.replace(/\s+/g,'').includes(memoriesVeil),
- 'Traveler memories needs the same dark translucent overlay as booking')
-assert.ok(memoriesCss.includes('.site:has(.memories-page)>main{display:flex;flex-direction:column;flex:1;min-height:0}')&&
- memoriesCss.includes('.site:has(.memories-page) .memories-page{flex:1}'),
- 'Traveler memories overlay must reach the footer even when content is short')
-assert.ok(app.includes('path="/memories"'), 'Traveler memories must remain in the shared public scene shell')
-assert.ok(memoriesRoot.includes('width:100%')&&memoriesRoot.includes('min-width:0')&&
- !memoriesRoot.includes('max-width:')&&!memoriesRoot.includes('1100px'),
- 'Traveler memories ink wash must cover the viewport rather than a centered 1100px strip')
-assert.ok(memoriesCss.includes('.memories-page{padding:44px 12px 90px}'),
- 'Mobile traveler memories must retain a full-width ink wash')
-assert.ok(memoriesCss.includes('.memories-panel{max-width:850px'),
- 'Keep traveler forms comfortably centered inside the full-width background')
-assert.ok(staffRoot.replace(/\s+/g,'').includes(memoriesVeil),
- 'Staff roster must use the same translucent dark gradient as traveler memories')
-assert.ok(staffCss.includes('.site:has(.staff-page)>main{display:flex;flex-direction:column;flex:1;min-height:0}')&&
- staffRoot.includes('flex: 1;'),
- 'Staff roster dark backdrop must fill short viewport pages through the footer')
-assert.ok(staffCss.includes('.site > main .staff-page .staff-grid')&&
- staffCss.includes('.staff-page .staff-entry')&&
- staffCss.includes('.staff-page .staff-catalog-panel'),
- 'Staff portrait grid, card sizing and directory filtering must remain intact')
-assert.ok(shiftCss.includes('@media(max-width:690px)'),
- 'Mobile calendar must retain its responsive layout')
-console.log('PASS: services, shifts, traveler memories and staff roster reveal the shared seven-scene 5-second crossfade while keeping galleries, calendar and accessibility')
+
+assert.ok(transitionCss.includes('.public-page-veil {')&&
+ transitionCss.replace(/\s+/g,'').includes('background:linear-gradient(180deg,rgba(13,12,21,.75),rgba(14,13,21,.95))'),
+ 'All non-home pages must use the same tea-inspired translucent ink veil')
+assert.ok(transitionCss.includes('.public-page-veil.is-home { display: none; }'),
+ 'The homepage must not receive the new interior veil')
+assert.ok(transitionCss.includes('z-index: -1;')&&transitionCss.includes('pointer-events: none;'),
+ 'Global veil must sit between photographs and interactive page content')
+assert.ok(transition.includes('displayed.pathname === \'/\' ? \' is-home\' : \'\''),
+ 'Interior veil must switch with the DISPLAYED route, not the pending route')
+assert.ok(transition.includes('<SceneBackdrop introReady={introReady} path={displayed.pathname} />'),
+ 'Scene photo and shared veil must change together behind the covering curtain')
+assert.ok(scene.includes('Array.from({ length: 7 }')&&
+ scene.includes('window.setInterval(')&&scene.includes('5000)'),
+ 'Retain existing seven image five-second rotation')
+assert.ok(scene.includes('requestId !== latestRequest')&&
+ scene.includes('visibleScene.current === nextImage'),
+ 'Late background image decodes must never overwrite a newer scene')
+assert.ok(scene.includes('!introReady')&&
+ scene.includes("prefers-reduced-motion: reduce")&&
+ scene.includes("document.visibilityState !== 'visible'"),
+ 'Preserve intro gating, reduced motion and hidden-tab throttling')
+assert.ok(!scene.includes('useLocation')&&scene.includes('path: string'),
+ 'Shared photo path must follow the displayed route after curtain swap')
+assert.ok(sceneCss.includes('transition: opacity 2400ms')&&
+ sceneCss.includes('.scene-backdrop__photo.is-active')&&
+ sceneCss.includes('background: transparent !important;'),
+ 'Maintain smooth photo crossfade and avoid double tint on fallback pages')
+assert.ok(events.includes('PUBLIC_ROUTE_MOUNTED_EVENT')&&
+ app.includes('useLayoutEffect')&&
+ app.includes('<PublicRouteMounted path={location.pathname}/>')&&
+ app.indexOf('<PublicRouteMounted path={location.pathname}/>')>app.indexOf('</Routes>'),
+ 'Lazy routes must signal completion from inside the Suspense boundary')
+assert.ok(transition.includes('PUBLIC_ROUTE_MOUNTED_EVENT')&&
+ transition.includes('(event as CustomEvent<string>).detail !== location.pathname')&&
+ transition.includes('location.pathname === \'/\' ? null : PUBLIC_ROUTE_MOUNTED_EVENT'),
+ 'Never reveal unloaded pages or accept stale route mount notifications')
+for(const selector of ['.route-stage .house-rules-hero h1','.route-stage .services-hero h1',
+ '.route-stage .tea-menu-hero h1','.route-stage .staff-entry']){
+ assert.ok(motion.includes(selector),'Keep public entrance animation '+selector)
+}
+assert.ok(servicePage.includes('ServicePhotoGallery')&&
+ shiftPage.includes('shift-calendar-weekdays')&&shiftPage.includes('shift-selected-detail'),
+ 'Service photo galleries and shifts calendar must remain intact')
+assert.ok(pageCss[2].includes('.site > main .staff-page .staff-grid')&&
+ pageCss[6].includes('.memories-panel{max-width:850px'),
+ 'Staff cards and centered traveler forms must remain unchanged')
+console.log('PASS: every non-home public page has one eager dark veil; lazy routes wait for CSS; homepage/admin and page interactions remain independent')
