@@ -1,6 +1,6 @@
 /* Share the public seven-scene backdrop. An opaque page gradient would
    hide every scene even though SceneBackdrop is already cycling behind it. */
-.shift-page{flex:1 0 auto;min-width:0;padding:0 0 82px;color:#eadcc9;background:radial-gradient(ellipse at 50% 0,rgba(111,77,106,.17),transparent 46%),linear-gradient(180deg,rgba(13,12,22,.69) 0%,rgba(15,13,24,.77) 52%,rgba(16,14,25,.87) 100%)}
+.shift-page{flex:1 0 auto;min-width:0;padding:0 0 82px;color:#eadcc9;background:transparent}
 .shift-hero{max-width:900px;margin:auto;padding:clamp(42px,6vw,70px) 22px 30px;text-align:center}
 .shift-eyebrow{color:#d0b88f;font-size:.79rem;letter-spacing:.27em;margin:0}
 .shift-ornament{display:block;color:#c5a27b;margin:14px 0}
