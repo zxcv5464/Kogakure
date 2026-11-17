@@ -27,6 +27,10 @@ jobs:
         with:
           node-version: '24'
           cache: npm
+      - name: Verify private keepsake delivery, expiry cleanup and moderated guestbook
+        env:
+          VITE_OFFLINE_PREVIEW: 'true'
+        run: node scripts/qa-guest-memories.mjs
       - name: Verify public Supabase configuration
         env:
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
