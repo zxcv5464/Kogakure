@@ -44,6 +44,8 @@ html{scroll-behavior:smooth;scrollbar-width:none}body{margin:0;min-width:320px;s
 .mobile-more-panel .mobile-extra-link:nth-of-type(3){animation-delay:.23s}
 .mobile-more-panel .mobile-extra-link:nth-of-type(4){animation-delay:.29s}
 .mobile-more-panel .mobile-extra-link:nth-of-type(5){animation-delay:.36s}
+.mobile-more-panel .mobile-extra-link:nth-of-type(6){animation-delay:.43s}
+@media(min-width:851px) and (max-width:1150px){.desktop-nav{gap:clamp(7px,1vw,12px)}.desktop-nav a{font-size:.81rem}}
 /* Keep all five mobile menu entries, including Discord, on the same
    gold hover/press and icon motion treatment. */
 .mobile-more-panel .mobile-extra-link{transition:background-color .22s ease,color .22s ease,border-color .22s ease}

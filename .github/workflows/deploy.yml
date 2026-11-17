@@ -42,6 +42,10 @@ jobs:
           fi
       - name: Install dependencies
         run: npm ci
+      - name: Verify private keepsake delivery, expiry cleanup and moderated guestbook
+        env:
+          VITE_OFFLINE_PREVIEW: 'true'
+        run: node scripts/qa-guest-memories.mjs
       - name: Build for GitHub Pages
         env:
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}

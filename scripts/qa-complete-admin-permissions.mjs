@@ -11,9 +11,10 @@ const paths=[
  'src/pages/admin/modules.ts',
  'supabase/migrations/20261115_28_complete_admin_module_permissions.sql',
  'supabase/migrations/20261116_03_bgm_management.sql',
+ 'supabase/migrations/20261117_01_guest_memories.sql',
  'supabase/functions/manage-employee-accounts/index.ts',
 ]
-const [accounts,admin,accountEditor,shifts,modules,sql,bgmSql,edge]=
+const [accounts,admin,accountEditor,shifts,modules,sql,bgmSql,memorySql,edge]=
  await Promise.all(paths.map(p=>readFile(p,'utf8')))
 for(const file of paths.filter(p=>/\.(tsx|ts)$/.test(p))){
  const ast=ts.createSourceFile(file,await readFile(file,'utf8'),
@@ -23,11 +24,11 @@ for(const file of paths.filter(p=>/\.(tsx|ts)$/.test(p))){
 const permissions=[
  'accounts.manage','staff.manage','announcements.manage','bgm.manage','accounting.manage',
  'menu.manage','services.manage','orders.manage','booking.manage',
- 'shifts.manage','shifts.attend',
+ 'keepsakes.manage','feedback.manage','shifts.manage','shifts.attend',
 ]
 for(const id of permissions){
  assert.ok(accounts.includes("id:'"+id+"'"),'Missing frontend grantable permission: '+id)
- assert.ok((id==='bgm.manage'?bgmSql:sql).includes("'"+id+"'"),'Missing SQL permission allowlist: '+id)
+ assert.ok((id==='bgm.manage'?bgmSql:id==='keepsakes.manage'||id==='feedback.manage'?memorySql:sql).includes("'"+id+"'"),'Missing SQL permission allowlist: '+id)
  assert.ok(edge.includes("'"+id+"'"),'Missing credential-service permission allowlist: '+id)
 }
 assert.ok(bgmSql.includes('private.check_employee_backoffice_permission')&&

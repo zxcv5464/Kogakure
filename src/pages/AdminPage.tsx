@@ -23,6 +23,7 @@ const AccountingManagement = lazy(() => import('./admin/AccountingManagement'))
 const EmployeeAccountsManagement = lazy(() => import('./admin/EmployeeAccountsManagement'))
 const AnnouncementManagement = lazy(() => import('./admin/AnnouncementManagement'))
 const BgmManagement = lazy(() => import('./admin/BgmManagement'))
+const MemoriesManagement = lazy(() => import('./admin/MemoriesManagement'))
 
 // Authentication and authorization belong to the shared admin shell, not to
 // any individual module. Every module is mounted only after verification.
@@ -132,6 +133,8 @@ function allowed(access:BackofficeAccess,id:string){
  if(id==='staff')return permitted(access,'staff.manage')
  if(id==='menu')return permitted(access,'menu.manage')
  if(id==='booking')return permitted(access,'booking.manage')
+ if(id==='keepsakes')return permitted(access,'keepsakes.manage')
+ if(id==='feedback')return permitted(access,'feedback.manage')
  if(id==='orders')return permitted(access,'orders.manage')
  return false
 }
@@ -201,6 +204,8 @@ function AdminWorkspace({ access,busy, onLogout }: {
     <Route path="/admin/menu" element={<ProtectedModule access={access} module="menu"><Suspense fallback={<div className="admin-module-loading" role="status">正在開啟茶宴菜單管理…</div>}><MenuManagement/></Suspense></ProtectedModule>}/>
      <Route path="/admin/services" element={<ProtectedModule access={access} module="services"><Suspense fallback={<div className="admin-module-loading" role="status">正在開啟服務內容管理…</div>}><ServiceManagement/></Suspense></ProtectedModule>}/>
     <Route path="/admin/booking" element={<ProtectedModule access={access} module="booking"><Suspense fallback={<div className="admin-module-loading" role="status">正在開啟預約管理…</div>}><BookingManagement/></Suspense></ProtectedModule>}/>
+    <Route path="/admin/keepsakes" element={<ProtectedModule access={access} module="keepsakes"><Suspense fallback={<div className="admin-module-loading" role="status">正在載入狐影留帖…</div>}><MemoriesManagement section="keepsakes"/></Suspense></ProtectedModule>}/>
+    <Route path="/admin/feedback" element={<ProtectedModule access={access} module="feedback"><Suspense fallback={<div className="admin-module-loading" role="status">正在載入狐語迴音…</div>}><MemoriesManagement section="feedback"/></Suspense></ProtectedModule>}/>
     <Route path="/admin/orders" element={<ProtectedModule access={access} module="orders"><Suspense fallback={<div className="admin-module-loading" role="status">正在開啟茶宴訂單管理…</div>}><OrdersManagement/></Suspense></ProtectedModule>}/>
     <Route path="/admin/accounting" element={<ProtectedModule access={access} module="accounting"><Suspense fallback={<div className="admin-module-loading" role="status">正在開啟帳務管理…</div>}><AccountingManagement/></Suspense></ProtectedModule>}/>
      <Route path="/admin/shifts" element={<ProtectedModule access={access} module="shifts"><Suspense fallback={<div className="admin-module-loading" role="status">正在開啟值班排班管理…</div>}><ShiftManagement access={access}/></Suspense></ProtectedModule>}/>

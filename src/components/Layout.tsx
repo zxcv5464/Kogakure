@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
-import { Home, UsersRound, CalendarDays, UtensilsCrossed, Grid2X2, X, AtSign, ArrowUpRight, Compass, Sparkles, CalendarCheck2 } from 'lucide-react'
+import { Home, UsersRound, CalendarDays, UtensilsCrossed, Grid2X2, X, AtSign, ArrowUpRight, Compass, Sparkles, CalendarCheck2, Feather } from 'lucide-react'
 import { asset } from '../lib/paths'
 import { prefetchStaffPage, prefetchShiftsPage, prefetchServicesPage, prefetchMenuPage, prefetchBookingPage } from '../lib/prefetch'
 import SiteBgm from './SiteBgm'
@@ -21,6 +21,7 @@ const links = [
  {to:'/shifts',label:'值班排班'},
  {to:'/menu',label:'茶宴'},
  {to:'/booking',label:'預約'},
+ {to:'/memories',label:'旅人繪卷'},
 ]
 
 const mobileMain = [
@@ -34,6 +35,7 @@ const mobileExtra = [
  {to:'/about',label:'入館須知',icon:Compass},
  {to:'/services',label:'服務內容',icon:Sparkles},
  {to:'/booking',label:'預約',icon:CalendarCheck2},
+ {to:'/memories',label:'旅人繪卷',icon:Feather},
 ]
 
 const pageTitles: Record<string, string> = {
@@ -44,6 +46,7 @@ const pageTitles: Record<string, string> = {
  '/shifts': '值班排班',
  '/menu': '茶宴',
  '/booking': '預約',
+ '/memories': '旅人繪卷',
  '/admin': '後台管理',
 }
 

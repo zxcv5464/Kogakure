@@ -16,6 +16,7 @@ import {prefetchBookingPage,prefetchMenuPage} from './lib/prefetch'
 
 const AdminPage = lazy(() => import('./pages/AdminPage'))
 const StaffPage = lazy(() => import('./pages/StaffPage'))
+const MemoriesPage = lazy(() => import('./pages/MemoriesPage'))
 
 // The administration route is deliberately separate from the public shell.
 // This keeps its interface and loading state independent of public animations.
@@ -74,6 +75,7 @@ function PublicApp() {
        <Route path="/staff" element={<StaffPage />} />
        <Route path="/menu" element={<MenuPage />} />
        <Route path="/booking" element={<BookingPage />} />
+       <Route path="/memories" element={<MemoriesPage />} />
        <Route path="/shifts" element={<ShiftsPage />} />
        <Route path="*" element={<OtherPage />} />
       </Routes>

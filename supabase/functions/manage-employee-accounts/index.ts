@@ -5,7 +5,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2.86.0'
 
 const siteOrigin = 'https://zxcv5464.github.io'
 const internalDomain = 'staff.kogakure.invalid'
-const allowedPermissions = new Set(['accounts.manage','staff.manage','announcements.manage','bgm.manage','accounting.manage','menu.manage','services.manage','orders.manage','booking.manage','shifts.manage','shifts.attend'])
+const allowedPermissions = new Set(['accounts.manage','staff.manage','announcements.manage','bgm.manage','accounting.manage','menu.manage','services.manage','orders.manage','booking.manage','shifts.manage','shifts.attend','keepsakes.manage','feedback.manage'])
 const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
 const secretKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 const service = createClient(supabaseUrl, secretKey, {

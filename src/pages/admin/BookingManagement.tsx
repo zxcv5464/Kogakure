@@ -29,6 +29,32 @@ const rulesEqual=(a:NomineeRules,b:NomineeRules)=>a.allowJoint===b.allowJoint&&
  (a.allowedPlanIds===null&&b.allowedPlanIds===null||
   a.allowedPlanIds!==null&&b.allowedPlanIds!==null&&
   a.allowedPlanIds.length===b.allowedPlanIds.length&&a.allowedPlanIds.every(id=>b.allowedPlanIds?.includes(id)))
+// Keep the text draft separate from the numeric quota: converting an empty
+// input to Number('') immediately would force a zero back into the field on iOS.
+function BookingQuotaCountInput({value,min,onChange,disabled,ariaLabel,required=false}:{
+ value:number;min:number;onChange:(next:number)=>void;disabled?:boolean;ariaLabel:string;required?:boolean
+}){
+ const [draft,setDraft]=useState(String(value))
+ useEffect(()=>setDraft(String(value)),[value])
+ return <input type="text" inputMode="numeric" pattern="[0-9]*" maxLength={6}
+  aria-label={ariaLabel} required={required} disabled={disabled} value={draft}
+  onFocus={e=>e.target.select()}
+  onChange={e=>{
+   const next=e.target.value
+   if(!/^[0-9]*$/.test(next))return
+   setDraft(next)
+   if(next==='')return
+   const parsed=Number(next)
+   if(Number.isInteger(parsed)&&parsed>=min&&parsed<=100000)onChange(parsed)
+  }}
+  onBlur={()=>{
+   const parsed=Number(draft)
+   if(draft!==''&&Number.isInteger(parsed)&&parsed>=min&&parsed<=100000){
+    setDraft(String(parsed))
+    onChange(parsed)
+   }else setDraft(String(value))
+  }}/>
+}
 export default function BookingManagement(){
  const [bookings,setBookings]=useState<BookingRequest[]>([])
  const [plans,setPlans]=useState<BookingPlan[]>([])
@@ -316,10 +342,10 @@ export default function BookingManagement(){
           })}>
           <option value="unlimited">無限制</option><option value="limited">限制次數</option>
          </select>
-         {rules.caps[plan.id]!==undefined&&<input type="number" min={0} max={100000} step={1}
-          aria-label={person.name+' '+plan.name+' 可接受次數上限'} disabled={busy}
+         {rules.caps[plan.id]!==undefined&&<BookingQuotaCountInput key={plan.id} min={0}
+          ariaLabel={person.name+' '+plan.name+' 可接受次數上限'} disabled={busy}
           value={rules.caps[plan.id]}
-          onChange={e=>editNomineeRules(person,r=>({...r,caps:{...r.caps,[plan.id]:Number(e.target.value)}}))}/>}
+          onChange={value=>editNomineeRules(person,r=>({...r,caps:{...r.caps,[plan.id]:value}}))}/>}
         </div>)}
        </div>
        <label className="booking-admin-rules-choice">
@@ -357,9 +383,9 @@ export default function BookingManagement(){
         </select>
        </label>
        {planDraft.value.maxUses!==null&&<label>可接取上限
-        <input type="number" min={1} max={100000} step={1} required
-         value={planDraft.value.maxUses}
-         onChange={e=>patchPlan('maxUses',e.target.value===''?0:Number(e.target.value))}/>
+        <BookingQuotaCountInput key={planDraft.value.id} min={1} required
+         ariaLabel="方案可接取上限" value={planDraft.value.maxUses}
+         onChange={value=>patchPlan('maxUses',value)}/>
        </label>}
        <small>累計接取（含已完成）：{quotaUsage.plans[planDraft.value.id]||0} 筆；待審核不佔名額。</small>
       </div>
