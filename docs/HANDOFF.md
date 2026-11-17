@@ -34,5 +34,5 @@
 - `docs/ROADMAP.md`：實作進度與待辦。
 - `docs/STAFF_ADMIN_AUDIT.md`：名帖管理修正。
 - `docs/SUPABASE_SETUP.md`：資料與身分權限的設計界線。
-- `docs/GITHUB_PUBLISH.md`：部署架構與儲存庫隱私考量。
+- `docs/GITHUB_PUBLISH.md`：原始碼存放、網站掛載與公開資料安全邊界。
 - `docs/SECURITY_REVIEW_20261117.md`：已查核項目與風險優先順序。

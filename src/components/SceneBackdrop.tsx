@@ -27,6 +27,7 @@ export default function SceneBackdrop({ introReady }: { introReady: boolean }) {
  const startIndex = INITIAL_SCENE[path] ?? 0
  const nextIndex = useRef(startIndex)
  const previousPath = useRef(path)
+ const visibleScene = useRef(SCENES[startIndex])
  const [backdrop, setBackdrop] = useState<BackdropState>(() => ({
   sources: [SCENES[startIndex], SCENES[startIndex]],
   active: 0,
@@ -34,14 +35,20 @@ export default function SceneBackdrop({ introReady }: { introReady: boolean }) {
 
  useEffect(() => {
   let cancelled = false
+  let latestRequest = 0
   const preloads = new Set<HTMLImageElement>()
   function showScene(index: number) {
    const nextImage = SCENES[index]
+   // Invalidate any pending preload, even when returning to the visible photo.
+   const requestId = ++latestRequest
+   if (visibleScene.current === nextImage) return
    const preload = new Image()
    preloads.add(preload)
    preload.onload = () => {
     preloads.delete(preload)
-    if (cancelled) return
+    // A later route change or rotation must not be overwritten by a slow image.
+    if (cancelled || requestId !== latestRequest) return
+    visibleScene.current = nextImage
     setBackdrop(previous => {
      if (previous.sources[previous.active] === nextImage) return previous
      const active: Layer = previous.active === 0 ? 1 : 0
@@ -56,10 +63,12 @@ export default function SceneBackdrop({ introReady }: { introReady: boolean }) {
   if (path !== previousPath.current) {
    previousPath.current = path
    nextIndex.current = INITIAL_SCENE[path] ?? 0
-   if (path !== '/admin') showScene(nextIndex.current)
   }
+  // The entrance covers the photos. Defer extra image requests and rotation
+  // until the visitor has entered, then show the correct route scene.
+  if (introReady && path !== '/admin') showScene(nextIndex.current)
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  const timer = path === '/admin' || reduced ? undefined : window.setInterval(() => {
+  const timer = path === '/admin' || reduced || !introReady ? undefined : window.setInterval(() => {
    if (document.visibilityState !== 'visible') return
    nextIndex.current = (nextIndex.current + 1) % SCENES.length
    showScene(nextIndex.current)
@@ -69,7 +78,7 @@ export default function SceneBackdrop({ introReady }: { introReady: boolean }) {
    if (timer !== undefined) window.clearInterval(timer)
    for (const preload of preloads) { preload.onload = null; preload.onerror = null }
   }
- }, [path])
+ }, [path, introReady])
 
  return (
   <div

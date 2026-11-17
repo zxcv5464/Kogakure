@@ -30,8 +30,11 @@ export default function HomeAnnouncements(){
   if(!configured)return
   let alive=true
   let inFlight=false
+  let lastRequestAt=0
   const update=async()=>{
-   if(inFlight)return
+   // Focus and visibilitychange can fire together; avoid duplicate reads.
+   if(inFlight||Date.now()-lastRequestAt<20000)return
+   lastRequestAt=Date.now()
    inFlight=true
    try{
     const results=await fetchPublicAnnouncements()
@@ -45,7 +48,7 @@ export default function HomeAnnouncements(){
   }
   void update()
   const onFocus=()=>{if(document.visibilityState==='visible')void update()}
-  const timer=window.setInterval(onFocus,45000)
+  const timer=window.setInterval(onFocus,90000)
   window.addEventListener('focus',onFocus)
   document.addEventListener('visibilitychange',onFocus)
   return()=>{

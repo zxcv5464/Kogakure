@@ -18,6 +18,10 @@ const [menu,booking,menuCache,bookingCache,prefetch,layout,transition,motion,
  menuCss,bookingCss,menuAdmin,bookingAdmin]=
  await Promise.all(files.map(p=>readFile(p,'utf8')))
 const app=await readFile('src/App.tsx','utf8')
+const viteConfig=await readFile('vite.config.ts','utf8')
+assert.ok(viteConfig.includes('vendor-react')&&viteConfig.includes('vendor-supabase')&&
+ viteConfig.includes('inlineDynamicImports: true'),
+ 'Keep stable vendor chunks separated while retaining single-file offline preview support')
 for(const name of ['AboutPage','ServicesPage','ShiftsPage','BookingPage']){
  assert.ok(app.includes(`const ${name} = lazy(() => import('./pages/${name}'))`),
   `${name} should remain lazy-loaded so unrelated page code is excluded from the entry bundle`)

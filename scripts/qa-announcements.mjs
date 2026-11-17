@@ -29,7 +29,8 @@ assert.ok(board.includes("role=\"tablist\"")&&
  board.includes('館內公告')&&board.includes('最新消息')&&
  board.includes("role=\"dialog\"")&&board.includes('createPortal')&&
  board.includes('aria-modal="true"')&&board.includes("onClick={()=>setActive(item)}")&&
- board.includes('setInterval(onFocus,45000)')&&
+ board.includes('setInterval(onFocus,90000)')&&
+ board.includes('Date.now()-lastRequestAt<20000')&&
  board.includes('visibilitychange')&&board.includes('Escape'),
  'Public announcements must offer categories, accessible full details and live refresh')
 assert.ok(motion.includes('.route-stage .home-content>.home-news{animation:quietRise')&&

@@ -25,6 +25,12 @@ assert.ok(backdrop.includes('window.setInterval(')&&backdrop.includes('5000)'),
  'Shared background must keep its five-second photo cycling')
 assert.ok(backdrop.includes('preload.onload')&&backdrop.includes('setBackdrop(previous =>'),
  'Switch only after next shared background photo has loaded')
+assert.ok(backdrop.includes('requestId !== latestRequest')&&
+ backdrop.includes('visibleScene.current === nextImage')&&
+ backdrop.indexOf('const requestId = ++latestRequest') < backdrop.indexOf('if (visibleScene.current === nextImage) return'),
+ 'Invalidate older image requests even when returning to a photograph already shown')
+assert.ok(backdrop.includes('!introReady')&&backdrop.includes('[path, introReady]'),
+ 'Background rotation must wait until the entrance animation is finished')
 assert.ok(backdrop.includes("prefers-reduced-motion: reduce")&&backdrop.includes("document.visibilityState !== 'visible'"),
  'Respect reduced motion and pause while the browser is hidden')
 assert.ok(transition.includes('<SceneBackdrop introReady={introReady} />'),
