@@ -152,6 +152,5 @@
 .memories-claim-edit-panel input{width:100%;min-width:0}
 .memories-claim-edit-panel small{color:#c5ae91;line-height:1.75}
 .memories-claim-edit-panel .memories-admin-actions{margin-top:0}
-.memories-claim-edit-panel .memories-regenerate-code{justify-self:start;display:inline-flex;align-items:center;gap:8px;min-height:39px;padding:8px 13px;border:1px solid rgba(199,158,113,.4);background:rgba(104,82,65,.2);color:#e4c79e;border-radius:3px}
 
 @media(max-width:680px){.memories-admin-upload .memories-admin-fields>label:last-child{grid-column:auto}.memories-claim-edit-panel{padding:13px}}
