@@ -29,6 +29,12 @@
 .memories-section-title{text-align:center;margin:0 auto 30px}
 .memories-section-title h2{font-size:clamp(1.55rem,3.5vw,2.2rem);letter-spacing:.16em;font-weight:500;color:#e8cfad;margin:9px 0 14px}
 .memories-section-title>p:last-child{max-width:590px;margin:0 auto;color:#bfb0a4;line-height:2;font-size:.87rem}
+/* Keep the keepsake welcome as two deliberate, balanced paragraphs. */
+.memories-keepsake-intro{max-width:590px;margin:0 auto;color:#bfb0a4;line-height:2;font-size:.87rem}
+.memories-keepsake-intro p{margin:0;text-wrap:balance}
+.memories-keepsake-intro p+p{margin-top:10px}
+.memories-keepsake-intro p span{display:inline-block}
+
 .memories-claim-form,.memories-feedback-form{display:grid;gap:13px;margin:auto;max-width:650px}
 .memories-claim-form>label{display:flex;align-items:center;gap:9px}
 .memories-claim-form label,.memories-feedback-form label{color:#e3d3c0;font-size:.88rem;letter-spacing:.04em}
@@ -146,4 +152,6 @@
 .memories-claim-edit-panel input{width:100%;min-width:0}
 .memories-claim-edit-panel small{color:#c5ae91;line-height:1.75}
 .memories-claim-edit-panel .memories-admin-actions{margin-top:0}
+.memories-claim-edit-panel .memories-regenerate-code{justify-self:start;display:inline-flex;align-items:center;gap:8px;min-height:39px;padding:8px 13px;border:1px solid rgba(199,158,113,.4);background:rgba(104,82,65,.2);color:#e4c79e;border-radius:3px}
+
 @media(max-width:680px){.memories-admin-upload .memories-admin-fields>label:last-child{grid-column:auto}.memories-claim-edit-panel{padding:13px}}
