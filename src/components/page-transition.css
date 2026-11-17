@@ -1,3 +1,15 @@
+/* One early-loaded veil for EVERY public page except home. It is mounted
+   before lazy route CSS, so first visits and transitions cannot flash a bare
+   photograph before a route-specific gradient arrives. */
+.public-page-veil {
+ position: fixed;
+ inset: 0;
+ z-index: -1;
+ pointer-events: none;
+ background: linear-gradient(180deg,rgba(13,12,21,.75),rgba(14,13,21,.95));
+}
+.public-page-veil.is-home { display: none; }
+
 /* Quiet, full-screen background fade between routes.
    The destination route mounts only while this is fully opaque. */
 .page-transition-curtain {
