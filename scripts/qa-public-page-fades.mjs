@@ -30,11 +30,6 @@ for (const selector of [
  '.route-stage .memories-hero h1',
  '.route-stage .memories-tabs',
  '.route-stage .memories-panel',
- '.route-stage .memories-section-title',
- '.route-stage .memories-claim-form',
- '.route-stage .memories-feedback-form',
- '.route-stage .memories-privacy-note',
- '.route-stage .memories-guestbook',
  '.route-stage .shift-calendar-shell',
  '.route-stage .shift-calendar-heading',
  '.route-stage .shift-calendar-weekdays',
@@ -55,6 +50,10 @@ assert.ok(memories.includes('className="memories-hero"')&&
  shifts.includes('className="shift-calendar-shell"')&&
  shifts.includes('className="shift-weeks"'),
  'The animated CSS must target stable real public DOM sections')
+assert.ok(!motion.includes('.route-stage .memories-feedback-form{animation:')&&
+ !motion.includes('.route-stage .memories-claim-form{animation:')&&
+ motion.includes('Animate the whole stable panel ONCE'),
+ 'Switching between guestbook and keepsake tabs must not trigger delayed entrance animations')
 assert.ok(motion.includes('.route-stage .home-content>.home-news{animation:quietRise')&&
  motion.includes('.route-stage.is-covering .home-content>.home-news{animation-play-state:paused}')&&
  motion.includes('.home-content>.primary-link,.home-content>.home-news,.home-note'),
