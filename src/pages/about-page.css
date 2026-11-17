@@ -4,7 +4,8 @@
  width: 100%;
  min-width: 0;
  padding-bottom: clamp(46px, 7vw, 100px);
- background: linear-gradient(180deg, rgba(13, 12, 22, .78) 0%, rgba(14, 13, 23, .9) 33%, rgba(16, 14, 24, .94) 100%);
+ /* The shared eager-loaded public veil supplies all page darkness. */
+ background: transparent;
  color: #e9e0d5;
 }
 .house-rules-page::before {
