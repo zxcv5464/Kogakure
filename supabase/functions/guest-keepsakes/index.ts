@@ -15,6 +15,10 @@ const cors=(origin:string|null):Record<string,string>=>({
 })
 const reply=(data:unknown,status=200,origin:string|null=null)=>
  new Response(JSON.stringify(data),{status,headers:{...cors(origin),'Content-Type':'application/json; charset=utf-8'}})
+const digestHex=async(input:string):Promise<string>=>{
+ const bytes=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(input))
+ return Array.from(new Uint8Array(bytes)).map(b=>b.toString(16).padStart(2,'0')).join('')
+}
 
 Deno.serve(async(req:Request)=>{
  const origin=req.headers.get('origin')
@@ -32,6 +36,9 @@ Deno.serve(async(req:Request)=>{
    if(key.length!==64)return reply({error:'無權執行清除作業'},403,origin)
    const valid=await db.rpc('keepsake_cleanup_token_valid',{p_token:key})
    if(valid.error||valid.data!==true)return reply({error:'無權執行清除作業'},403,origin)
+   // Retain only the last 48 hours of hashed attempt counters.
+   const purge=await db.rpc('purge_keepsake_lookup_quota')
+   if(purge.error)console.error('Keepsake lookup quota cleanup failed',purge.error)
    const {data:expired,error:queryError}=await db.from('keepsake_claims')
     .select('id').lte('expires_at',new Date().toISOString()).order('expires_at').limit(100)
    if(queryError)throw queryError
@@ -56,8 +63,22 @@ Deno.serve(async(req:Request)=>{
   if(body.action!=='lookup')return reply({error:'未知操作'},400,origin)
   const token=String(body.token||'').replace(/[\s-]/g,'').toLowerCase()
   if(!/^[a-z0-9]{12,32}$/.test(token))return reply({error:'請輸入有效的領取碼'},400,origin)
-  const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(token))
-  const sha=Array.from(new Uint8Array(digest)).map(b=>b.toString(16).padStart(2,'0')).join('')
+  // A YYYYMMDD + photo-count + 4-digit secret has only 10,000 guesses.
+  // Consume the prefix-wide AND per-client budgets atomically before lookup.
+  // Strip optional separators before deriving the prefix so attackers cannot
+  // bypass the limit merely by changing hyphen placement.
+  const clientId=req.headers.get('cf-connecting-ip')||
+   req.headers.get('x-forwarded-for')?.split(',').at(-1)?.trim()||
+   req.headers.get('x-real-ip')||'unknown-client'
+  const groupKey=/^[0-9]{14,16}$/.test(token)?
+   'short:'+token.slice(0,-4):'other:'+token
+  const {data:allowed,error:limitError}=await db.rpc('reserve_keepsake_lookup',{
+   p_client_hash:await digestHex(clientId),
+   p_prefix_hash:await digestHex(groupKey),
+  })
+  if(limitError)throw limitError
+  if(allowed!==true)return reply({error:'領取碼嘗試次數過多，請稍後再試或聯繫館方'},429,origin)
+  const sha=await digestHex(token)
   const {data:claim,error:claimError}=await db.from('keepsake_claims')
    .select('id,guest_label,note,expires_at').eq('token_sha256',sha)
    .gt('expires_at',new Date().toISOString()).maybeSingle()
