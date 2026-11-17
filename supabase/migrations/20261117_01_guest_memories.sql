@@ -24,6 +24,7 @@ returns boolean language sql stable security definer set search_path='' as $$
  ));
 $$;
 revoke all on function private.check_employee_backoffice_permission(text) from public,anon,authenticated;
+grant execute on function private.check_employee_backoffice_permission(text) to authenticated;
 
 create table if not exists public.keepsake_claims(
  id uuid primary key default gen_random_uuid(),
