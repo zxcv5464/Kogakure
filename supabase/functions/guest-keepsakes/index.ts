@@ -62,7 +62,7 @@ Deno.serve(async(req:Request)=>{
   }
   if(body.action!=='lookup')return reply({error:'未知操作'},400,origin)
   const token=String(body.token||'').replace(/[\s-]/g,'').toLowerCase()
-  if(!/^[a-z0-9]{12,32}$/.test(token))return reply({error:'請輸入有效的領取碼'},400,origin)
+  if(!/^[a-z0-9]{8,32}$/.test(token))return reply({error:'請輸入有效的領取碼'},400,origin)
   // A YYYYMMDD + photo-count + 4-digit secret has only 10,000 guesses.
   // Consume the prefix-wide AND per-client budgets atomically before lookup.
   // Strip optional separators before deriving the prefix so attackers cannot
