@@ -31,4 +31,9 @@ assert.ok(motion.includes('prefers-reduced-motion:reduce'), 'Motion accessibilit
 assert.ok(transition.includes("phase === 'cover' ? ' is-covering' : ''"), 'Route curtain state must reach stage')
 assert.ok(app.includes('path="/about"'))
 assert.ok(app.includes('path="/menu"'))
+assert.ok(transition.includes('PUBLIC_ROUTE_MOUNTED_EVENT')&&
+ transition.includes("location.pathname === '/' ? null : PUBLIC_ROUTE_MOUNTED_EVENT"),
+ 'About, services and memories transitions must wait for lazy route mount before reveal')
+assert.ok(app.includes('useLayoutEffect')&&app.includes('<PublicRouteMounted path={location.pathname}/>'),
+ 'Signal route readiness only after content under Suspense can commit')
 console.log('PASS: house rules and menu share staff pacing, curtain pause and reduced-motion support')
