@@ -55,7 +55,7 @@ Deno.serve(async(req:Request)=>{
   }
   if(body.action!=='lookup')return reply({error:'未知操作'},400,origin)
   const token=String(body.token||'').replace(/[\s-]/g,'').toLowerCase()
-  if(!/^[a-f0-9]{32}$/.test(token))return reply({error:'請輸入有效的領取碼'},400,origin)
+  if(!/^[a-z0-9]{12,32}$/.test(token))return reply({error:'請輸入有效的領取碼'},400,origin)
   const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(token))
   const sha=Array.from(new Uint8Array(digest)).map(b=>b.toString(16).padStart(2,'0')).join('')
   const {data:claim,error:claimError}=await db.from('keepsake_claims')
