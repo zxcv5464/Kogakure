@@ -13,14 +13,13 @@ const db=()=>{if(!configured||!supabase)throw new Error('狐隱服務尚未連�
 const err=(error:{message:string}|null,context:string)=>{if(error)throw new Error(context+'：'+error.message)}
 export const formatExpiry=(expires:string)=>new Date(expires).toLocaleString('zh-TW',{timeZone:'Asia/Taipei',hour12:false,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})
 export const isExpired=(expires:string)=>Date.parse(expires)<=Date.now()
-/** Validate a staff-chosen code before the permission-checked RPC.
- * The server repeats this validation and hashes the case-/hyphen-free form. */
+/** New backoffice codes are explicitly set by staff: ASCII letters and
+ * digits only, 8–16 characters. Historical longer codes remain valid in
+ * the public lookup API until their original seven-day expiry. */
 export function validateKeepsakeCode(code:string):string{
  const display=code.trim().toUpperCase()
- const normalized=display.replace(/-/g,'')
- if(display.length>48||!/^[A-Z0-9]+(-[A-Z0-9]+)*$/.test(display)||
-  normalized.length<12||normalized.length>32)
-  throw new Error('專屬領取碼須為 12～32 位英文字母或數字，可使用「-」分組')
+ if(!/^[A-Z0-9]{8,16}$/.test(display))
+  throw new Error('專屬領取碼須為 8～16 位英文字母或數字，不可包含空格或符號')
  return display
 }
 export async function createKeepsake(guestLabel:string,note:string,code:string):Promise<{claim:KeepsakeClaim;code:string}>{
@@ -36,32 +35,6 @@ export async function createKeepsake(guestLabel:string,note:string,code:string):
   .select('id,guest_label,note,created_at,expires_at').eq('id',id).single()
  err(readError,'交付單建立後無法讀取')
  return {claim:{...(data as Omit<KeepsakeClaim,'keepsake_photos'>),keepsake_photos:[]},code:display}
-}
-/** Propose a code using Taiwan delivery date, uploaded photo count and
- * exactly four random decimal digits. The shortened suffix has only 10,000
- * possibilities, so public redemption MUST be protected by server rate limits.
- * Example: 20261117-03-4827
- * Existing claims are unchanged until an operator explicitly saves. */
-export function generateKeepsakeCode(deliveredAt:string,photoCount:number):string{
- const when=new Date(deliveredAt)
- if(!Number.isFinite(when.getTime()))throw new Error('無法取得有效的交付日期')
- if(!Number.isSafeInteger(photoCount)||photoCount<0||photoCount>9999)
-  throw new Error('照片張數無效，無法產生領取碼')
- const parts=new Intl.DateTimeFormat('en-US',{
-  timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit',
- }).formatToParts(when)
- const part=(type:string)=>parts.find(item=>item.type===type)?.value||''
- const stamp=part('year')+part('month')+part('day')
- const count=String(photoCount).padStart(2,'0')
- // Rejection sample to give each decimal value exactly equal probability.
- let number=0
- while(true){
-  const bytes=crypto.getRandomValues(new Uint8Array(2))
-  const value=(bytes[0]<<8)|bytes[1]
-  if(value<60000){number=value%10000;break}
- }
- const random=String(number).padStart(4,'0')
- return validateKeepsakeCode(stamp+'-'+count+'-'+random)
 }
 /** A replacement invalidates all previously shared links without changing
  * the photos, claim ID, or the seven-day expiry. */
