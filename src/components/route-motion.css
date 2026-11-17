@@ -93,12 +93,9 @@
 .route-stage .memories-hero>p:not(.eyebrow){animation:quietRise 1.18s var(--public-reveal-ease) .54s both}
 .route-stage .memories-ornament{animation:quietFade 1.12s var(--public-reveal-ease) .72s both}
 .route-stage .memories-tabs{animation:quietRise 1.15s var(--public-reveal-ease) .84s both}
+/* Animate the whole stable panel ONCE, not its tab-swapped forms/guestbook:
+   tab changes must remain immediately responsive and never wait 1+ seconds. */
 .route-stage .memories-panel{animation:quietRise 1.2s var(--public-reveal-ease) 1.03s both}
-.route-stage .memories-section-title{animation:quietFade .94s var(--public-reveal-ease) 1.1s both}
-.route-stage .memories-claim-form,
-.route-stage .memories-feedback-form{animation:quietRise 1.05s var(--public-reveal-ease) 1.2s both}
-.route-stage .memories-privacy-note,
-.route-stage .memories-guestbook{animation:quietFade 1s var(--public-reveal-ease) 1.34s both}
 /* 點菜：茶宴題字 → 主旨 → 卷別與御品 → 點單；分類可由 Supabase 非同步載入 */
 .route-stage .tea-menu-brand,
 .route-stage .tea-menu-seal{animation:quietRise 1.12s var(--public-reveal-ease) .16s both}
@@ -151,8 +148,7 @@
 .route-stage:is(.is-covering,.intro-waiting) .memories-page :is(
  .memories-hero .eyebrow,.memories-glyph,.memories-hero h1,
  .memories-hero>p:not(.eyebrow),.memories-ornament,.memories-tabs,
- .memories-panel,.memories-section-title,.memories-claim-form,
- .memories-feedback-form,.memories-privacy-note,.memories-guestbook
+ .memories-panel
 ){animation-play-state:paused}
 /* 預約名片：與狐姬名冊共用 staffReveal 節奏，先題字、再介紹、
    最後按名帖同樣的延遲和緩動方式逐張浮現。 */
