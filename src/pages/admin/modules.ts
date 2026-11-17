@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
-import { CalendarDays, ClipboardList, FileText, Soup, UsersRound, ShieldCheck, ShoppingBag, ScrollText, Wallet, Music2 } from 'lucide-react'
+import { CalendarDays, ClipboardList, FileText, Soup, UsersRound, ShieldCheck, ShoppingBag, ScrollText, Wallet, Music2, Camera, MessageCircle } from 'lucide-react'
 
 // The admin catalog is the extension point for future, separately permissioned
 // features. Planned entries are deliberately not links until implemented.
@@ -20,6 +20,8 @@ export const ADMIN_MODULES: AdminModule[] = [
  { id: 'menu', title: '菜單管理', summary: '茶宴分類、品項、Gil 金額、供應狀態與公開排序', icon: Soup, path: '/admin/menu', status: 'available' },
  { id: 'services', title: '服務內容管理', summary: '新增服務、照片、輪播順序與公開狀態', icon: ScrollText, path: '/admin/services', status: 'available' },
  { id: 'orders', title: '訂單管理', summary: '按日期查看茶宴點單、接單、完成與取消訂單', icon: ShoppingBag, path: '/admin/orders', status: 'available' },
+ { id: 'keepsakes', title: '狐影留帖', summary: '上傳拍立得、領取碼、七天自動到期與交付紀錄', icon: Camera, path: '/admin/keepsakes', status: 'available' },
+ { id: 'feedback', title: '狐語迴音', summary: '審核署名與匿名留言、館方回覆、公開及刪除', icon: MessageCircle, path: '/admin/feedback', status: 'available' },
  { id: 'booking', title: '預約管理', summary: '指名人員開放設定、預約審核、方案與即時計時', icon: ClipboardList, path: '/admin/booking', status: 'available' },
  { id: 'shifts', title: '值班排班', summary: '管理員設定營業日期，館員登記出勤；四週自動滾動', icon: CalendarDays, path: '/admin/shifts', status: 'available' },
 ]
