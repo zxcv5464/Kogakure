@@ -44,12 +44,16 @@ for(const [path,name,css,selector] of roots){
 assert.ok(transitionCss.includes('.public-page-veil {')&&
  transitionCss.replace(/\s+/g,'').includes('background:linear-gradient(180deg,rgba(13,12,21,.75),rgba(14,13,21,.95))'),
  'All non-home pages must use the same tea-inspired translucent ink veil')
-assert.ok(transitionCss.includes('.public-page-veil.is-home { display: none; }'),
- 'The homepage must not receive the new interior veil')
+assert.ok(!transitionCss.includes('.public-page-veil.is-home')&&
+ !transition.includes(' is-home')&&
+ transition.includes('<div className="public-page-veil" aria-hidden="true" />'),
+ 'Homepage and all other public pages must share the same permanently mounted veil')
 assert.ok(transitionCss.includes('z-index: -1;')&&transitionCss.includes('pointer-events: none;'),
  'Global veil must sit between photographs and interactive page content')
-assert.ok(transition.includes('displayed.pathname === \'/\' ? \' is-home\' : \'\''),
- 'Interior veil must switch with the DISPLAYED route, not the pending route')
+assert.ok(app.includes('path="/" element={<HomePage />} />')&&
+ transition.indexOf('<SceneBackdrop introReady={introReady} path={displayed.pathname} />') <
+ transition.indexOf('<div className="public-page-veil" aria-hidden="true" />'),
+ 'Homepage must share the backdrop and veil from the first render, without route-specific toggling')
 assert.ok(transition.includes('<SceneBackdrop introReady={introReady} path={displayed.pathname} />'),
  'Scene photo and shared veil must change together behind the covering curtain')
 assert.ok(scene.includes('Array.from({ length: 7 }')&&
@@ -87,4 +91,4 @@ assert.ok(servicePage.includes('ServicePhotoGallery')&&
 assert.ok(pageCss[2].includes('.site > main .staff-page .staff-grid')&&
  pageCss[6].includes('.memories-panel{max-width:850px'),
  'Staff cards and centered traveler forms must remain unchanged')
-console.log('PASS: every non-home public page has one eager dark veil; lazy routes wait for CSS; homepage/admin and page interactions remain independent')
+console.log('PASS: homepage and all seven public pages share one early dark veil; lazy routes wait for CSS; admin remains independent')
