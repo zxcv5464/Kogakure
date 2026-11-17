@@ -120,7 +120,7 @@ export default function PageTransition({
 
  return <>
   <SceneBackdrop introReady={introReady} path={displayed.pathname} />
-  <div className={'public-page-veil' + (displayed.pathname === '/' ? ' is-home' : '')} aria-hidden="true" />
+  <div className="public-page-veil" aria-hidden="true" />
   <div key={displayed.pathname} className={'route-stage' + (introReady ? '' : ' intro-waiting') + (phase === 'cover' ? ' is-covering' : '')}>
    {children(displayed)}
   </div>
