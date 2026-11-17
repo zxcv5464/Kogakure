@@ -24,6 +24,18 @@ export default function MemoriesPage(){
  const [website,setWebsite]=useState('')
 
  useEffect(()=>{
+  const match=window.location.hash.match(/^#code=(.+)$/)
+  if(!match)return
+  let token=''
+  try{token=decodeURIComponent(match[1])}catch{return}
+  let live=true
+  setLookupBusy(true)
+  lookupKeepsake(token).then(result=>{if(live)setPickup(result)})
+   .catch(e=>{if(live)setLookupError(e instanceof Error?e.message:'查詢失敗')})
+   .finally(()=>{if(live)setLookupBusy(false)})
+  return()=>{live=false}
+ },[])
+ useEffect(()=>{
   let live=true
   fetchPublicFeedback().then(data=>{if(live)setEntries(data)})
    .catch(()=>{if(live)setFeedbackError('目前無法載入留言，請稍後再試')})
