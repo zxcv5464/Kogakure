@@ -1,13 +1,15 @@
-/* The staff directory is a single, calm gallery rather than a solid header
-   followed by a disconnected photograph. */
+/* Keep the roster's gallery and its independent card animations, but
+   use the same deep, translucent full-page veil as Traveler Memories.
+   The shared scene carousel stays visible subtly behind the roster. */
+.site:has(.staff-page){display:flex;flex-direction:column;min-height:100vh;min-height:100dvh}
+.site:has(.staff-page)>main{display:flex;flex-direction:column;flex:1;min-height:0}
 .site > main .staff-page {
  position: relative;
+ flex: 1;
  width: 100%;
+ min-width: 0;
  padding: 0;
- background: linear-gradient(180deg,
-  rgba(13,13,22,.48) 0%,
-  rgba(13,13,22,.13) 34%,
-  rgba(13,13,22,.5) 100%);
+ background:linear-gradient(180deg,rgba(12,12,21,.90) 0%,rgba(17,15,26,.98) 100%);
 }
 .site > main .staff-page .staff-hero {
  min-height: 0;
