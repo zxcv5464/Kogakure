@@ -1,5 +1,5 @@
 /* Fox banquet: ink, washi gold and restrained tea-room typography. */
-.tea-menu-page{width:100%;min-width:0;background:linear-gradient(180deg,rgba(13,12,21,.75),rgba(14,13,21,.95));color:#eadfce;padding-bottom:clamp(50px,7vw,100px)}
+.tea-menu-page{width:100%;min-width:0;background:transparent;color:#eadfce;padding-bottom:clamp(50px,7vw,100px)}
 .tea-menu-hero{text-align:center;padding:clamp(55px,7vw,90px) 18px 40px;background:radial-gradient(ellipse at 50% 0,rgba(91,66,84,.31),transparent 70%)}
 .tea-menu-brand{font-family:'Noto Serif TC',serif;color:#ceb78e;font-size:.76rem;letter-spacing:.3em}
 .tea-menu-seal{display:block;margin:20px auto 11px;color:#bfa17c;font-size:1.2rem}
