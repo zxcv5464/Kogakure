@@ -12,6 +12,8 @@ export const EMPLOYEE_PERMISSIONS = [
  { id:'services.manage',label:'服務內容管理',description:'服務項目、圖片、輪播順序及公開狀態' },
  { id:'orders.manage',label:'訂單管理',description:'茶宴訂單、接單、完成、取消與刪除' },
  { id:'booking.manage',label:'預約管理',description:'預約審核、方案與指名人員設定' },
+ { id:'keepsakes.manage',label:'狐影留帖',description:'拍立得照片上傳、交付碼、交付紀錄及檔案刪除' },
+ { id:'feedback.manage',label:'狐語迴音',description:'審核留言、公開與隱藏、館方回覆及刪除' },
  { id:'shifts.manage',label:'值班排班管理',description:'管理營業時間、活動與全員出勤安排' },
  { id:'shifts.attend',label:'個人出勤登記',description:'僅能登記、取消與修改自己的出勤資訊' },
 ] as const
