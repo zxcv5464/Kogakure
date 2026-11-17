@@ -59,7 +59,13 @@ export default function SiteBgm({onRegisterStart}:{onRegisterStart?:(start:()=>v
 
  useEffect(()=>{
   let live=true
+  let inFlight=false
+  let lastRequestAt=0
   async function refresh(){
+   // Return-to-tab and polling events may arrive together; share one read.
+   if(inFlight||Date.now()-lastRequestAt<20000)return
+   lastRequestAt=Date.now()
+   inFlight=true
    try{
     const next=await readPublicBgm()
     if(!live)return
@@ -76,6 +82,7 @@ export default function SiteBgm({onRegisterStart}:{onRegisterStart?:(start:()=>v
      setPlayback(next.enabled?'blocked':'off')
     }else if(audioRef.current)audioRef.current.volume=next.volume
    }catch{/* Keep the last playable source when the network is unavailable. */}
+   finally{inFlight=false}
   }
   void refresh()
   // Do not poll Supabase while this tab is hidden. A visible tab refreshes
@@ -109,7 +116,7 @@ export default function SiteBgm({onRegisterStart}:{onRegisterStart?:(start:()=>v
   playback==='blocked'?'點擊播放':playback==='starting'?'準備播放':
   playback==='waiting'?'入館後播放':'已關閉'
  return <div className="site-bgm" aria-label="背景音樂控制">
-  <audio ref={audioRef} src={currentAudioUrl(settings)||undefined} loop={settings.loop} preload="metadata"
+  <audio ref={audioRef} src={currentAudioUrl(settings)||undefined} loop={settings.loop} preload="none"
    onPlaying={()=>{if(enabled&&settings.enabled&&settings.source!=='youtube')setPlayback('playing')}}
    onPause={()=>{if(enabled)setPlayback(previous=>previous==='playing'?'blocked':previous)}}
    onError={()=>{if(enabled&&settings.source!=='youtube')setPlayback('error')}}

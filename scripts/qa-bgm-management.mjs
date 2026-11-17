@@ -93,7 +93,7 @@ assert.ok(lib.includes("rpc(")===false&&
  lib.includes('DEFAULT_BGM_URL'),
  'BGM source validation and upload must use current Supabase storage without extra credentials')
 
-const vite=await createServer({server:{middlewareMode:true,hmr:false},appType:'custom'})
+const vite=await createServer({optimizeDeps:{noDiscovery:true},server:{middlewareMode:true,hmr:false},appType:'custom'})
 try{
  const mod=await vite.ssrLoadModule('/src/lib/site-bgm.ts')
  const base={...mod.DEFAULT_BGM}
