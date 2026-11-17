@@ -61,8 +61,11 @@ assert.ok(!accounts.includes('service_role')&&!accounts.includes('SERVICE_ROLE_K
  'No secret or service role may appear in frontend password code')
 assert.ok(!component.includes('employee_accounts')&&!component.includes('admin_users'),
  'Changing own password cannot mutate role or manager tables')
-assert.ok(edge.includes("if(!await isManager(user.id))"),
- 'Admin-only reset/delete endpoints must remain restricted')
+assert.ok(edge.includes("operatorScope(user.id)")&&
+ edge.includes('canManageTarget(scope,user.id,id)')&&
+ edge.includes('service.auth.getUser(token)')&&
+ edge.includes("scope=await operatorScope(user.id)"),
+ 'Manager-scoped reset/delete endpoints must remain restricted')
 assert.ok(adminEditor.includes('resetEmployeePassword(draft.userId,resetPassword)'),
  'Existing manager password reset must remain available')
 assert.ok(docs.includes('「管理總覽」→「我的帳號安全'),
