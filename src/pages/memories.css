@@ -1,5 +1,17 @@
 /* 狐隱 · 旅人繪卷 — deep ink, antique gold, restrained foxfire. */
-.memories-page{width:min(1100px,calc(100% - 40px));margin:0 auto;padding:76px 0 112px;color:#f1e7dc;min-height:75vh}
+/* Full-bleed translucent ink wash, matching services and shifts.
+   Let the shared seven-scene backdrop crossfade behind the entire page. */
+.memories-page{
+ width:100%;
+ min-width:0;
+ min-height:75vh;
+ margin:0;
+ padding:76px clamp(12px,2.5vw,30px) 112px;
+ color:#f1e7dc;
+ background:
+  radial-gradient(ellipse at 52% 1%,rgba(126,91,117,.16),transparent 47%),
+  linear-gradient(180deg,rgba(13,12,22,.69) 0%,rgba(15,13,24,.77) 52%,rgba(16,14,25,.87) 100%);
+}
 .memories-hero{text-align:center;margin:0 auto 35px;max-width:740px}
 .memories-hero .eyebrow,.memories-section-title .eyebrow,.memories-admin .eyebrow{letter-spacing:.22em;color:#c2a077;font-size:.73rem}
 .memories-glyph{font-size:.76rem;letter-spacing:.62em;color:#ae8a60;margin:22px 0 7px}
@@ -104,7 +116,7 @@
 .memories-preview-backdrop img{object-fit:contain;max-height:80vh;max-width:90vw}
 .memories-preview-backdrop button{padding:8px 14px;background:#22202c;color:#efdbc4;border:1px solid #8f714d}
 @media(max-width:680px){
- .memories-page{width:calc(100% - 24px);padding:44px 0 90px}
+ .memories-page{padding:44px 12px 90px}
  .memories-panel{padding:28px 16px}
  .memories-tabs{gap:8px}
  .memories-tabs button{min-width:0;flex:1 1 45%;padding:12px 8px;gap:6px;flex-wrap:wrap;font-size:.87rem}
