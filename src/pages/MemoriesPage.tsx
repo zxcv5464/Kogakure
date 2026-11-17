@@ -1,4 +1,5 @@
 import {useEffect,useState} from 'react'
+import type {FormEvent} from 'react'
 import {Camera,Download,Feather,KeyRound,MessageCircle,Send,ShieldCheck} from 'lucide-react'
 import {fetchPublicFeedback,formatExpiry,lookupKeepsake,submitFeedback} from '../lib/guest-memories'
 import type {Feedback,Pickup} from '../lib/guest-memories'
@@ -42,14 +43,14 @@ export default function MemoriesPage(){
   return()=>{live=false}
  },[])
 
- async function fetchPhotos(event:React.FormEvent){
+ async function fetchPhotos(event:FormEvent){
   event.preventDefault()
   setLookupBusy(true);setLookupError('');setPickup(null)
   try{setPickup(await lookupKeepsake(code.trim()))}
   catch(error){setLookupError(error instanceof Error?error.message:'領取失敗')}
   finally{setLookupBusy(false)}
  }
- async function post(event:React.FormEvent){
+ async function post(event:FormEvent){
   event.preventDefault()
   if(submitting)return
   if(website){setSent(true);return}
