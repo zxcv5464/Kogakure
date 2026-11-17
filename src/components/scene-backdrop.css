@@ -40,7 +40,7 @@
  filter: none;
 }
 .site > main .coming-photo {
- background: linear-gradient(180deg, rgba(12,12,20,.57), rgba(12,12,20,.75)) !important;
+ background: transparent !important;
  filter: none;
 }
 .site > main .staff-hero {
