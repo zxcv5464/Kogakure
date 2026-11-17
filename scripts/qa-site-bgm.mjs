@@ -112,7 +112,7 @@ assert.ok(introCss.includes('.intro-entry-action,.intro-music-note{opacity:1!imp
 assert.ok(introCss.includes('@media(prefers-reduced-motion:reduce)')&&
  !introCss.includes('.entry-intro{display:none!important}'),
  'Visitors with reduced motion must retain access to the entry button')
-assert.ok(transition.includes('<SceneBackdrop introReady={introReady} />'),
+assert.ok(transition.includes('<SceneBackdrop introReady={introReady} path={displayed.pathname} />'),
  'Site background and route transitions must keep using the existing reveal state')
 assert.ok(css.includes('width:40px;height:40px')&&
  css.includes('border-radius:50%')&&
