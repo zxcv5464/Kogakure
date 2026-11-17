@@ -141,7 +141,7 @@ try{
  assert.deepEqual(mod.EMPLOYEE_PERMISSIONS.map(x=>x.id),[
   'accounts.manage','staff.manage','announcements.manage','bgm.manage','accounting.manage',
   'menu.manage','services.manage','orders.manage','booking.manage',
-  'shifts.manage','shifts.attend',
+  'keepsakes.manage','feedback.manage','shifts.manage','shifts.attend',
  ])
  assert.equal(mod.staffLoginEmail('Fox_01'),'fox_01@staff.kogakure.invalid')
  assert.equal(mod.staffLoginEmail(' yueying '),'yueying@staff.kogakure.invalid')
