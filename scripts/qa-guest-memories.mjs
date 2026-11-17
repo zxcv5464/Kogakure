@@ -9,10 +9,11 @@ const files=[
  'src/pages/MemoriesPage.tsx','src/pages/admin/MemoriesManagement.tsx',
  'src/lib/guest-memories.ts','scripts/prepare-pages.mjs',
  'supabase/migrations/20261117_01_guest_memories.sql',
+ 'supabase/migrations/20261117_02_keepsake_code_retrieval.sql',
  'supabase/functions/guest-keepsakes/index.ts',
  'supabase/functions/manage-employee-accounts/index.ts',
 ]
-const [app,layout,admin,modules,permissions,publicPage,manager,api,routes,sql,edge,accountsEdge]=
+const [app,layout,admin,modules,permissions,publicPage,manager,api,routes,sql,codeSql,edge,accountsEdge]=
  await Promise.all(files.map(path=>readFile(path,'utf8')))
 for(const path of [
  'src/pages/MemoriesPage.tsx','src/pages/admin/MemoriesManagement.tsx',
@@ -60,7 +61,8 @@ has(edge,[
 ],'Expiry and short-lived signed delivery')
 has(api,[
  'crypto.getRandomValues(new Uint8Array(16))',
- "crypto.subtle.digest('SHA-256'",
+ "rpc('create_keepsake_claim'",
+ "rpc('reveal_keepsake_claim_code'",
  "from('keepsake_claims')",
  "from('guest_feedback')",
  "rpc('submit_guest_feedback'",
@@ -77,8 +79,25 @@ has(manager,[
  'deleteKeepsake(claim)',
  "moderateFeedback(item.id,status",
  'deleteFeedback(item.id)',
- 'newCode','newLink',
+ 'newCode','newLink','toggleClaimCode(claim)','revealKeepsakeCode(claim.id)',
+ '顯示領取碼','複製領取碼','複製連結',
 ],'Backoffice workflow')
+has(codeSql,[
+ 'create table if not exists private.keepsake_claim_codes',
+ 'encrypted_code bytea not null',
+ 'alter table private.keepsake_claim_codes enable row level security',
+ 'create or replace function public.create_keepsake_claim(',
+ 'create or replace function public.reveal_keepsake_claim_code(',
+ "has_backoffice_permission('keepsakes.manage')",
+ "extensions.pgp_sym_encrypt(",
+ "extensions.pgp_sym_decrypt(",
+ "extensions.digest(v_code,'sha256')",
+ "grant execute on function public.reveal_keepsake_claim_code(uuid) to authenticated",
+ "revoke insert,update on public.keepsake_claims from authenticated",
+ "c.expires_at>now()",
+],'Operators can recover encrypted codes but guests cannot')
+assert.ok(!api.includes("token_sha256:sha"),
+ 'Clients may not create unrecoverable legacy claim records')
 assert.ok(!sql.includes("values('keepsake-deliveries','keepsake-deliveries',true"),
  'Customer photos must never use a public Storage bucket')
-console.log('PASS: private seven-day polaroid delivery, delegated backoffice and anonymous moderated feedback')
+console.log('PASS: private seven-day photo delivery, securely recoverable codes and moderated feedback')

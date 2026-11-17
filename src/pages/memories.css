@@ -118,3 +118,10 @@
  .memories-admin-card{padding:16px}
  .memories-admin-actions button{flex:1}
 }
+
+/* Recoverable but private delivery codes, displayed only on an operator action. */
+.memories-claim-code-panel{margin:16px 0 6px;padding:15px 16px;border:1px solid rgba(206,166,111,.32);background:rgba(15,17,28,.68);border-radius:4px}
+.memories-code-label{display:block;color:#e8caa5;font-size:.81rem;margin-bottom:10px;letter-spacing:.07em}
+.memories-claim-code-panel .memories-share-row{margin:9px 0}
+.memories-claim-code-panel .memories-share-row button{white-space:nowrap}
+@media(max-width:680px){.memories-claim-code-panel{padding:13px}.memories-claim-code-panel .memories-share-row button{width:100%;justify-content:center}}

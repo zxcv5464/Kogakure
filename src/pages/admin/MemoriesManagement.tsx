@@ -2,7 +2,7 @@ import {useCallback,useEffect,useState} from 'react'
 import type {FormEvent} from 'react'
 import {Camera,Check,ClipboardCopy,Eye,RefreshCw,Save,Trash2,UploadCloud} from 'lucide-react'
 import {adminPreviewUrl,createKeepsake,deleteFeedback,deleteKeepsake,deleteKeepsakePhoto,
- fetchAdminFeedback,fetchAdminKeepsakes,formatExpiry,isExpired,keepsakeShareLink,moderateFeedback,uploadKeepsakePhoto} from '../../lib/guest-memories'
+ fetchAdminFeedback,fetchAdminKeepsakes,formatExpiry,isExpired,keepsakeShareLink,moderateFeedback,revealKeepsakeCode,uploadKeepsakePhoto} from '../../lib/guest-memories'
 import type {Feedback,KeepsakeClaim,KeepsakePhoto} from '../../lib/guest-memories'
 import '../memories.css'
 
@@ -13,6 +13,7 @@ export default function MemoriesManagement({section}:{section:'keepsakes'|'feedb
  const [guest,setGuest]=useState('')
  const [note,setNote]=useState('')
  const [files,setFiles]=useState<File[]>([])
+ const [shownCodes,setShownCodes]=useState<Record<string,string>>({})
  const [newCode,setNewCode]=useState('')
  const [newLink,setNewLink]=useState('')
  const [busy,setBusy]=useState(false)
@@ -41,13 +42,14 @@ export default function MemoriesManagement({section}:{section:'keepsakes'|'feedb
    const result=await createKeepsake(guest,note)
    setNewCode(result.code)
    setNewLink(keepsakeShareLink(result.code))
+   setShownCodes(old=>({...old,[result.claim.id]:result.code}))
    let saved=0
    const failures:string[]=[]
    for(const file of files){
     try{await uploadKeepsakePhoto(result.claim.id,file);saved++}
     catch(e){failures.push(file.name+'：'+(e instanceof Error?e.message:'上傳失敗'))}
    }
-   setNotice(saved+' 張照片已交付。領取碼僅顯示這一次，請立即複製並傳給旅人。')
+   setNotice(saved+' 張照片已交付。可隨時在下方交付紀錄重新顯示及複製領取碼。')
    if(failures.length)setError('部分照片未能上傳：'+failures.join('；'))
    setGuest('');setNote('');setFiles([])
    const picker=document.getElementById('keepsake-upload-picker') as HTMLInputElement|null
@@ -55,6 +57,18 @@ export default function MemoriesManagement({section}:{section:'keepsakes'|'feedb
    await refresh()
   }catch(e){setError(e instanceof Error?e.message:'建立交付單失敗')}
   finally{setBusy(false)}
+ }
+ async function toggleClaimCode(claim:KeepsakeClaim){
+  if(shownCodes[claim.id]){
+   setShownCodes(old=>{const next={...old};delete next[claim.id];return next})
+   return
+  }
+  setBusyItem(claim.id);setError('')
+  try{
+   const code=await revealKeepsakeCode(claim.id)
+   setShownCodes(old=>({...old,[claim.id]:code}))
+  }catch(e){setError(e instanceof Error?e.message:'領取碼載入失敗')}
+  finally{setBusyItem('')}
  }
  async function addPhotos(claim:KeepsakeClaim,selected:FileList|null){
   if(!selected?.length)return
@@ -132,7 +146,7 @@ export default function MemoriesManagement({section}:{section:'keepsakes'|'feedb
    </form>
    {newCode&&<div className="memories-admin-card memories-new-code">
     <h2><Check size={19}/>領取碼已產生</h2>
-    <p>請立即轉交旅人。為維護隱私，系統只保存領取碼的雜湊值，離開頁面後無法重新查詢原始碼。</p>
+    <p>領取碼已安全加密保存。日後可在下方交付紀錄點選「顯示領取碼」重新取得，不必另外保存。</p>
     <div className="memories-share-row"><code>{newCode}</code><button type="button" onClick={()=>void copy(newCode)}><ClipboardCopy size={17}/>複製碼</button></div>
     <div className="memories-share-row"><input readOnly value={newLink} aria-label="專屬領取網址"/><button type="button" onClick={()=>void copy(newLink)}><ClipboardCopy size={17}/>複製連結</button></div>
    </div>}
@@ -149,7 +163,20 @@ export default function MemoriesManagement({section}:{section:'keepsakes'|'feedb
       <button type="button" aria-label={'預覽 '+photo.original_name} disabled={!!busyItem} onClick={()=>void showPreview(photo)}><Eye size={16}/></button>
       <button type="button" className="is-danger" aria-label={'刪除 '+photo.original_name} disabled={!!busyItem} onClick={()=>void removePhoto(photo)}><Trash2 size={16}/></button>
      </div>)}</div>
+     {!isExpired(claim.expires_at)&&shownCodes[claim.id]&&<div className="memories-claim-code-panel">
+      <span className="memories-code-label">專屬領取碼</span>
+      <div className="memories-share-row">
+       <code>{shownCodes[claim.id]}</code>
+       <button type="button" onClick={()=>void copy(shownCodes[claim.id])}><ClipboardCopy size={16}/>複製領取碼</button>
+      </div>
+      <div className="memories-share-row">
+       <input readOnly aria-label={claim.guest_label+' 的專屬領取連結'} value={keepsakeShareLink(shownCodes[claim.id])}/>
+       <button type="button" onClick={()=>void copy(keepsakeShareLink(shownCodes[claim.id]))}><ClipboardCopy size={16}/>複製連結</button>
+      </div>
+     </div>}
      <div className="memories-admin-actions">
+      {!isExpired(claim.expires_at)&&<button type="button" disabled={!!busyItem}
+       onClick={()=>void toggleClaimCode(claim)}><Eye size={16}/>{shownCodes[claim.id]?'隱藏領取碼':'顯示領取碼'}</button>}
       {!isExpired(claim.expires_at)&&<label className="memories-admin-add-files"><UploadCloud size={15}/>補傳照片
        <input type="file" accept="image/jpeg,image/png,image/webp" multiple disabled={!!busyItem}
         onChange={e=>{void addPhotos(claim,e.target.files);e.target.value=''}}/></label>}
