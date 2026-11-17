@@ -37,7 +37,7 @@
 .route-stage .tea-menu-page,
 .route-stage .services-page,
 .route-stage .shift-page,
-.route-stage .booking-page,
+.route-stage .booking-page{--public-reveal-ease:cubic-bezier(.22,.65,.25,1)}
 .route-stage .memories-page{--public-reveal-ease:cubic-bezier(.22,.65,.25,1)}
 /* 入館須知：題字 → 引言 → 歡迎詞 → 目錄 → 五章館約 */
 .route-stage .house-rules-brand,
