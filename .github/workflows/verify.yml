@@ -19,6 +19,10 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci
+      - name: Verify private keepsake delivery, expiry cleanup and moderated guestbook
+        env:
+          VITE_OFFLINE_PREVIEW: 'true'
+        run: node scripts/qa-guest-memories.mjs
       - name: Verify GitHub Pages build without production credentials
         env:
           VITE_BASE_PATH: /Kogakure/
