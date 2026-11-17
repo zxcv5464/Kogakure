@@ -1,4 +1,4 @@
-// Ensure service, shift and traveler memories pages reveal the site's rotating
+// Ensure all public pages retain the site's rotating backdrop and their intended
 // photographic backdrop instead of painting opaque backgrounds over it.
 // Static checks only; no browser, external URLs or production data changes.
 import assert from 'node:assert/strict'
@@ -33,13 +33,13 @@ assert.ok(app.includes('path="/services"')&&app.includes('path="/shifts"'),
 assert.ok(backdropCss.includes('transition: opacity 2400ms')&&backdropCss.includes('.scene-backdrop__photo.is-active'),
  'Background imagery must still crossfade instead of abruptly switching')
 
-// Both pages deliberately use identical translucent ink-wash strengths.
+// Services and shifts use the lighter scene wash; memories uses a darker veil.
 // Removing the opaque colors is what makes the already-running images visible.
 const wash='linear-gradient(180deg,rgba(13,12,22,.69)0%,rgba(15,13,24,.77)52%,rgba(16,14,25,.87)100%)'
 const serviceRoot=serviceCss.split('.services-page {')[1]?.split('\n}')[0]??''
 const shiftRoot=shiftCss.split('.shift-page{')[1]?.split('}')[0]??''
 const memoriesRoot=memoriesCss.split('.memories-page{')[1]?.split('}')[0]??''
-for(const [name,root] of [['services',serviceRoot],['shifts',shiftRoot],['memories',memoriesRoot]]){
+for(const [name,root] of [['services',serviceRoot],['shifts',shiftRoot]]){
  const normalized=root.replace(/\s+/g,'')
  assert.ok(normalized.includes(wash),name+' page must use the shared translucent scene wash')
  assert.ok(!/linear-gradient\(180deg,#/.test(normalized),
@@ -49,6 +49,14 @@ assert.ok(servicePage.includes('ServicePhotoGallery')&&serviceCss.includes('.ser
  'Independent service photo carousel must be preserved')
 assert.ok(shiftPage.includes('shift-calendar-weekdays')&&shiftPage.includes('shift-selected-detail'),
  'Monthly roster and selected-day details must not be replaced')
+// Memories are intentionally darker than the service and shift scene wash:
+ // match the translucent ink veil used by the booking page.
+const memoriesVeil='linear-gradient(180deg,rgba(12,12,21,.90)0%,rgba(17,15,26,.98)100%)'
+assert.ok(memoriesRoot.replace(/\s+/g,'').includes(memoriesVeil),
+ 'Traveler memories needs the same dark translucent overlay as booking')
+assert.ok(memoriesCss.includes('.site:has(.memories-page)>main{display:flex;flex-direction:column;flex:1;min-height:0}')&&
+ memoriesCss.includes('.site:has(.memories-page) .memories-page{flex:1}'),
+ 'Traveler memories overlay must reach the footer even when content is short')
 assert.ok(app.includes('path="/memories"'), 'Traveler memories must remain in the shared public scene shell')
 assert.ok(memoriesRoot.includes('width:100%')&&memoriesRoot.includes('min-width:0')&&
  !memoriesRoot.includes('max-width:')&&!memoriesRoot.includes('1100px'),
