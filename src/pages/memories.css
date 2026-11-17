@@ -139,3 +139,11 @@
 .memories-claim-code-panel .memories-share-row{margin:9px 0}
 .memories-claim-code-panel .memories-share-row button{white-space:nowrap}
 @media(max-width:680px){.memories-claim-code-panel{padding:13px}.memories-claim-code-panel .memories-share-row button{width:100%;justify-content:center}}
+
+/* Manual delivery code setup and replacement share the discreet ink/gold form. */
+.memories-admin-upload .memories-admin-fields>label:last-child{grid-column:1/-1}
+.memories-claim-edit-panel{display:grid;gap:11px;margin-top:16px;padding:16px;border:1px solid rgba(206,166,111,.3);background:rgba(15,17,28,.66);border-radius:4px}
+.memories-claim-edit-panel input{width:100%;min-width:0}
+.memories-claim-edit-panel small{color:#c5ae91;line-height:1.75}
+.memories-claim-edit-panel .memories-admin-actions{margin-top:0}
+@media(max-width:680px){.memories-admin-upload .memories-admin-fields>label:last-child{grid-column:auto}.memories-claim-edit-panel{padding:13px}}
