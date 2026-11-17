@@ -2,6 +2,8 @@
 import assert from 'node:assert/strict'
 import {readFile} from 'node:fs/promises'
 import ts from 'typescript'
+import {runInNewContext} from 'node:vm'
+import {webcrypto} from 'node:crypto'
 
 const files=[
  'src/App.tsx','src/components/Layout.tsx','src/pages/AdminPage.tsx',
@@ -121,6 +123,51 @@ has(manualSql,[
 has(api,['normalized.length<12','normalized.length>32',"rpc('update_keepsake_claim_code'"],'Input and code update validation')
 has(publicPage,['maxLength={48}','輸入館方提供的專屬領取碼'],'Public code form accepts custom labels')
 has(edge,["/^[a-z0-9]{12,32}$/.test(token)",".replace(/[\\s-]/g,'').toLowerCase()"],'Public lookup normalizes custom and legacy codes')
+has(publicPage,[
+ 'className="memories-keepsake-intro"',
+ '將今夜的月色，輕輕收進相片。',
+ '請輸入館方交付的專屬領取碼，',
+ 'const [anonymous,setAnonymous]=useState(false)',
+],'Split visitor instructions and named-first feedback')
+assert.ok(!publicPage.includes('const [anonymous,setAnonymous]=useState(true)'),
+ 'Guest feedback must not silently default to anonymous')
+has(manager,[
+ 'generateKeepsakeCode(claim.created_at,claim.keepsake_photos.length)',
+ '重新產生隨機碼',
+ '確認修改領取碼',
+ 'window.confirm(',
+],'Existing claim edits require explicit confirmation')
+has(api,[
+ 'export function generateKeepsakeCode(',
+ "timeZone:'Asia/Taipei'",
+ 'crypto.getRandomValues(new Uint8Array(10))',
+ "String(photoCount).padStart(2,'0')",
+],'Date, uploaded count, and strong random-code generation')
+
+// Exercise just the two pure TS code helpers with real Web Crypto, without
+// importing DB/session modules or touching private uploads in the test.
+const validationSource=api.slice(
+ api.indexOf('export function validateKeepsakeCode('),
+ api.indexOf('export async function createKeepsake('))
+const generatorSource=api.slice(
+ api.indexOf('export function generateKeepsakeCode('),
+ api.indexOf('/** A replacement invalidates'))
+assert.ok(validationSource.includes('return display')&&generatorSource.includes('return validateKeepsakeCode'))
+const compiled=ts.transpileModule(validationSource+'\n'+generatorSource,{
+ compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022},
+}).outputText
+const isolatedExports={}
+runInNewContext(compiled,{exports:isolatedExports,crypto:webcrypto,Intl,Date,Array,Number,String,Uint8Array,Error})
+const codeFns=isolatedExports
+const testCode=codeFns.generateKeepsakeCode('2026-11-17T18:34:00Z',3)
+const secondCode=codeFns.generateKeepsakeCode('2026-11-17T18:34:00Z',3)
+assert.match(testCode,/^20261118-03-[A-F0-9]{20}$/,'Taipei-local delivery date and padded photo count')
+assert.notEqual(testCode,secondCode,'Codes must be cryptographically randomized on each generation')
+assert.equal(codeFns.validateKeepsakeCode(testCode),testCode,'Proposed codes must pass claim RPC validation')
+assert.match(codeFns.generateKeepsakeCode('2026-11-17T00:00:00Z',125),
+ /^20261117-125-[A-F0-9]{20}$/,'Keep the actual photo count above 99')
+assert.throws(()=>codeFns.generateKeepsakeCode('invalid',2),'Invalid dates must not become claim codes')
+assert.throws(()=>codeFns.generateKeepsakeCode('2026-11-17T00:00:00Z',-1),'Negative photo counts must fail')
 assert.ok(!api.includes('crypto.getRandomValues(new Uint8Array(16))'),
  'Backoffice must require staff-chosen code rather than issuing automatic random tokens')
 assert.ok(!api.includes("token_sha256:sha"),
