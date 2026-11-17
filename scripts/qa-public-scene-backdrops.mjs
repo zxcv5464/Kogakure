@@ -1,10 +1,10 @@
-// Ensure service and shift pages reveal the site's existing rotating
+// Ensure service, shift and traveler memories pages reveal the site's rotating
 // photographic backdrop instead of painting opaque backgrounds over it.
 // Static checks only; no browser, external URLs or production data changes.
 import assert from 'node:assert/strict'
 import {readFile} from 'node:fs/promises'
 
-const [backdrop,backdropCss,transition,app,serviceCss,shiftCss,servicePage,shiftPage]=
+const [backdrop,backdropCss,transition,app,serviceCss,shiftCss,memoriesCss,servicePage,shiftPage]=
  await Promise.all([
   'src/components/SceneBackdrop.tsx',
   'src/components/scene-backdrop.css',
@@ -12,6 +12,7 @@ const [backdrop,backdropCss,transition,app,serviceCss,shiftCss,servicePage,shift
   'src/App.tsx',
   'src/pages/services-page.css',
   'src/pages/shifts-page.css',
+  'src/pages/memories.css',
   'src/pages/ServicesPage.tsx',
   'src/pages/ShiftsPage.tsx',
  ].map(p=>readFile(p,'utf8')))
@@ -37,7 +38,8 @@ assert.ok(backdropCss.includes('transition: opacity 2400ms')&&backdropCss.includ
 const wash='linear-gradient(180deg,rgba(13,12,22,.69)0%,rgba(15,13,24,.77)52%,rgba(16,14,25,.87)100%)'
 const serviceRoot=serviceCss.split('.services-page {')[1]?.split('\n}')[0]??''
 const shiftRoot=shiftCss.split('.shift-page{')[1]?.split('}')[0]??''
-for(const [name,root] of [['services',serviceRoot],['shifts',shiftRoot]]){
+const memoriesRoot=memoriesCss.split('.memories-page{')[1]?.split('}')[0]??''
+for(const [name,root] of [['services',serviceRoot],['shifts',shiftRoot],['memories',memoriesRoot]]){
  const normalized=root.replace(/\s+/g,'')
  assert.ok(normalized.includes(wash),name+' page must use the shared translucent scene wash')
  assert.ok(!/linear-gradient\(180deg,#/.test(normalized),
@@ -47,6 +49,14 @@ assert.ok(servicePage.includes('ServicePhotoGallery')&&serviceCss.includes('.ser
  'Independent service photo carousel must be preserved')
 assert.ok(shiftPage.includes('shift-calendar-weekdays')&&shiftPage.includes('shift-selected-detail'),
  'Monthly roster and selected-day details must not be replaced')
+assert.ok(app.includes('path="/memories"'), 'Traveler memories must remain in the shared public scene shell')
+assert.ok(memoriesRoot.includes('width:100%')&&memoriesRoot.includes('min-width:0')&&
+ !memoriesRoot.includes('max-width:')&&!memoriesRoot.includes('1100px'),
+ 'Traveler memories ink wash must cover the viewport rather than a centered 1100px strip')
+assert.ok(memoriesCss.includes('.memories-page{padding:44px 12px 90px}'),
+ 'Mobile traveler memories must retain a full-width ink wash')
+assert.ok(memoriesCss.includes('.memories-panel{max-width:850px'),
+ 'Keep traveler forms comfortably centered inside the full-width background')
 assert.ok(shiftCss.includes('@media(max-width:690px)'),
  'Mobile calendar must retain its responsive layout')
-console.log('PASS: services and shifts reveal the shared seven-scene 5-second crossfade while keeping galleries, calendar and accessibility')
+console.log('PASS: services, shifts and traveler memories reveal the shared seven-scene 5-second crossfade while keeping galleries, calendar and accessibility')
