@@ -11,7 +11,7 @@
    - `VITE_SUPABASE_URL`：Supabase Project URL。
    - `VITE_SUPABASE_PUBLISHABLE_KEY`：`sb_publishable_...` 公開金鑰。
 3. **禁止**將 service-role、`sb_secret_...`、資料庫密碼或員工密碼放在 `VITE_*` 或提交到儲存庫。
-4. `.github/workflows/verify.yml` 負責 PR 的已知高風險依賴漏洞稽核與回歸檢查；`.github/workflows/deploy.yml` 於 `main` 更新後建置、發佈 GitHub Pages。新增的 `.github/dependabot.yml` 每週為 npm 和 GitHub Actions 更新提出 PR（**不自動合併**）。
+4. `.github/workflows/verify.yml` 負責 PR 的已知高風險依賴漏洞稽核與回歸檢查；`.github/workflows/deploy.yml` 於 `main` 更新後建置、發佈 GitHub Pages。`.github/dependabot.yml` 目前停用大量一般版本升級 PR，僅保留 GitHub 已啟用時的安全更新提醒／PR；避免一次出現多個未經相容性驗證的大版本更新。任何依賴更新都**不會自動合併**。
 5. 部署成功後，確認正式網址、各頁直接進入／重新整理、後台登入、網路請求是否指向**預期 Supabase 專案**。
 
 Actions 只發布前端靜態檔案。**SQL migrations、Storage/RLS、Edge Function 必須由授權管理員另外部署**，不可認為 push 就會自動生效。

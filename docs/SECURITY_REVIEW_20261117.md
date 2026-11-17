@@ -6,7 +6,7 @@
 
 - `npm audit --audit-level=moderate`、`npm audit --omit=dev --audit-level=moderate`：本次執行結果均為 **0 項已知依賴漏洞**（結果會隨公告變動，請持續重跑）。
 - `.github/workflows/deploy.yml`：網站只以 `VITE_SUPABASE_URL` 與 `sb_publishable_*` 公開金鑰建置，並明確拒絕 secret/service-role 作為 Vite 公開金鑰；部署 job 權限限於內容讀取及 Pages 發布需要的項目。
-- `.github/workflows/verify.yml`：PR 使用離線預覽進行回歸 QA，不依賴正式 Supabase 密鑰；本次新增 `npm audit --audit-level=high` 安全檢查。另以 `.github/dependabot.yml` 每週對 npm／GitHub Actions 提出更新 PR，仍需人工審核合併。
+- `.github/workflows/verify.yml`：PR 使用離線預覽進行回歸 QA，不依賴正式 Supabase 密鑰；本次新增 `npm audit --audit-level=high` 安全檢查。`.github/dependabot.yml` 已調整為暫停一般版本升級 PR，以免一次建立大量大版本更新；保留在 GitHub 倉庫安全功能已啟用時的安全更新提醒／PR，仍需人工審核合併。
 - 後台員工帳號操作使用帶 JWT 的 Edge Function `manage-employee-accounts`；函式程式碼核對登入者、`accounts.manage`、帳號啟用狀態與委派限制；高權限 Supabase 金鑰在服務端取得。
 - SQL 使用 RLS、受控 RPC／`private` schema 隔離公開寫入與私有訂單／預約／帳務明細。**需在正式 Supabase 實測確認 migration 全部已套用。**
 

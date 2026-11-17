@@ -1,14 +1,15 @@
-# Keep frontend dependencies and GitHub Actions updated through reviewable PRs.
-# Do not automatically merge dependency updates into the deployed website.
+# Security update PRs are managed separately from routine version-update PRs.
+# Avoid flooding the owner with unreviewed major-version upgrade requests.
+# Keep Dependabot alerts and security updates enabled in repository Settings.
 version: 2
 updates:
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 0
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 0
