@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import type { Location } from 'react-router-dom'
 import SceneBackdrop from './SceneBackdrop'
-import { STAFF_PAGE_READY_EVENT, MENU_PAGE_READY_EVENT, BOOKING_PAGE_READY_EVENT, SHIFT_PAGE_READY_EVENT } from '../lib/route-events'
+import { STAFF_PAGE_READY_EVENT, MENU_PAGE_READY_EVENT, BOOKING_PAGE_READY_EVENT, SHIFT_PAGE_READY_EVENT, PUBLIC_ROUTE_MOUNTED_EVENT } from '../lib/route-events'
 import './page-transition.css'
 import './route-motion.css'
 
@@ -58,7 +58,8 @@ export default function PageTransition({
   const readyEvent = location.pathname === '/staff' ? STAFF_PAGE_READY_EVENT
    : location.pathname === '/menu' ? MENU_PAGE_READY_EVENT
    : location.pathname === '/booking' ? BOOKING_PAGE_READY_EVENT
-   : location.pathname === '/shifts' ? SHIFT_PAGE_READY_EVENT : null
+   : location.pathname === '/shifts' ? SHIFT_PAGE_READY_EVENT
+   : location.pathname === '/' ? null : PUBLIC_ROUTE_MOUNTED_EVENT
   const readyTimeout = location.pathname === '/menu' ? MENU_READY_TIMEOUT_MS : STAFF_READY_TIMEOUT_MS
   let swapped = false
   let ready = readyEvent === null
@@ -71,7 +72,10 @@ export default function PageTransition({
    setPhase('reveal')
    finish = window.setTimeout(() => setPhase('idle'), REVEAL_MS + 40)
   }
-  const onPageReady = () => {
+  const onPageReady = (event: Event) => {
+   // A late lazy chunk from a previous route must never open this curtain.
+   if (readyEvent === PUBLIC_ROUTE_MOUNTED_EVENT &&
+    (event as CustomEvent<string>).detail !== location.pathname) return
    ready = true
    if (fallback !== undefined) window.clearTimeout(fallback)
    reveal()
@@ -115,7 +119,8 @@ export default function PageTransition({
  }, [phase !== 'idle'])
 
  return <>
-  <SceneBackdrop introReady={introReady} />
+  <SceneBackdrop introReady={introReady} path={displayed.pathname} />
+  <div className={'public-page-veil' + (displayed.pathname === '/' ? ' is-home' : '')} aria-hidden="true" />
   <div key={displayed.pathname} className={'route-stage' + (introReady ? '' : ' intro-waiting') + (phase === 'cover' ? ' is-covering' : '')}>
    {children(displayed)}
   </div>
