@@ -1,96 +1,68 @@
-# 狐隱｜Supabase 正式資料庫與本機管理後台設定
+# 狐隱｜Supabase 設定、遷移與安全驗收
 
-目前開發方式：`D:\kogakure` 本機 Vite + 雲端 Supabase。**不需要把網站部署到 GitHub**，也不需要下載 PostgreSQL 伺服器。
+對照 2026-11-17 GitHub 原始碼。**本說明不會自動變更正式 Supabase**；在操作 SQL Editor、帳號、Storage 或 Edge Function 前，先確認店長授權與可還原備份。
 
-## A. 建立雲端資料庫（只做一次）
+## 系統分工
 
-1. 登入 https://supabase.com/dashboard 。
-2. 選擇 New project（建立新專案）；專案名稱可用 `kogakure`。
-3. 選擇你預計使用的組織、方案和較近的地區；設定**資料庫密碼**並自行安全保管（不要貼進對話或 `.env.local`）。
-4. 等待 Supabase 顯示專案正常可用。
-5. 左側選 **SQL Editor → New query**。
-6. 開啟本專案 `supabase/migrations/20261108_01_staff.sql`，把**完整 SQL 內容**貼到 SQL Editor 並按 Run。
-7. SQL 執行成功後，到 Table Editor 應能看到 `public.staff` 和 `public.admin_users`；Storage 應能看到 `staff-media` bucket。
+- GitHub Pages：公開 React/Vite 網頁與後台介面，**不執行資料庫 migration**。
+- Supabase PostgreSQL：公開資料、訂單／預約、帳務與權限（RLS、受控 RPC）。
+- Supabase Auth：正式管理員與員工登入身分。
+- Supabase Storage：員工、服務、BGM 等公開素材；寫入權限由 Storage RLS 檢查。
+- Supabase Edge Function `manage-employee-accounts`：以**伺服器端**權限管理員工 Auth 使用者。
 
-這一輪先建立**員工資料、管理員權限、員工圖片**三項。排班、菜單與預約的表會在規則確認後分階段新增，不會現在一次建一堆空表。
+## 首次建立專案（只在空白環境使用）
 
-## B. 建立第一個後台管理員（只做一次）
+1. 在 Supabase Dashboard 建立專案，保管資料庫密碼，關閉不需要的訪客自助註冊。
+2. 由正式負責人確認 `supabase/migrations/` 中全部 SQL 的順序與相依。最初基準為 `20261108_01_staff.sql`，其後已增加多份菜單、訂單、預約、排班、服務、公告、BGM、帳務及權限 migration；**不能只套用第一份**。
+3. 由有權限的操作人員逐份套用尚未執行的 migration，記錄檔名、時間、結果和回復方式。**不要因 SQL 使用 `IF NOT EXISTS` 就假定可以任意重跑**；後續函式與權限可能已被新版替換。
+4. 在 Authentication → Users 建立第一位正式管理員，確認 UID 後，在 SQL Editor 執行：
+   ```sql
+   insert into public.admin_users (user_id)
+   values ('YOUR_AUTH_USER_UUID')
+   on conflict (user_id) do nothing;
+   ```
+5. 配置 Edge Function `manage-employee-accounts` 並啟用 JWT 驗證（`verify_jwt=true`）。Supabase URL 和 service-role/secret 權限只留在**函式服務端**，不得進入 Vite 或 GitHub 前端變數。
+6. 依模組文件驗證 Storage buckets、公開 SELECT 限制、編輯者與匿名者的隔離，以及上傳後的實際公開效果。
 
-1. 打開 **Authentication → Users**。
-2. 使用 Dashboard 的 **Add user** 建立一個 Email + 密碼的使用者；完成後請確認使用者可以登入（必要時完成 Email 驗證）。
-3. 在 Users 清單中點選剛建立的使用者，複製其 **User UID（UUID）**。
-4. 到 **SQL Editor → New query**，執行：
+若是**已在營運的專案**，跳過「首次建立」；先盤點目前 schema、函式定義、migrations 已套用紀錄，對比最新 GitHub 內容。尤其 2026-11-17 公開表單名稱檢查的 migration 會替換既有函式片段，含安全前置檢查，**不適合在未知版本上盲目執行**。
 
-```sql
-insert into public.admin_users (user_id)
-values ('貼上你剛剛複製的 User UID')
-on conflict (user_id) do nothing;
-```
+## 本機環境
 
-5. 可再執行下面的查詢驗證（應有一筆 User UID，**不包含密碼**）：
-
-```sql
-select user_id, created_at from public.admin_users;
-```
-
-只有被加入 `admin_users` 的登入者才具有管理權限。一般訪客只能讀取 `is_published = true` 的員工名帖。
-
-**建議：** Authentication → Settings / General configuration 將 **Allow new users to sign up** 關閉；此網站管理員由 Dashboard 手動建立，訪客不需要註冊。
-
-## C. 將本機網站連到資料庫
-
-1. 在 Supabase 專案頂部找到 **Connect**，取得 **Project URL** 和 **Publishable Key**（格式約為 `sb_publishable_...`）。也可以到 **Settings → API Keys**。
-2. 在 `D:\kogakure` 將 `.env.example` 複製成 `.env.local`，只填兩個值：
+建立 `.env.local`（Git 忽略此檔）：
 
 ```dotenv
-VITE_SUPABASE_URL=https://你的專案ID.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_你的公開金鑰
+VITE_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_YOUR_PUBLIC_KEY
 ```
-
-3. 在專案資料夾啟動終端機，執行：
 
 ```bash
+npm ci
 npm run db:check
 npm run dev
+npm run check
+npm run build
 ```
 
-4. 進入本機管理後台 `http://localhost:5173/admin`（如果 Vite 顯示其他埠號，就依終端機顯示的網址）。
-5. 用 B 步驟建立的 Email 和密碼登入。
+`VITE_*` 一定會公開到網頁。**只用 Publishable Key**，不得放 `sb_secret_*`、`service_role`、JWT signing secret、資料庫密碼、帳號密碼。管理員登錄密碼僅於正常登入流程輸入。
 
-**安全注意：** **絕不使用 Secret Key（sb_secret_...）或舊 service_role Key**。網站的 Vite 變數會被放進瀏覽器程式裡，只有 Publishable Key 適合使用。管理員密碼只在登入頁填寫，絕不寫入設定檔或交給他人。
+## 權限與功能驗收（正式環境須人工操作）
 
-本專案的 `.gitignore` 已排除 `.env.local`。請不要將內容截圖公開，也不要把它放入未來交付包。
+| 身分 | 必測情境 |
+| --- | --- |
+| 無痕／匿名 | 只能看到公開名帖、菜單、服務、公告與已公開排班；不得讀取他人訂單、預約明細、帳務及員工帳號 |
+| 未授權登入員工 | 無法使用不屬於自己的後台模組，也不能直接呼叫敏感 RPC |
+| 特定權限員工 | 僅能操作授權模組，停用或撤權後應立即被拒絕；`accounts.manage` 不得任意提升本人權限 |
+| 正式管理員 | 已授權流程可正常新增／修改；敏感的永久刪除與薪資紀錄須確認正確性 |
+| Storage | 匿名不可上傳或刪除；授權者只能操作其模組允許的 bucket |
+| Edge Function | 缺少／無效 JWT、已停用員工、越權操作應被拒絕；service-role 不出現在前端回應 |
 
-## D. 後台第一輪實際測試
+測試資料請事先規劃清理方式，**不要直接刪除正式營運訂單、預約或歷史帳務來測試**。
 
-1. 在 `/admin` 按 **新增**。
-2. 填入姓名、職稱、短句、完整介紹。
-3. 設定個人主題色、狐火／落櫻等特效、服務分類。
-4. 上傳一張員工圖片。系統會轉成兩種高品質 WebP 並存至 Supabase `staff-media`。
-5. 選擇 **對訪客公開名帖**，再按 **儲存名帖**。
-6. 用**無痕視窗**打開 `http://localhost:5173/staff`，確認公開名帖。
-7. 回到後台，取消公開並儲存；在無痕視窗重新整理，確認該名帖已隱藏。
-8. 測試社群連結、照片替換、角色姓名修改後是否同步。
-9. 退出管理後台，再檢查一般訪客不能存取草稿或修改資料。
+## 高風險維運事項
 
-若看到空白人員名錄是正常的：**新的正式資料庫預設沒有員工**，既有的兩位示範人物尚未匯入 Supabase。
+- 公開茶宴、預約使用匿名 RPC；同名同伺服器冷卻機制不等於可靠的網路速率限制。正式公開前評估 Edge/WAF 限流、CAPTCHA 等防垃圾機制。
+- 最新 2026-11-17 migration 移除旅人姓名／世界的 2–48 字限制；只有非空白與控制字元檢查。若輸入超長內容，可能造成儲存與請求資源濫用。需要在不破壞使用需求下決定合理**位元組或請求大小上限**，再另行審核 migration。
+- 服務角色權限、資料庫備份、員工 Auth 密碼、帳務與個資的保存期限，都應由店長控管。
+- 資料庫回滾不是 `git revert`：改回前端版本不會自動倒轉 SQL 與已寫入資料。
 
-## E. 常見狀況
-
-| 狀況 | 最常見原因／處理 |
-|---|---|
-| 後台仍顯示預覽模式 | `.env.local` 不存在、值為空、Vite 未重啟 |
-| `npm run db:check` 回傳找不到 `staff` | SQL migration 尚未成功執行 |
-| 登入後提示沒有管理權限 | 尚未將 Auth UID 加入 `public.admin_users` |
-| Email 無法登入 | 帳密不符、未完成 Email 驗證或 Auth 使用者未建立 |
-| 圖片上傳權限錯誤 | `staff-media` 未建立，或 Storage RLS 沒有設成功 |
-| 前台看不到員工 | 沒勾選公開、沒按儲存，或沒有建立任何資料 |
-| 新圖沒立刻更新 | 前台需重新整理；圖片版本會使用不同路徑避免舊快取 |
-| 手機在同 Wi-Fi 直接開 `localhost` 無法連 | `localhost` 指手機自己；目前只允許本機監聽，如需真機測試另設定區網測試方式 |
-
-## F. 後續工作界線
-
-- SQL Editor 建表與帳號建立是**雲端專案操作**，在你建立並提供授權連線方式前，不會自動執行。
-- 我會在 DevSpace 內負責本機前後台程式、SQL migration、圖片與串接錯誤的修正。
-- 等人員介紹整個流程穩定，繼續擴充館內介紹、營業公告、排班、點菜與預約的資料表和管理後台。
-- 專案告一段落才製作最終交付壓縮檔；不用設定 GitHub Pages 自動部署。
+相關：`docs/STAFF_ACCOUNTS.md`、`docs/SECURITY_REVIEW_20261117.md`、`docs/GITHUB_PUBLISH.md`。

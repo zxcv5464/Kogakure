@@ -1,0 +1,14 @@
+# Keep frontend dependencies and GitHub Actions updated through reviewable PRs.
+# Do not automatically merge dependency updates into the deployed website.
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5

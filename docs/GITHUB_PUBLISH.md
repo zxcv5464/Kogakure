@@ -1,59 +1,55 @@
-# 狐隱｜店長 GitHub 發布設定
+# 狐隱｜GitHub Pages 發布與多人協作
 
-專案來源：`https://github.com/zxcv5464/Kogakure`
-預計網站網址：`https://zxcv5464.github.io/Kogakure/`
-本機專案：`D:\kogakure`
-資料庫：店長的 Supabase，與本機測試使用同一套公開資料。
+正式儲存庫：<https://github.com/zxcv5464/Kogakure>
 
-## 一次性 GitHub 設定（由店長或具管理權限者完成）
+公開網址：<https://zxcv5464.github.io/Kogakure/>
 
-1. 儲存庫須是 **Public**（GitHub Free 的 GitHub Pages 需要公開儲存庫）。公開的是程式碼和經過最佳化的網站圖片，不包含 `.env.local`、管理員密碼、Secret Key、原始角色 PNG。
-2. 在 Repository **Settings → Pages → Build and deployment → Source** 選擇 **GitHub Actions**。
-3. 在 Repository **Settings → Secrets and variables → Actions → Variables → New repository variable** 建立：
-   - `VITE_SUPABASE_URL`：Supabase **Project URL**，與本機 `.env.local` 相同。
-   - `VITE_SUPABASE_PUBLISHABLE_KEY`：Supabase 的 **Publishable Key（sb_publishable_...）**，與本機相同。
-4. 不要將 `sb_secret_...`、`service_role`、管理員帳號密碼設定成 `VITE_*`，也不需把 `.env.local` 上傳至 GitHub。
-5. 在 **Actions** 檢查 `Publish Kogakure website` 工作流程是否完成。首度完成 Pages 設定後，可執行 `workflow_dispatch` 手動發布一次，或日後直接 push `main` 觸發。
+## GitHub Actions 設定
 
-設定完成後，推送 `main` 會自動建置並發布至 `https://zxcv5464.github.io/Kogakure/`。如果缺少上面的兩個公開變數，工作流程會**停止部署**，不會誤將示範資料網站發布出去。
+1. 在儲存庫 **Settings → Pages**，將 Build and deployment Source 設為 **GitHub Actions**。
+2. 在 **Settings → Secrets and variables → Actions → Variables** 設定：
+   - `VITE_SUPABASE_URL`：Supabase Project URL。
+   - `VITE_SUPABASE_PUBLISHABLE_KEY`：`sb_publishable_...` 公開金鑰。
+3. **禁止**將 service-role、`sb_secret_...`、資料庫密碼或員工密碼放在 `VITE_*` 或提交到儲存庫。
+4. `.github/workflows/verify.yml` 負責 PR 的已知高風險依賴漏洞稽核與回歸檢查；`.github/workflows/deploy.yml` 於 `main` 更新後建置、發佈 GitHub Pages。新增的 `.github/dependabot.yml` 每週為 npm 和 GitHub Actions 更新提出 PR（**不自動合併**）。
+5. 部署成功後，確認正式網址、各頁直接進入／重新整理、後台登入、網路請求是否指向**預期 Supabase 專案**。
 
-## 第一次推送至店長的儲存庫
+Actions 只發布前端靜態檔案。**SQL migrations、Storage/RLS、Edge Function 必須由授權管理員另外部署**，不可認為 push 就會自動生效。
 
-DevSpace 本機 `origin` 已切換為 `https://github.com/zxcv5464/Kogakure.git`。請確認你的 GitHub 帳號已接受店長的 Collaborator 邀請。
+## 正常更新與防止覆蓋店長修改
 
-開發機目前 Git 作者可能仍是測試用的 `Your Name <you@example.com>`。首次提交前，請將**本機這個儲存庫**的 Git 作者改成你自己的 GitHub 顯示名稱和已驗證或 noreply Email（不會影響其他專案）。然後：
+在本機 `D:\kogakure`、且工作目錄乾淨時：
 
 ```bash
-cd /d/kogakure
-git add -A
-git commit -m "Prepare Kogakure for owner GitHub Pages"
-git push -u origin main
+git status -sb
+git fetch origin
+git log --oneline --max-count=10 origin/main
+git switch main
+git pull --ff-only origin main
+git switch -c docs/or-feature-name
+npm ci
+npm run check
+npm run build
 ```
 
-新儲存庫建立時是空的，可以直接推送現有歷史；推送後，如 Pages 或 Variables 尚未設定，Actions 會提示設定缺漏。完成 GitHub Pages 設定後可以在 Actions 重新執行 workflow，不需要修改程式碼。
+修改後執行相關 `node scripts/qa-*.mjs`，檢查差異再提交分支：
 
-## 乾淨網址（不需要 #）
+```bash
+git diff --check
+git diff --stat
+git add README.md docs/ .github/dependabot.yml .github/workflows/verify.yml
+git commit -m "Refresh Kogakure documentation and security checklist"
+git push -u origin docs/or-feature-name
+```
 
-網站採用 BrowserRouter，正式執行 `npm run build` 時，會為 `about`、`services`、`staff`、`shifts`、`menu`、`booking`、`admin` 產生各自的 `dist/<頁面>/index.html`，解決 GitHub Pages 無 SPA rewrite 時，直接開啟或重新整理會 404 的問題。
+在 GitHub 開 Pull Request（PR），確認測試通過、店長審查後合併至 `main`。若原工作目錄有未提交改動，**先檢查並保留**，不要直接 pull/覆蓋；若 `--ff-only` 失敗，說明分支歷史已分歧，先看 log 再決定 rebase 或 merge。
 
-正式網址例如 `https://zxcv5464.github.io/Kogakure/staff`、`https://zxcv5464.github.io/Kogakure/admin`（GitHub Pages 可能在直接載入時補上結尾 `/`）；舊的 `/#/staff` 書籤會自動轉換。未知路徑使用 `404.html` 導回 SPA，不會改變網址列中顯示的乾淨路徑。
+**不要使用 `git push --force` 覆蓋店長的 `main`。** 兩人同時修改造成衝突時，應逐檔整合與測試。不同分支或 DevSpace worktree 的修改不會自動出現在 `D:\kogakure` 的主工作目錄。
 
-## 日常流程
+## GitHub Pages 乾淨網址
 
-1. 在 DevSpace `D:\kogakure` 修改程式。
-2. 用 `npm run dev` 本機測試，資料寫進店長的 Supabase。
-3. 確認後提交到 `main` 並推送店長的 GitHub 儲存庫。
-4. GitHub Actions 重新建置，公開網站更新。
+專案採 BrowserRouter，`npm run build` 會透過 `scripts/prepare-pages.mjs` 產生公開頁與後台路由的靜態入口，支援網址 `/Kogakure/staff`、`/Kogakure/booking`、`/Kogakure/admin` 等直接開啟或重新整理。
 
-**注意：** GitHub 部署只負責**前台程式、靜態圖片與管理介面**。從後台新增／修改員工資料會直接更新 Supabase，通常**不需 push 或重新部署網站**；只需訪客重新整理頁面即可看到更新。
+若正式網站呈現舊版，先看 Actions 是否部署成功，並使用無痕視窗確認快取與 Supabase 資料來源。**後台更新內容直接寫入 Supabase，通常不需要新 Git 提交。**
 
-## 多個網站與管理員
-
-- 舊測試帳號 `ffxivtesthub/kogakure` 與店長專案是**不同**儲存庫；以店長專案為正式來源。
-- 訪客網站與 `/Kogakure/admin`（管理總覽）、`/Kogakure/admin/staff`（員工名帖管理）共用同一個網域，管理員仍須使用 Supabase 帳號登入。
-- GitHub Pages 是公開網站，不能將網站登入頁面當作資料安全邊界。資料庫依 Supabase RLS 驗證操作權限。
-- GitHub Pages 推送後可能有短暫的 GitHub/CDN 快取延遲，請以 Actions 成功、硬重新整理或無痕模式檢查。
-
-## 尚未上線前
-
-程式碼能推上 GitHub 但**不代表已啟用 Pages**。請先確認 Actions Variables 和 Settings → Pages 設定完成，再分享正式網址給客人。
+交接與權限詳見 `docs/HANDOFF.md`、`docs/SUPABASE_SETUP.md`。

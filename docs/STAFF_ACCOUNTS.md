@@ -34,9 +34,16 @@
 | 茶宴訂單管理 | 全部 | `orders.manage`：查看旅人訂單、接單、完成或取消；與菜單編輯權限分開 |
 | 預約管理 | 全部 | `booking.manage`：預約審核、方案、計時及歷史 |
 | 帳務管理 | 全部 | `accounting.manage`：Gil 收支紀錄、日期／月份統計、編輯、刪除與匯出 CSV |
-| 員工帳號與權限 | 全部 | **不能授予** |
+| 員工帳號與權限 | 全部 | `accounts.manage`：受限管理其他員工帳號；不得修改自己、其他帳號管理者，亦不得授予自己沒有的權限或擴權為正式管理員 |
+| 公告管理 | 全部 | `announcements.manage`：公告內容與發布 |
+| 背景音樂 | 全部 | `bgm.manage`：音樂來源、音檔與播放設定 |
+| 服務內容 | 全部 | `services.manage`：服務介紹、照片與公開狀態 |
+| 值班營業安排 | 全部 | `shifts.manage`：營業日期與他人班次管理 |
+| 員工自行出勤 | 可用 | `shifts.attend`：自己的出勤與常用名稱（不包含開店設定） |
 
-每個權限包含相應模組的管理／編輯操作，不是唯讀模式。**帳務管理權限由正式管理員在「員工帳號」逐一勾選發放，預設不授權任何員工，且與訂單管理權限完全獨立。**獲授權的員工可以新增、修改、刪除與匯出 Gil 帳務；正式管理員可以隨時取消勾選或停用員工，資料庫會立即拒絕後續操作。前端僅顯示已授權模組，PostgreSQL RLS 和受控 RPC 也會拒絕沒有權限的人員。
+每個權限包含相應模組的管理／編輯操作，不是唯讀模式。**帳務、帳號委派等敏感權限務必遵守最小授權**，與訂單、菜單權限互相獨立。
+
+2026-11-17 補充：`accounts.manage` 現可委派，但 Edge Function 會核對操作者有權限、帳號啟用中，並禁止委派人員對自身或其他帳號管理者進行敏感修改，或授予自己未擁有的權限。此設計仍需在正式 Edge Function 部署後實測；非表示一般員工都能管理帳號。獲授權的員工可以新增、修改、刪除與匯出 Gil 帳務；正式管理員可以隨時取消勾選或停用員工，資料庫會立即拒絕後續操作。前端僅顯示已授權模組，PostgreSQL RLS 和受控 RPC 也會拒絕沒有權限的人員。
 
 ## 刪除與停用的差異
 
@@ -48,13 +55,13 @@
 
 ## 部署及驗證
 
-- 原先的 `supabase/migrations/20261115_01_employee_accounts_permissions.sql` 等資料庫保護規則保留。
+- 原先的 `supabase/migrations/20261115_01_employee_accounts_permissions.sql` 等資料庫保護規則保留。後續 `20261115_28_complete_admin_module_permissions.sql` 與 `20261116_03_bgm_management.sql` 擴充可委派權限；務必先核對正式資料庫已套用版本，不能只依這份初期帳號說明。
 - `supabase/migrations/20261115_17_delegated_accounting_permission.sql` 新增 `accounting.manage`、限制四種帳務操作的 RLS，確保尚未授權員工無法閱讀任何帳務資料。
 - 新增 `supabase/migrations/20261115_04_employee_usernames.sql`，為員工登入增加唯一的 username 欄位。舊版已存在的員工帳號會暫以 `legacy_...` 識別，**仍可沿用原有 Email 登入，直到管理者選擇轉換**；新建員工帳號的 Auth email 欄位僅作內部登入識別。
-- 重新部署 `supabase/functions/manage-employee-accounts/index.ts`，保持 `verify_jwt=true`。只允許正式管理員、使用伺服器端金鑰呼叫 `auth.admin.createUser`、`updateUserById` 和 `deleteUser`，瀏覽器不可取得 service-role key。
+- 重新部署 `supabase/functions/manage-employee-accounts/index.ts`，保持 `verify_jwt=true`。只允許正式管理員或經明確委派且符合額外限制的 `accounts.manage` 員工，透過伺服器端 service-role 權限執行受控帳號操作；瀏覽器不可取得 service-role key。
 - GitHub Pages 發布後，管理者可使用真實員工帳號驗收建立、登入、修改權限、重設密碼及刪除，並確認歷史名帖和預約資料不變。
 - 不額外建立假員工或寄信測試，不改原始正式管理員帳號。
 
 ## 補充
 
-員工帳號仍由管理者建立，不開放自助註冊或忘記密碼時的自助找回；**已登入且知道目前密碼的員工可以自行修改自己的登入密碼**。員工不能修改其他帳號或提升正式管理者權限。
+員工帳號由正式管理員或明確授予 `accounts.manage` 的受限員工管理，不開放自助註冊或忘記密碼時的自助找回；**已登入且知道目前密碼的員工可以自行修改自己的登入密碼**。沒有帳號管理權限者不得更動其他帳號；已獲委派者仍不能繞過自身權限或提升為正式管理者。

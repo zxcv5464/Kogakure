@@ -9,7 +9,7 @@
 - **技術**：React、TypeScript、Vite、GitHub Pages / GitHub Actions。
 - **公開資料與後台**：Supabase（Auth / PostgreSQL RLS / Storage）。網頁代碼部署和資料庫內容更新是兩種不同操作。
 - **發佈工作流程**：`.github/workflows/deploy.yml`。推送至 `main` 後由 Actions 建置及發佈。
-- **主要檔案**：`src/App.tsx`（路由）、`src/pages/StaffPage.tsx`（名冊）、`src/pages/admin/`（後台）、`src/lib/staff.ts`（資料存取）、`supabase/migrations/`（資料庫結構）。
+- **主要檔案**：`src/App.tsx`（路由）、`src/pages/StaffPage.tsx`（名冊）、`src/pages/admin/`（後台）、`src/pages/admin/modules.ts`（模組清單）、`src/lib/`（資料存取）、`supabase/migrations/`（資料庫結構）、`supabase/functions/`（Edge Function）。
 
 ## 每次更新的標準流程
 1. 先讀取遠端 `main` 的最新 SHA、最近提交及未合併 PR，確認其他夥伴的變動；**不要從以前下載的網站 HTML 或舊資料夾直接覆寫**。
@@ -32,8 +32,8 @@
 - **瀏覽器歷史紀錄**：後台未儲存內容的上一頁／下一頁保護仍需跨瀏覽器驗證。
 - **照片 Storage**：名帖替換或刪除後的舊檔尚無安全孤兒檔案清理流程。
 - **正式資料庫驗收**：管理員登入、RLS、CRUD、上傳、公開狀態仍需有權限者實測。
-- **測試覆蓋**：目前 GitHub Pages 發佈工作流程包含建置，但尚未將完整瀏覽器 QA 納入跨平台 CI；部分本機 QA 依賴 Windows Chrome 路徑。
-- **前台功能**：公告、館內、服務、排班、菜單與預約仍依 `docs/ROADMAP.md` 分階段建置，不應將規劃頁誤示為正式可用。
+- **測試覆蓋**：GitHub PR／Pages Actions 已執行多項靜態與 Chromium 回歸測試；仍無法取代正式 Supabase RLS、員工權限、資料庫寫入及真實 iOS／Android 的人工驗收。
+- **前台功能**：公告、服務、排班、茶宴送單與預約功能已在原始碼實作；但正式資料庫 migration、實際開放設定與人工驗收仍須逐項核對 `docs/ROADMAP.md`，不能僅依畫面推斷可對外營運。
 - **視覺回歸**：人員名帖的邊框／頂端裝飾、首次開啟時短暫閃爍、載入與進場動畫，任何修改都應檢查桌面／手機與首次載入／重整兩種情境。
 
 ## 每次更新的交付紀錄建議
@@ -50,3 +50,4 @@
 - `docs/STAFF_ADMIN_AUDIT.md`：後台已知限制及驗收流程
 - `docs/SUPABASE_SETUP.md`：資料庫設定
 - `docs/GITHUB_PUBLISH.md`：網站部署設定
+- `docs/SECURITY_REVIEW_20261117.md`：已查核項目、匿名表單與正式環境安全待辦

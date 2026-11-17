@@ -1,78 +1,85 @@
-# 狐隱 KOGAKURE｜本機開發專案
+# 狐隱 KOGAKURE｜網站開發與維護
 
 > 世有百鬼，夜有萬境。循狐而入，借湯忘憂。
 
-本專案採 **DevSpace 本機開發 + 店長 Supabase 資料庫 + 店長 GitHub Pages 公開網站** 的流程。前台與管理後台使用 React + TypeScript + Vite。Supabase 已完成基本連線與管理後台登入測試，後續所有新功能仍須本機驗證後再發布。
+狐隱是 FF14 RP 店鋪的公開展示與館務管理網站。前端採 React、TypeScript、Vite，靜態頁面由 GitHub Pages 發布；Supabase 提供 Auth、PostgreSQL／RLS、Storage 及員工帳號管理 Edge Function。
 
-## 本機啟動
+**本文件對照 GitHub `main` 於 2026-11-17 的原始碼。**「程式已實作」不代表店長的正式 Supabase 已執行每一份 migration，亦不代表已經過正式環境驗收。
 
-在 `D:\kogakure` 開啟 PowerShell 或 Git Bash：
+## 本機開始
 
 ```bash
-npm install
+npm ci
 npm run dev
 ```
 
-- 首頁：`http://localhost:5173/`
-- 人員介紹：`http://localhost:5173/staff`
-- 管理後台：`http://localhost:5173/admin`（登入後先顯示管理總覽）
-- 員工名帖管理模組：`http://localhost:5173/admin/staff`（獨立功能頁，仍須管理員登入）
-- 強制預覽開場動畫：`http://localhost:5173/?intro=1`
-- 檢查編譯：`npm run build`
+- 公開首頁：`http://localhost:5173/`
+- 狐姬名冊：`/staff`
+- 茶宴：`/menu`；預約：`/booking`；四週值班：`/shifts`
+- 後台登入與總覽：`/admin`
+- 型別檢查：`npm run check`
+- 正式建置：`npm run build`
+- 依功能執行 `scripts/qa-*.mjs`；CI 清單見 `.github/workflows/verify.yml`
 
-首次安裝或更換原始素材後，執行 `npm run assets:build` 更新網站用 WebP。這個指令會**重建** `public/images`，其中不可放手工新增的原圖。
+如需產出原始素材的 WebP，才執行 `npm run assets:build`。此指令會**重建** `public/images`；先確認未將手工新增圖片放在該目錄，原始圖片必須另行備份。
 
-## 資料夾用途
+## 現有功能（程式碼層級）
 
-| 路徑 | 用途 | 是否保留於最終靜態網站 |
-|---|---|---|
-| `src/` | 前台、員工名片、管理後台原始碼 | 否（編譯成 JS/CSS） |
-| `public/images/brand/` | 網站實際使用的 Logo 與開場圖 | 是 |
-| `public/images/staff/` | 網站實際使用的員工照及縮圖 | 是 |
-| `public/images/scenes/` | 7 張經過壓縮的場景背景照，切頁時按順序輪替 | 是 |
-| `狐隱LOGO/` | 原始 Logo（不可覆寫） | 否 |
-| `員工圖/` | 原始角色照片（包含暫未使用的備用照） | 否 |
-| `場景照/` | 14 張原始室內照（目前取 7 張生成背景 WebP，原圖不變） | 否 |
-| `scripts/` | 圖片最佳化及本機 QA 工具 | 否 |
-| `supabase/migrations/` | 資料表、RLS 與 Storage 權限設定 | 資料庫使用，非網頁靜態檔 |
-| `docs/ROADMAP.md` | 開發與驗收待辦 | 否 |
-| `dist/` | `npm run build` 產生的靜態網站成品 | 是（未來交付用） |
-| `node_modules/` | 安裝的開發套件 | 否 |
+公開網站包含首頁、入館須知、服務內容、狐姬名冊、值班排班、狐之茶宴（可建立正式訂單）、預約，以及共用開場、公告與 BGM。
 
-正式網站與後台均需要使用同一個 Supabase 專案。原始素材留在本機，不上傳至前台公開檔案。
+後台採獨立版型、模組化路由及分別授權：
 
-## Supabase 資料庫＋本機測試
+| 後台網址 | 模組 |
+| --- | --- |
+| `/admin/accounts` | 員工帳號與權限 |
+| `/admin/staff` | 人員名帖、照片、公開狀態、拖曳排序 |
+| `/admin/announcements` | 公告管理 |
+| `/admin/bgm` | 背景音樂管理 |
+| `/admin/accounting` | Gil 帳務與薪資紀錄 |
+| `/admin/menu` | 茶宴菜單與價格 |
+| `/admin/services` | 服務內容與相簿 |
+| `/admin/orders` | 茶宴訂單處理 |
+| `/admin/booking` | 指名方案、預約與計時 |
+| `/admin/shifts` | 營業日與館員出勤 |
 
-已連接店長 Supabase 專案，基本表單、資料庫連線、匿名讀取政策及管理員登入測試完成。新功能仍需逐項驗收。**資料庫設定與測試請見 `docs/SUPABASE_SETUP.md`。**
+員工權限細節見 `docs/STAFF_ACCOUNTS.md`；各模組的操作與限制見 `docs/` 對應文件。公開名冊與後台員工帳號是不同資料，不應混為一談。
 
-1. 建立 Supabase 專案。
-2. 在 Supabase SQL Editor 執行 `supabase/migrations/20261108_01_staff.sql`。
-3. Authentication → Users 建立管理員使用者，並在 SQL Editor 加入權限：
-   ```sql
-   insert into public.admin_users(user_id) values ('YOUR_AUTH_USER_UUID');
-   ```
-4. 複製 `.env.example` 成 `.env.local`，只填入 **Project URL**、**Publishable Key**。
-5. 先執行 `npm run db:check` 驗證資料庫與匿名讀取權限；再啟動 `npm run dev`，登入 `http://localhost:5173/admin` 新增與編輯員工。
-6. 前台 `/staff` 由 Supabase 讀取已公開員工；未設定 Supabase 時才使用示範資料。
+## 設定 Supabase
 
-**安全：** `VITE_*` 只能放允許公開的金鑰，切勿放 Supabase `service_role`、密碼等敏感資訊。資料修改權限由資料庫 RLS 控制，不依賴前端是否隱藏按鈕。
+將 `.env.example` 複製為 `.env.local`，僅填**公開**欄位：
 
-## 開發原則
+```dotenv
+VITE_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_YOUR_PUBLIC_KEY
+```
 
-- 首頁以同一張場景背景串起 Logo、標語、入口按鈕與籌備提示，不再另加割裂的底部橫條；桌面版在一般視窗高度盡量完整顯示，手機保留必要捲動。
-- 手機版底部五格導覽；電腦版頂部完整導覽。
-- 暗色主題保持高對比，手機基礎字體 17px，桌面 18px，寬螢幕更大。頁面外層捲軸不顯示，但仍保留滑鼠、鍵盤和觸控捲動，以免手機內容被裁切。
-- 前台「狐姬名冊」是純展示頁，不附帶預約；每位員工可由後台設定照片、稱號、社群連結與特效。名帖頁採單一連貫背景與置中展廊、精簡標題和適度縮小的卡片；載入階段顯示有柔和光影的御守佔位動畫，滑鼠指向或觸碰人員連結時按需預先載入程式與公開資料，訪客在五分鐘內來回切頁可重用同一份結果，減少 Supabase Egress；後台編輯完成會清除本機快取。長篇介紹採隱藏捲軸的柔和閱讀區，桌面固定照片、手機整張卡可滑動，保留「繼續閱讀」提示。
-- 使用 WebP 多尺寸縮圖，原始 PNG/JPG 不修改；`public/images` 只放**現在用得到**的檔案。
-- 首次進站的 Logo 開場動畫約 3 秒（比原版延長約 1 秒）；頁面切換以約 1.4 秒的深色背景淡出、換頁、淡入。動畫不下載影片或增加大型套件，尊重 `prefers-reduced-motion`，需要再次預覽可用 `?intro=1`。
-- 前台背景使用 7 張館內照片；切換頁面時按順序輪替，以約 1.45 秒的交疊淡入淡出搭配原有的暗色換頁動畫，僅按需載入下一張照片。
-- `/admin` 使用獨立的精簡管理版型與共用登入驗證：管理總覽列出可用功能及規劃中的模組；`/admin/staff` 才載入獨立員工名帖編輯器。員工模組提供搜尋、公開狀態篩選、分段編輯、儲存狀態、未儲存離開提醒，以及先在本機預覽照片、按儲存才上傳的流程，避免意外消耗 Storage。清單的「排序」可直接拖曳或按上下箭頭，無須手填排序數字。前台狐姬未滿 6 位不顯示搜尋工具，6 位以上才提供預設收合的簡潔搜尋／服務篩選。相關 BUG 盤查、已知限制及驗收流程見 `docs/STAFF_ADMIN_AUDIT.md`。後續公告、營業資訊、菜單、預約、排班各自新增模組，不會與員工編輯功能共用一大份頁面。前後台不共用背景、導覽、頁尾及動畫；只有左上 Logo 可返回前台，不在前台展示後台入口。權限仍由 Supabase Auth 與 RLS 控制。
-- 其他六個頁面持續開發；尚未實作的功能不應讓訪客誤認已可使用。
+`VITE_*` 會編譯進公開網站；**絕對不可放** `sb_secret_*`、`service_role`、資料庫密碼或使用者密碼。員工管理所需的高權限金鑰只能存於 Supabase Edge Function 的伺服器端環境。
 
-## GitHub 公開網站與協作
+資料庫 migration 在 `supabase/migrations/`，須依實際已套用版本、備份與相依順序處理。**GitHub Pages 部署不會自動套用 SQL migration 或 Edge Function。** 步驟見 `docs/SUPABASE_SETUP.md`。
 
-店長儲存庫：`https://github.com/zxcv5464/Kogakure`；預計公開網址：`https://zxcv5464.github.io/Kogakure/`。程式推送至 `main` 後，GitHub Actions 會編譯並部署。需先由儲存庫管理者在 **Settings → Pages** 啟用 **GitHub Actions**，並將 Supabase URL 及 Publishable Key 設為 Actions repository variables。**完整操作請見 `docs/GITHUB_PUBLISH.md`。**
+正式資料與權限需使用具備授權的測試帳號、訪客無痕視窗分開驗證；`npm run db:check` 與離線 QA 不能代替實際的 RLS／CRUD 測試。
 
-網址已改為不帶 `#` 的乾淨路徑，例如 `/Kogakure/staff`、`/Kogakure/admin`；正式建置會產生每個頁面的靜態入口，直接開啟、重新整理不會 404，舊的 `/#/staff` 書籤可自動轉換。網站程式更新需重新推送；管理員從後台修改員工資訊直接寫入 Supabase，通常不必推送 GitHub。原始素材、`.env.local`、資料庫密碼和 `node_modules` 都不加入儲存庫，也不再以壓縮檔為主要交接方式。
+## 專案目錄
 
-詳細開發階段請查看 `docs/ROADMAP.md`。
+- `src/`：公開頁、後台、元件與 Supabase 資料操作。
+- `public/images/`：公開網站使用的最佳化素材。
+- `scripts/`：圖片處理、建置入口、靜態與瀏覽器 QA。
+- `supabase/migrations/`：資料庫結構與權限（須另外部署）。
+- `supabase/functions/`：伺服器端 Edge Function（須另外部署）。
+- `docs/`：交接、部署、安全及各功能說明。
+- `dist/`：建置輸出，不手動維護。
+
+原始大型素材、`.env.local`、`node_modules` 和密碼都不應加入 GitHub 儲存庫。
+
+## 發布與協作
+
+正式原始碼：<https://github.com/zxcv5464/Kogakure>
+
+網站：<https://zxcv5464.github.io/Kogakure/>
+
+推送 `main` 後，GitHub Actions 會建置並發布靜態網站。後台改動資料時直接寫入 Supabase，通常不需要重新推送程式。多人協作**先 fetch、核對遠端差異、建立分支／PR、通過驗證再合併**，不要強制推送覆蓋店長更新。
+
+- `docs/GITHUB_PUBLISH.md`：GitHub Pages、Actions 與 Git 協作。
+- `docs/ROADMAP.md`：目前實作與待驗收進度。
+- `docs/HANDOFF.md`：共同維護規範。
+- `docs/SECURITY_REVIEW_20261117.md`：本次安全盤查、風險與待辦。
