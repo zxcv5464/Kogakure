@@ -37,10 +37,11 @@ export async function createKeepsake(guestLabel:string,note:string,code:string):
  err(readError,'交付單建立後無法讀取')
  return {claim:{...(data as Omit<KeepsakeClaim,'keepsake_photos'>),keepsake_photos:[]},code:display}
 }
-/** Suggest an unguessable, staff-confirmed claim code using the original
- * delivery date in Taiwan, the current uploaded photo count, and 80 random bits.
- * Example: 20261117-03-4F7C2A1D9E6B8C0F12A9
- * No existing codes change until an operator explicitly saves this value. */
+/** Propose a code using Taiwan delivery date, uploaded photo count and
+ * exactly four random decimal digits. The shortened suffix has only 10,000
+ * possibilities, so public redemption MUST be protected by server rate limits.
+ * Example: 20261117-03-4827
+ * Existing claims are unchanged until an operator explicitly saves. */
 export function generateKeepsakeCode(deliveredAt:string,photoCount:number):string{
  const when=new Date(deliveredAt)
  if(!Number.isFinite(when.getTime()))throw new Error('無法取得有效的交付日期')
@@ -52,8 +53,14 @@ export function generateKeepsakeCode(deliveredAt:string,photoCount:number):strin
  const part=(type:string)=>parts.find(item=>item.type===type)?.value||''
  const stamp=part('year')+part('month')+part('day')
  const count=String(photoCount).padStart(2,'0')
- const bytes=crypto.getRandomValues(new Uint8Array(10))
- const random=Array.from(bytes,n=>n.toString(16).padStart(2,'0')).join('').toUpperCase()
+ // Rejection sample to give each decimal value exactly equal probability.
+ let number=0
+ while(true){
+  const bytes=crypto.getRandomValues(new Uint8Array(2))
+  const value=(bytes[0]<<8)|bytes[1]
+  if(value<60000){number=value%10000;break}
+ }
+ const random=String(number).padStart(4,'0')
  return validateKeepsakeCode(stamp+'-'+count+'-'+random)
 }
 /** A replacement invalidates all previously shared links without changing
