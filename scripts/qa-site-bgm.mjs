@@ -34,8 +34,11 @@ assert.ok(player.includes('const request=audio.play()')&&player.includes('NotAll
 assert.ok(player.includes('audio.volume=config.volume')&&
  player.includes('audioRef.current.volume=next.volume'),
  'Managed volume must use the existing HTMLAudioElement')
-assert.ok(player.includes('loop={settings.loop} preload="metadata"'),
- 'The existing player must not eagerly download full audio before visitor consent')
+assert.ok(player.includes('loop={settings.loop} preload="none"'),
+ 'The visitor must not fetch even audio metadata before choosing to play')
+assert.ok(player.includes('if(inFlight||Date.now()-lastRequestAt<20000)return')&&
+ player.includes('finally{inFlight=false}'),
+ 'Repeated visible-tab events must not start redundant BGM settings requests')
 assert.ok(player.includes("document.addEventListener('visibilitychange',refreshWhenVisible)")&&
  player.includes("window.setInterval(refreshWhenVisible,120000)"),
  'Background tabs must not keep polling the public BGM setting')
@@ -124,7 +127,7 @@ assert.ok(css.includes('width:40px;height:40px')&&
  introCss.includes('@media(max-width:570px)'),
  'Compact top-right BGM button must match social icons without crowding navigation')
 
-const vite=await createServer({server:{middlewareMode:true,hmr:false},appType:'custom'})
+const vite=await createServer({optimizeDeps:{noDiscovery:true},server:{middlewareMode:true,hmr:false},appType:'custom'})
 try{
  const {default:Layout}=await vite.ssrLoadModule('/src/components/Layout.tsx')
  const markup=renderToStaticMarkup(createElement(MemoryRouter,null,

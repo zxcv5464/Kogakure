@@ -5,7 +5,7 @@
 - 原有 LOGO 入館畫面與音樂入口合併，避免額外的播放頁面；播放請求直接由訪客入館手勢觸發，因應瀏覽器自動播放限制。
 - 一般音檔由單一全站播放器跨頁維持；後台可管理預設音樂、已上傳音檔、HTTPS 來源及受支援的 YouTube 來源。
 - 上傳來源使用 Supabase `bgm-media` Storage，音檔設定和素材管理受授權及 RLS 約束。
-- 音檔改為 `preload="metadata"`，降低入館前不必要的下載；BGM 設定只在可見分頁定期更新，返回前景時同步。
+- 音檔改為 `preload="none"`，入館前不預先抓取音訊；BGM 設定只在可見分頁定期更新，並對短時間重複事件進行請求合併。
 - 管理後台與前台入館音樂分離，避免管理頁意外播放背景音樂。
 - 主要變更對應 `src/components/SiteBgm.tsx`、`src/lib/site-bgm.ts` 以及 `supabase/migrations/20261116_03_bgm_management.sql`、`20261116_04_preserve_bgm_original_filenames.sql`。
 
