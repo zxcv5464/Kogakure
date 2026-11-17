@@ -1,10 +1,10 @@
-// Ensure all public pages retain the site's rotating backdrop and their intended
-// photographic backdrop instead of painting opaque backgrounds over it.
+// Ensure public pages keep the shared rotating photography and their intended
+// translucent ink washes, including full-height dark veils on roster and memories.
 // Static checks only; no browser, external URLs or production data changes.
 import assert from 'node:assert/strict'
 import {readFile} from 'node:fs/promises'
 
-const [backdrop,backdropCss,transition,app,serviceCss,shiftCss,memoriesCss,servicePage,shiftPage]=
+const [backdrop,backdropCss,transition,app,serviceCss,shiftCss,memoriesCss,staffCss,servicePage,shiftPage]=
  await Promise.all([
   'src/components/SceneBackdrop.tsx',
   'src/components/scene-backdrop.css',
@@ -13,6 +13,7 @@ const [backdrop,backdropCss,transition,app,serviceCss,shiftCss,memoriesCss,servi
   'src/pages/services-page.css',
   'src/pages/shifts-page.css',
   'src/pages/memories.css',
+  'src/pages/staff-page.css',
   'src/pages/ServicesPage.tsx',
   'src/pages/ShiftsPage.tsx',
  ].map(p=>readFile(p,'utf8')))
@@ -39,6 +40,7 @@ const wash='linear-gradient(180deg,rgba(13,12,22,.69)0%,rgba(15,13,24,.77)52%,rg
 const serviceRoot=serviceCss.split('.services-page {')[1]?.split('\n}')[0]??''
 const shiftRoot=shiftCss.split('.shift-page{')[1]?.split('}')[0]??''
 const memoriesRoot=memoriesCss.split('.memories-page{')[1]?.split('}')[0]??''
+const staffRoot=staffCss.split('.site > main .staff-page {')[1]?.split('\n}')[0]??''
 for(const [name,root] of [['services',serviceRoot],['shifts',shiftRoot]]){
  const normalized=root.replace(/\s+/g,'')
  assert.ok(normalized.includes(wash),name+' page must use the shared translucent scene wash')
@@ -65,6 +67,15 @@ assert.ok(memoriesCss.includes('.memories-page{padding:44px 12px 90px}'),
  'Mobile traveler memories must retain a full-width ink wash')
 assert.ok(memoriesCss.includes('.memories-panel{max-width:850px'),
  'Keep traveler forms comfortably centered inside the full-width background')
+assert.ok(staffRoot.replace(/\s+/g,'').includes(memoriesVeil),
+ 'Staff roster must use the same translucent dark gradient as traveler memories')
+assert.ok(staffCss.includes('.site:has(.staff-page)>main{display:flex;flex-direction:column;flex:1;min-height:0}')&&
+ staffRoot.includes('flex: 1;'),
+ 'Staff roster dark backdrop must fill short viewport pages through the footer')
+assert.ok(staffCss.includes('.site > main .staff-page .staff-grid')&&
+ staffCss.includes('.staff-page .staff-entry')&&
+ staffCss.includes('.staff-page .staff-catalog-panel'),
+ 'Staff portrait grid, card sizing and directory filtering must remain intact')
 assert.ok(shiftCss.includes('@media(max-width:690px)'),
  'Mobile calendar must retain its responsive layout')
-console.log('PASS: services, shifts and traveler memories reveal the shared seven-scene 5-second crossfade while keeping galleries, calendar and accessibility')
+console.log('PASS: services, shifts, traveler memories and staff roster reveal the shared seven-scene 5-second crossfade while keeping galleries, calendar and accessibility')
