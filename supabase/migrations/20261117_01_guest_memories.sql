@@ -141,7 +141,7 @@ $$;
 revoke all on function public.keepsake_cleanup_token_valid(text) from public,anon,authenticated;
 grant execute on function public.keepsake_cleanup_token_valid(text) to service_role;
 
-select cron.schedule('kogakure-keepsake-expiry','0 * * * *',$task$
+select cron.schedule('kogakure-keepsake-expiry','*/10 * * * *',$task$
  select net.http_post(
   url:='https://akocsanwytansrdptaho.supabase.co/functions/v1/guest-keepsakes',
   headers:=jsonb_build_object(
