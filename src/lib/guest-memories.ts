@@ -13,21 +13,40 @@ const db=()=>{if(!configured||!supabase)throw new Error('狐隱服務尚未連�
 const err=(error:{message:string}|null,context:string)=>{if(error)throw new Error(context+'：'+error.message)}
 export const formatExpiry=(expires:string)=>new Date(expires).toLocaleString('zh-TW',{timeZone:'Asia/Taipei',hour12:false,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})
 export const isExpired=(expires:string)=>Date.parse(expires)<=Date.now()
-function tokenToCode(raw:string){return raw.toUpperCase().match(/.{1,8}/g)?.join('-')||raw}
-export async function createKeepsake(guestLabel:string,note:string):Promise<{claim:KeepsakeClaim;code:string}>{
+/** Validate a staff-chosen code before the permission-checked RPC.
+ * The server repeats this validation and hashes the case-/hyphen-free form. */
+export function validateKeepsakeCode(code:string):string{
+ const display=code.trim().toUpperCase()
+ const normalized=display.replace(/-/g,'')
+ if(display.length>48||!/^[A-Z0-9]+(-[A-Z0-9]+)*$/.test(display)||
+  normalized.length<12||normalized.length>32)
+  throw new Error('專屬領取碼須為 12～32 位英文字母或數字，可使用「-」分組')
+ return display
+}
+export async function createKeepsake(guestLabel:string,note:string,code:string):Promise<{claim:KeepsakeClaim;code:string}>{
  if(guestLabel.trim().length<1||guestLabel.trim().length>100)throw new Error('請輸入 1～100 字的旅人稱呼')
  if(note.length>400)throw new Error('交付備註最多 400 字')
- const random=crypto.getRandomValues(new Uint8Array(16))
- const token=Array.from(random).map(n=>n.toString(16).padStart(2,'0')).join('')
+ const display=validateKeepsakeCode(code)
  const {data:id,error}=await db().rpc('create_keepsake_claim',{
-  p_guest_label:guestLabel.trim(),p_note:note.trim(),p_code:token,
+  p_guest_label:guestLabel.trim(),p_note:note.trim(),p_code:display,
  })
  err(error,'建立交付單失敗')
  if(typeof id!=='string')throw new Error('交付單建立後無法取得編號')
  const {data,error:readError}=await db().from('keepsake_claims')
   .select('id,guest_label,note,created_at,expires_at').eq('id',id).single()
  err(readError,'交付單建立後無法讀取')
- return {claim:{...(data as Omit<KeepsakeClaim,'keepsake_photos'>),keepsake_photos:[]},code:tokenToCode(token)}
+ return {claim:{...(data as Omit<KeepsakeClaim,'keepsake_photos'>),keepsake_photos:[]},code:display}
+}
+/** A replacement invalidates all previously shared links without changing
+ * the photos, claim ID, or the seven-day expiry. */
+export async function updateKeepsakeCode(claimId:string,code:string):Promise<string>{
+ const display=validateKeepsakeCode(code)
+ const {data,error}=await db().rpc('update_keepsake_claim_code',{
+  p_claim_id:claimId,p_code:display,
+ })
+ err(error,'變更領取碼失敗')
+ if(typeof data!=='string'||!data)throw new Error('變更後無法取得新領取碼')
+ return data
 }
 /** Code is decrypted by a permission-checked RPC only when an operator clicks Reveal. */
 export async function revealKeepsakeCode(claimId:string):Promise<string>{
