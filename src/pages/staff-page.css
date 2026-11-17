@@ -9,7 +9,7 @@
  width: 100%;
  min-width: 0;
  padding: 0;
- background:linear-gradient(180deg,rgba(12,12,21,.90) 0%,rgba(17,15,26,.98) 100%);
+ background:transparent;
 }
 .site > main .staff-page .staff-hero {
  min-height: 0;
