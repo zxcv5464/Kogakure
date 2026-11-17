@@ -3,7 +3,6 @@ import assert from 'node:assert/strict'
 import {readFile} from 'node:fs/promises'
 import ts from 'typescript'
 import {runInNewContext} from 'node:vm'
-import {webcrypto} from 'node:crypto'
 
 const files=[
  'src/App.tsx','src/components/Layout.tsx','src/pages/AdminPage.tsx',
@@ -14,10 +13,11 @@ const files=[
  'supabase/migrations/20261117_02_keepsake_code_retrieval.sql',
  'supabase/migrations/20261117_03_manual_keepsake_claim_codes.sql',
  'supabase/migrations/20261117_04_rate_limit_short_keepsake_claims.sql',
+ 'supabase/migrations/20261117_05_manual_alphanumeric_8_to_16_keepsake_codes.sql',
  'supabase/functions/guest-keepsakes/index.ts',
  'supabase/functions/manage-employee-accounts/index.ts',
 ]
-const [app,layout,admin,modules,permissions,publicPage,manager,api,routes,sql,codeSql,manualSql,limitSql,edge,accountsEdge]=
+const [app,layout,admin,modules,permissions,publicPage,manager,api,routes,sql,codeSql,manualSql,limitSql,shortSql,edge,accountsEdge]=
  await Promise.all(files.map(path=>readFile(path,'utf8')))
 for(const path of [
  'src/pages/MemoriesPage.tsx','src/pages/admin/MemoriesManagement.tsx',
@@ -121,9 +121,9 @@ has(manualSql,[
  'revoke all on function public.update_keepsake_claim_code(uuid,text) from public,anon,authenticated',
  'grant execute on function public.update_keepsake_claim_code(uuid,text) to authenticated',
 ],'Permission-checked, reversible admin codes with legacy compatibility')
-has(api,['normalized.length<12','normalized.length>32',"rpc('update_keepsake_claim_code'"],'Input and code update validation')
+has(api,["/^[A-Z0-9]{8,16}$/", "rpc('update_keepsake_claim_code'"],'Input and code update validation')
 has(publicPage,['maxLength={48}','輸入館方提供的專屬領取碼'],'Public code form accepts custom labels')
-has(edge,["/^[a-z0-9]{12,32}$/.test(token)",".replace(/[\\s-]/g,'').toLowerCase()"],'Public lookup normalizes custom and legacy codes')
+has(edge,["/^[a-z0-9]{8,32}$/.test(token)",".replace(/[\\s-]/g,'').toLowerCase()"],'Public lookup normalizes 8–16 and legacy codes')
 has(publicPage,[
  'className="memories-keepsake-intro"',
  '將今夜的月色，輕輕收進相片。',
@@ -133,44 +133,48 @@ has(publicPage,[
 assert.ok(!publicPage.includes('const [anonymous,setAnonymous]=useState(true)'),
  'Guest feedback must not silently default to anonymous')
 has(manager,[
- 'generateKeepsakeCode(claim.created_at,claim.keepsake_photos.length)',
- '重新產生4位數字',
  '確認修改領取碼',
+ 'minLength={8} maxLength={16} pattern="[A-Za-z0-9]{8,16}"',
  'window.confirm(',
 ],'Existing claim edits require explicit confirmation')
-has(api,[
- 'export function generateKeepsakeCode(',
- "timeZone:'Asia/Taipei'",
- 'crypto.getRandomValues(new Uint8Array(2))',
- "String(number).padStart(4,'0')",
- "value<60000",
- "String(photoCount).padStart(2,'0')",
-],'Date, uploaded count, and strong random-code generation')
+has(manager,[
+ 'placeholder="例如：KOGAKURE26"',
+ 'placeholder="自行設定 8～16 位英數字"',
+ 'setEditCode(\'\');setEditClaim(claim.id);setError(\'\')',
+],'New and existing delivery codes must be manually entered')
+assert.ok(!manager.includes('generateKeepsakeCode')&&
+ !manager.includes('重新產生4位數字')&&
+ !manager.includes('memories-regenerate-code')&&
+ !api.includes('generateKeepsakeCode'),
+ 'The old automatic random code generation UI and helper must be removed')
+has(shortSql,[
+ "v_display !~ '^[A-Z0-9]{8,16}$'",
+ 'v_normalized text:=lower(v_display);',
+ 'public.create_keepsake_claim(',
+ 'public.update_keepsake_claim_code(',
+ "has_backoffice_permission('keepsakes.manage')",
+ 'grant execute on function public.update_keepsake_claim_code(uuid,text) to authenticated',
+],'Server-side 8–16 alphanumeric code validation, scoped to authorized staff')
+assert.ok(shortSql.split("v_display !~ '^[A-Z0-9]{8,16}$'").length===3,
+ 'Both creation and existing-code replacement must enforce the new format')
+assert.ok(!shortSql.includes("reveal_keepsake_claim_code("),
+ 'Historic code retrieval must remain compatible and unchanged')
 
-// Exercise just the two pure TS code helpers with real Web Crypto, without
-// importing DB/session modules or touching private uploads in the test.
+// Exercise the pure validation helper in isolation without DB/session access.
 const validationSource=api.slice(
  api.indexOf('export function validateKeepsakeCode('),
  api.indexOf('export async function createKeepsake('))
-const generatorSource=api.slice(
- api.indexOf('export function generateKeepsakeCode('),
- api.indexOf('/** A replacement invalidates'))
-assert.ok(validationSource.includes('return display')&&generatorSource.includes('return validateKeepsakeCode'))
-const compiled=ts.transpileModule(validationSource+'\n'+generatorSource,{
+const compiled=ts.transpileModule(validationSource,{
  compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022},
 }).outputText
 const isolatedExports={}
-runInNewContext(compiled,{exports:isolatedExports,crypto:webcrypto,Intl,Date,Array,Number,String,Uint8Array,Error})
-const codeFns=isolatedExports
-const testCode=codeFns.generateKeepsakeCode('2026-11-17T18:34:00Z',3)
-const secondCode=codeFns.generateKeepsakeCode('2026-11-17T18:34:00Z',3)
-assert.match(testCode,/^20261118-03-[0-9]{4}$/,'Taipei-local delivery date and exactly four decimal digits')
-assert.notEqual(testCode,secondCode,'Codes must be cryptographically randomized on each generation')
-assert.equal(codeFns.validateKeepsakeCode(testCode),testCode,'Proposed codes must pass claim RPC validation')
-assert.match(codeFns.generateKeepsakeCode('2026-11-17T00:00:00Z',125),
- /^20261117-125-[0-9]{4}$/,'Keep the actual photo count above 99')
-assert.throws(()=>codeFns.generateKeepsakeCode('invalid',2),'Invalid dates must not become claim codes')
-assert.throws(()=>codeFns.generateKeepsakeCode('2026-11-17T00:00:00Z',-1),'Negative photo counts must fail')
+runInNewContext(compiled,{exports:isolatedExports,Error})
+const validate=isolatedExports.validateKeepsakeCode
+assert.equal(validate('abc12345'),'ABC12345','Eight characters must be accepted case-insensitively')
+assert.equal(validate('Ab12Cd34Ef56Gh78'),'AB12CD34EF56GH78','Sixteen characters must be accepted')
+for(const invalid of [
+ 'ABC1234','ABCDEFGHIJKLMNOPQ','ABC-12345','AB_12345','AB 12345','密碼123456',
+])assert.throws(()=>validate(invalid),'Reject code outside 8–16 alphanumeric rule: '+invalid)
 has(limitSql,[
  'create table if not exists private.keepsake_lookup_quota',
  'alter table private.keepsake_lookup_quota enable row level security',
@@ -198,4 +202,4 @@ assert.ok(!api.includes("token_sha256:sha"),
  'Clients may not create unrecoverable legacy claim records')
 assert.ok(!sql.includes("values('keepsake-deliveries','keepsake-deliveries',true"),
  'Customer photos must never use a public Storage bucket')
-console.log('PASS: manually chosen and replaceable private claim codes, legacy compatibility, seven-day delivery and moderated feedback')
+console.log('PASS: manually entered 8–16 alphanumeric claim codes, legacy redemption, rate limits, seven-day delivery and moderated feedback')
