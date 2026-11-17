@@ -17,6 +17,13 @@ const files=[
 const [menu,booking,menuCache,bookingCache,prefetch,layout,transition,motion,
  menuCss,bookingCss,menuAdmin,bookingAdmin]=
  await Promise.all(files.map(p=>readFile(p,'utf8')))
+const app=await readFile('src/App.tsx','utf8')
+for(const name of ['AboutPage','ServicesPage','ShiftsPage','BookingPage']){
+ assert.ok(app.includes(`const ${name} = lazy(() => import('./pages/${name}'))`),
+  `${name} should remain lazy-loaded so unrelated page code is excluded from the entry bundle`)
+}
+assert.ok(app.includes("import MenuPage from './pages/MenuPage'"),
+ 'Preserve the first-paint tea menu shell without a lazy route waterfall')
 
 for(const [name,source] of [['Menu',menu],['Booking',booking]]){
  assert.ok(source.includes('window.requestAnimationFrame(()=>window.dispatchEvent(new Event('),

@@ -34,8 +34,11 @@ assert.ok(player.includes('const request=audio.play()')&&player.includes('NotAll
 assert.ok(player.includes('audio.volume=config.volume')&&
  player.includes('audioRef.current.volume=next.volume'),
  'Managed volume must use the existing HTMLAudioElement')
-assert.ok(player.includes('loop={settings.loop} preload="auto"'),
- 'The existing player still uses one looping-capable audio element')
+assert.ok(player.includes('loop={settings.loop} preload="metadata"'),
+ 'The existing player must not eagerly download full audio before visitor consent')
+assert.ok(player.includes("document.addEventListener('visibilitychange',refreshWhenVisible)")&&
+ player.includes("window.setInterval(refreshWhenVisible,120000)"),
+ 'Background tabs must not keep polling the public BGM setting')
 assert.ok(player.includes('function pauseMusic()')&&player.includes('audioRef.current?.pause()')&&
  player.includes('setYoutubeOpen(false)'),
  'The original header control must still stop uploaded audio and visible YouTube')

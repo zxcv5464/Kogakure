@@ -6,17 +6,20 @@ import EntryIntro, { shouldPlay } from './components/EntryIntro'
 import PageTransition from './components/PageTransition'
 import StaffLoading from './components/StaffLoading'
 import { HomePage, OtherPage } from './pages/OtherPages'
-import AboutPage from './pages/AboutPage'
-import ShiftsPage from './pages/ShiftsPage'
 import MenuPage from './pages/MenuPage'
-import BookingPage from './pages/BookingPage'
-import ServicesPage from './pages/ServicesPage'
 import {configured} from './lib/config'
 import {prefetchBookingPage,prefetchMenuPage} from './lib/prefetch'
 
 const AdminPage = lazy(() => import('./pages/AdminPage'))
 const StaffPage = lazy(() => import('./pages/StaffPage'))
 const MemoriesPage = lazy(() => import('./pages/MemoriesPage'))
+// Keep the tea menu in the first public bundle: its branded first-paint shell
+// must appear without an extra code request. Other visitor pages load only
+// when needed; booking still benefits from the existing intent prefetch.
+const AboutPage = lazy(() => import('./pages/AboutPage'))
+const ShiftsPage = lazy(() => import('./pages/ShiftsPage'))
+const BookingPage = lazy(() => import('./pages/BookingPage'))
+const ServicesPage = lazy(() => import('./pages/ServicesPage'))
 
 // The administration route is deliberately separate from the public shell.
 // This keeps its interface and loading state independent of public animations.
