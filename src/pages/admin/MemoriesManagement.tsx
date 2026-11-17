@@ -2,7 +2,7 @@ import {useCallback,useEffect,useState} from 'react'
 import type {FormEvent} from 'react'
 import {Camera,Check,ClipboardCopy,Eye,RefreshCw,Save,Trash2,UploadCloud} from 'lucide-react'
 import {adminPreviewUrl,createKeepsake,deleteFeedback,deleteKeepsake,deleteKeepsakePhoto,
- fetchAdminFeedback,fetchAdminKeepsakes,formatExpiry,isExpired,keepsakeShareLink,moderateFeedback,revealKeepsakeCode,updateKeepsakeCode,uploadKeepsakePhoto,validateKeepsakeCode} from '../../lib/guest-memories'
+ fetchAdminFeedback,fetchAdminKeepsakes,formatExpiry,generateKeepsakeCode,isExpired,keepsakeShareLink,moderateFeedback,revealKeepsakeCode,updateKeepsakeCode,uploadKeepsakePhoto,validateKeepsakeCode} from '../../lib/guest-memories'
 import type {Feedback,KeepsakeClaim,KeepsakePhoto} from '../../lib/guest-memories'
 import '../memories.css'
 
@@ -143,7 +143,7 @@ export default function MemoriesManagement({section}:{section:'keepsakes'|'feedb
   <header className="memories-admin-heading">
    <div><p className="eyebrow">KOGAKURE · TRAVELER'S ARCHIVE</p>
     <h1>{section==='keepsakes'?'狐影留帖 · 拍立得交付':'狐語迴音 · 留言管理'}</h1>
-    <p>{section==='keepsakes'?'上傳照片並自行設定專屬領取碼；有效期限七天，也可在交付紀錄中修改領取碼。':'審核旅人留言，決定是否公開，並回覆館方心聲。'}</p>
+    <p>{section==='keepsakes'?'上傳照片後交付領取碼；既有交付單可依上傳日期、照片張數與安全隨機碼產生新碼，確認後才替換。':'審核旅人留言，決定是否公開，並回覆館方心聲。'}</p>
    </div>
    <button type="button" className="memories-admin-refresh" disabled={busy||!!busyItem}
     onClick={()=>void refresh().catch(e=>setError(e instanceof Error?e.message:'更新失敗'))}>
@@ -203,10 +203,16 @@ export default function MemoriesManagement({section}:{section:'keepsakes'|'feedb
      {editClaim===claim.id&&!isExpired(claim.expires_at)&&<form className="memories-claim-edit-panel" onSubmit={e=>void changeClaimCode(e,claim)}>
       <label>新的專屬領取碼<input type="text" value={editCode} onChange={e=>setEditCode(e.target.value.toUpperCase())}
        maxLength={48} autoCapitalize="characters" autoComplete="off" spellCheck={false}
-       placeholder="12～32 位英數字，可用 - 分組" required disabled={!!busyItem}/></label>
-      <small>儲存後舊碼及原連結立即失效，旅人必須使用新碼。照片與原本到期時間不變。</small>
+       placeholder="YYYYMMDD-張數-隨機碼" required disabled={!!busyItem}/></label>
+      <small>依原上傳日期（台灣時間）＋目前照片張數＋安全隨機碼產生；可自行調整，只有按下儲存才會更換。</small>
+      <button type="button" className="memories-regenerate-code" disabled={!!busyItem}
+       onClick={()=>{
+        try{setEditCode(generateKeepsakeCode(claim.created_at,claim.keepsake_photos.length));setError('')}
+        catch(e){setError(e instanceof Error?e.message:'無法重新產生領取碼')}
+       }}><RefreshCw size={15}/>重新產生隨機碼</button>
+      <small>修改後舊領取碼與分享連結立即失效，請將新碼交付旅人；照片與原到期時間不變。</small>
       <div className="memories-admin-actions">
-       <button type="submit" disabled={!!busyItem}><Save size={16}/>{busyItem===claim.id?'儲存中…':'儲存新領取碼'}</button>
+       <button type="submit" disabled={!!busyItem}><Save size={16}/>{busyItem===claim.id?'儲存中…':'確認修改領取碼'}</button>
        <button type="button" disabled={!!busyItem} onClick={()=>{setEditClaim(null);setEditCode('')}}>取消</button>
       </div>
      </form>}
@@ -215,7 +221,12 @@ export default function MemoriesManagement({section}:{section:'keepsakes'|'feedb
        onClick={()=>void toggleClaimCode(claim)}><Eye size={16}/>{shownCodes[claim.id]?'隱藏領取碼':'顯示領取碼'}</button>}
       {!isExpired(claim.expires_at)&&<button type="button" disabled={!!busyItem} onClick={()=>{
        if(editClaim===claim.id){setEditClaim(null);setEditCode('')}
-       else {setEditClaim(claim.id);setEditCode('')}
+       else{
+        try{
+         setEditCode(generateKeepsakeCode(claim.created_at,claim.keepsake_photos.length))
+         setEditClaim(claim.id);setError('')
+        }catch(e){setError(e instanceof Error?e.message:'無法產生新領取碼')}
+       }
       }}><Save size={16}/>{editClaim===claim.id?'取消變更':'修改領取碼'}</button>}
       {!isExpired(claim.expires_at)&&<label className="memories-admin-add-files"><UploadCloud size={15}/>補傳照片
        <input type="file" accept="image/jpeg,image/png,image/webp" multiple disabled={!!busyItem}
