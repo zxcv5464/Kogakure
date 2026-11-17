@@ -203,13 +203,13 @@ export default function MemoriesManagement({section}:{section:'keepsakes'|'feedb
      {editClaim===claim.id&&!isExpired(claim.expires_at)&&<form className="memories-claim-edit-panel" onSubmit={e=>void changeClaimCode(e,claim)}>
       <label>新的專屬領取碼<input type="text" value={editCode} onChange={e=>setEditCode(e.target.value.toUpperCase())}
        maxLength={48} autoCapitalize="characters" autoComplete="off" spellCheck={false}
-       placeholder="YYYYMMDD-張數-隨機碼" required disabled={!!busyItem}/></label>
-      <small>依原上傳日期（台灣時間）＋目前照片張數＋安全隨機碼產生；可自行調整，只有按下儲存才會更換。</small>
+       placeholder="例如：20261117-03-4827" required disabled={!!busyItem}/></label>
+      <small>依原上傳日期（台灣時間）＋目前照片張數＋4 位隨機數字產生。短碼較容易被猜測，公開領取端會限制嘗試次數；按下確認才會更換。</small>
       <button type="button" className="memories-regenerate-code" disabled={!!busyItem}
        onClick={()=>{
         try{setEditCode(generateKeepsakeCode(claim.created_at,claim.keepsake_photos.length));setError('')}
         catch(e){setError(e instanceof Error?e.message:'無法重新產生領取碼')}
-       }}><RefreshCw size={15}/>重新產生隨機碼</button>
+       }}><RefreshCw size={15}/>重新產生4位數字</button>
       <small>修改後舊領取碼與分享連結立即失效，請將新碼交付旅人；照片與原到期時間不變。</small>
       <div className="memories-admin-actions">
        <button type="submit" disabled={!!busyItem}><Save size={16}/>{busyItem===claim.id?'儲存中…':'確認修改領取碼'}</button>
