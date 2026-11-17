@@ -1,53 +1,38 @@
-# 狐隱 KOGAKURE｜網站維護交接與共同編輯規範
+# 狐隱 KOGAKURE｜維護變更與交接風險
 
-> 本文件是持續維護的入口；每次工作都應重新讀取 GitHub 最新 `main`，不要以此文件內的日期、截圖或過去對話作為「最新版本」的證明。
+本文件聚焦既有設計的理由、資料相容性及未解風險，不包含 Git 操作、部署或後台使用教學。功能狀態仍以當次 GitHub 原始碼及實際環境為準。
 
-## 正式來源與架構
-- **正式網站**：https://zxcv5464.github.io/Kogakure/
-- **正式儲存庫**：https://github.com/zxcv5464/Kogakure
-- **預設分支**：`main`
-- **技術**：React、TypeScript、Vite、GitHub Pages / GitHub Actions。
-- **公開資料與後台**：Supabase（Auth / PostgreSQL RLS / Storage）。網頁代碼部署和資料庫內容更新是兩種不同操作。
-- **發佈工作流程**：`.github/workflows/deploy.yml`。推送至 `main` 後由 Actions 建置及發佈。
-- **主要檔案**：`src/App.tsx`（路由）、`src/pages/StaffPage.tsx`（名冊）、`src/pages/admin/`（後台）、`src/pages/admin/modules.ts`（模組清單）、`src/lib/`（資料存取）、`supabase/migrations/`（資料庫結構）、`supabase/functions/`（Edge Function）。
+## 維護架構
 
-## 每次更新的標準流程
-1. 先讀取遠端 `main` 的最新 SHA、最近提交及未合併 PR，確認其他夥伴的變動；**不要從以前下載的網站 HTML 或舊資料夾直接覆寫**。
-2. 針對單一功能／修正建立新分支；修改前先讀相關原始碼與 `docs/ROADMAP.md`、`docs/STAFF_ADMIN_AUDIT.md`。
-3. 依需要執行 `npm ci`、`npm run check`、`npm run build`，並驗證相關 QA 腳本；瀏覽器腳本中部分 Chrome 路徑是 Windows 專用，換系統需要調整。
-4. 驗證手機與桌面畫面：首次載入、直接網址開啟／重新整理、頁面動畫、名帖、後台操作與空白／錯誤狀態。
-5. 優先提出 PR 供檢視：寫清楚**修改項目、影響路徑、測試證據、是否改動 Supabase、可能回歸風險**；核准後再合併至 `main`。
-6. 合併後確認 GitHub Actions 成功，且正式網站的畫面與 API 行為符合預期；若出現問題，可根據提交紀錄回復。
-7. 完成一項功能後更新 `docs/ROADMAP.md` 及必要的技術文件。
+- 前端：React、TypeScript、Vite；公開網站與後台共用部分基礎設施，但各管理模組獨立。
+- 發布：GitHub Actions 管理建置與靜態站點；資料庫、Storage 和 Edge Function 不會跟著靜態網站自動升級。
+- 資料：Supabase Auth、PostgreSQL RLS、受控 RPC、Storage。
+- 相關區域：`src/App.tsx`、`src/pages/admin/`、`src/lib/`、`supabase/migrations/`、`supabase/functions/`。
 
-## 安全與資料相容性
-- 不將 `.env.local`、管理員密碼、Supabase service_role 或 secret key 提交到公開儲存庫。
-- 前端只使用允許公開的 Supabase URL 與 publishable key；實際寫入權限依賴 RLS。
-- **不可直接在正式 Supabase 新增／刪除／修改資料、改 migration、清理 Storage，除非該項操作有明確授權及備份／回復計畫。**
-- 員工名帖讀取、管理、照片上傳與舊資料相容性都需納入測試。沒有設定資料庫時的示範資料不能代替正式環境驗收。
-- 不覆蓋其他夥伴在同一檔案的更新；若 `main` 前進，先確認差異並處理衝突。
+## 近期重要變更及必要性
 
-## 已知待辦與風險（以當次實際檢查為準）
-- **多人編輯**：現有員工管理尚未加入版本衝突偵測；最後儲存者可能覆蓋先前修改。
-- **瀏覽器歷史紀錄**：後台未儲存內容的上一頁／下一頁保護仍需跨瀏覽器驗證。
-- **照片 Storage**：名帖替換或刪除後的舊檔尚無安全孤兒檔案清理流程。
-- **正式資料庫驗收**：管理員登入、RLS、CRUD、上傳、公開狀態仍需有權限者實測。
-- **測試覆蓋**：GitHub PR／Pages Actions 已執行多項靜態與 Chromium 回歸測試；仍無法取代正式 Supabase RLS、員工權限、資料庫寫入及真實 iOS／Android 的人工驗收。
-- **前台功能**：公告、服務、排班、茶宴送單與預約功能已在原始碼實作；但正式資料庫 migration、實際開放設定與人工驗收仍須逐項核對 `docs/ROADMAP.md`，不能僅依畫面推斷可對外營運。
-- **視覺回歸**：人員名帖的邊框／頂端裝飾、首次開啟時短暫閃爍、載入與進場動畫，任何修改都應檢查桌面／手機與首次載入／重整兩種情境。
+| 變更 | 必要性 |
+| --- | --- |
+| 後台採獨立版型與模組權限 | 避免前台展示與敏感管理功能混用 |
+| 員工名帖加入排序、未儲存提醒和圖片暫存 | 減少誤操作、孤兒上傳與資料遺失 |
+| 公開茶宴與指名預約改為受控 RPC | 防止訪客自行決定價格、預約狀態或讀取他人資料 |
+| 支援可委派員工權限 | 讓職責分工不必共享最高權限帳號 |
+| 公開頁面分割載入、BGM 前景刷新 | 降低初始下載量及無效背景請求 |
+| 保留變更紀錄與自動回歸驗證 | 追蹤互相依賴的功能，降低跨模組回歸風險 |
 
-## 每次更新的交付紀錄建議
-- 日期與 `main` 基準 SHA：
-- 分支／PR：
-- 修改內容與檔案：
-- 編譯／QA／手動驗收：
-- Supabase 資料／Schema 是否受影響：
-- 正式部署結果或尚未部署的原因：
+## 尚待處理
 
-## 對照文件
-- `README.md`：專案啟動與架構
-- `docs/ROADMAP.md`：功能規劃與進度
-- `docs/STAFF_ADMIN_AUDIT.md`：後台已知限制及驗收流程
-- `docs/SUPABASE_SETUP.md`：資料庫設定
-- `docs/GITHUB_PUBLISH.md`：網站部署設定
-- `docs/SECURITY_REVIEW_20261117.md`：已查核項目、匿名表單與正式環境安全待辦
+- 名帖多人同時編輯缺少完整的資料版本衝突保護。
+- 已替換照片的 Storage 舊檔可能殘留；不能直接依 URL 變化判定可刪。
+- 瀏覽器上一頁／下一頁時的未儲存草稿保護仍需實機確認。
+- 正式資料庫的 migration、RLS、員工權限、敏感 RPC 及 Edge Function 版本需要個別核對。
+- 對匿名提交、使用者輸入長度與第三方音樂授權，仍有安全及營運風險。
+- 自動化與 Chromium QA 不等於真實手機瀏覽器或正式 Supabase 的完整驗收。
+
+## 文件對照
+
+- `docs/ROADMAP.md`：實作進度與待辦。
+- `docs/STAFF_ADMIN_AUDIT.md`：名帖管理修正。
+- `docs/SUPABASE_SETUP.md`：資料與身分權限的設計界線。
+- `docs/GITHUB_PUBLISH.md`：部署架構與儲存庫隱私考量。
+- `docs/SECURITY_REVIEW_20261117.md`：已查核項目與風險優先順序。
