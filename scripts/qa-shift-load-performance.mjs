@@ -34,9 +34,14 @@ assert.ok(publicSource.includes('CACHE_TTL_MS=45_000')&&publicSource.includes('p
  'Use a bounded, in-flight-deduplicated cache for the public page')
 assert.ok(!admin.includes('peekPublicShifts')&&!admin.includes('loadPublicShifts'),
  'Administration must keep fetching fresh data and ignore visitor-only caches')
-assert.ok(motion.includes('.route-stage .shift-week{animation:quietFade .45s')&&
- motion.includes('.route-stage .shift-week:nth-child(4){animation-delay:.23s}'),
- 'All rows should reveal with opacity only, avoiding costly transform layers during first data render')
+assert.ok(motion.includes('.route-stage .shift-calendar-shell{animation:quietFade 1.12s')&&
+ motion.includes('.route-stage .shift-calendar-heading{animation:quietRise .96s')&&
+ motion.includes('.route-stage .shift-calendar-weekdays{animation:quietFade .78s')&&
+ motion.includes('.route-stage .shift-week{animation:quietFade .82s')&&
+ motion.includes('.route-stage .shift-week:nth-child(4){animation-delay:1.43s}')&&
+ motion.includes('.route-stage .shift-selected-detail{animation:quietRise 1.05s')&&
+ motion.includes('.shift-calendar-shell,.shift-calendar-heading,.shift-calendar-weekdays,.shift-week,.shift-selected-detail'),
+ 'Month calendar, rows and selected-day detail must fade in behind the shared curtain, without moving the day grid')
 assert.ok(source.includes("opening?.open?members.get(date)||[]:[]")&&
  source.includes('shift-selected-detail'),
  'Preserve the actual daily roster and selected-day UI')
