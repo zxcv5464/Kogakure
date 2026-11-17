@@ -1,4 +1,5 @@
 import {useCallback,useEffect,useState} from 'react'
+import type {FormEvent} from 'react'
 import {Camera,Check,ClipboardCopy,Eye,RefreshCw,Save,Trash2,UploadCloud} from 'lucide-react'
 import {adminPreviewUrl,createKeepsake,deleteFeedback,deleteKeepsake,deleteKeepsakePhoto,
  fetchAdminFeedback,fetchAdminKeepsakes,formatExpiry,isExpired,keepsakeShareLink,moderateFeedback,uploadKeepsakePhoto} from '../../lib/guest-memories'
@@ -31,7 +32,7 @@ export default function MemoriesManagement({section}:{section:'keepsakes'|'feedb
  useEffect(()=>{void refresh().catch(e=>setError(e instanceof Error?e.message:'資料載入失敗'))},[refresh])
  const feedbackList=feedback.filter(item=>filter==='all'||item.status===filter)
 
- async function create(event:React.FormEvent){
+ async function create(event:FormEvent){
   event.preventDefault()
   if(busy)return
   if(!files.length){setError('請先選擇至少一張拍立得照片');return}
