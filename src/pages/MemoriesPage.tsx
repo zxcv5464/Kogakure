@@ -86,8 +86,9 @@ export default function MemoriesPage(){
    <form className="memories-claim-form" onSubmit={e=>void fetchPhotos(e)}>
     <label htmlFor="keepsake-claim-code"><KeyRound size={18}/>專屬領取碼</label>
     <input id="keepsake-claim-code" type="text" autoComplete="off"
-     value={code} onChange={e=>setCode(e.target.value)} maxLength={40}
-     placeholder="XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX" required/>
+     value={code} onChange={e=>setCode(e.target.value)} maxLength={48}
+     autoCapitalize="characters" spellCheck={false}
+     placeholder="輸入館方提供的專屬領取碼" required/>
     <button type="submit" disabled={lookupBusy}>{lookupBusy?'尋找狐影中…':'領取我的留影'}</button>
    </form>
    {lookupError&&<p className="memories-alert" role="alert">{lookupError}</p>}
