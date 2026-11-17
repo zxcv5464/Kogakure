@@ -3,11 +3,11 @@ import { join, resolve } from 'node:path'
 
 // GitHub Pages has no SPA rewrite rules. Output a tiny HTML entry for every
 // known BrowserRouter route so direct links and refreshes return HTTP 200.
-const routes = ['about', 'services', 'staff', 'shifts', 'menu', 'booking', 'admin', 'admin/staff', 'admin/announcements', 'admin/bgm', 'admin/menu', 'admin/services', 'admin/booking', 'admin/accounts', 'admin/orders', 'admin/shifts', 'admin/accounting']
+const routes = ['about', 'services', 'staff', 'shifts', 'menu', 'booking', 'memories', 'admin', 'admin/staff', 'admin/announcements', 'admin/bgm', 'admin/menu', 'admin/services', 'admin/booking', 'admin/accounts', 'admin/orders', 'admin/shifts', 'admin/accounting', 'admin/keepsakes', 'admin/feedback']
 const routeTitles = {
  about: '入館須知', services: '服務內容', staff: '狐姬名冊',
- shifts: '值班排班', menu: '茶宴', booking: '預約', admin: '後台管理',
- 'admin/staff': '員工名帖管理', 'admin/announcements': '公告管理', 'admin/bgm': 'BGM 管理', 'admin/menu': '菜單管理', 'admin/services': '服務內容管理', 'admin/booking': '預約管理', 'admin/accounts': '員工帳號與權限', 'admin/orders': '茶宴訂單管理', 'admin/shifts': '值班排班管理', 'admin/accounting': '帳務管理',
+ shifts: '值班排班', menu: '茶宴', booking: '預約', memories: '旅人繪卷', admin: '後台管理',
+ 'admin/staff': '員工名帖管理', 'admin/announcements': '公告管理', 'admin/bgm': 'BGM 管理', 'admin/menu': '菜單管理', 'admin/services': '服務內容管理', 'admin/booking': '預約管理', 'admin/accounts': '員工帳號與權限', 'admin/orders': '茶宴訂單管理', 'admin/shifts': '值班排班管理', 'admin/accounting': '帳務管理', 'admin/keepsakes': '狐影留帖', 'admin/feedback': '狐語迴音',
 }
 const dist = resolve('dist')
 const entry = await readFile(join(dist, 'index.html'), 'utf8')
