@@ -62,6 +62,8 @@ assert.ok(scene.includes('Array.from({ length: 7 }')&&
 assert.ok(scene.includes('requestId !== latestRequest')&&
  scene.includes('visibleScene.current === nextImage'),
  'Late background image decodes must never overwrite a newer scene')
+assert.ok(scene.includes('preloads.size > 0')&&scene.includes("preload.removeAttribute('src')"),
+ 'Slow image responses must not trigger overlapping rotation downloads, and route changes must cancel stale images')
 assert.ok(scene.includes('!introReady')&&
  scene.includes("prefers-reduced-motion: reduce")&&
  scene.includes("document.visibilityState !== 'visible'"),
