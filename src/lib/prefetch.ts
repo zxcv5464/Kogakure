@@ -1,3 +1,5 @@
+import {prefetchPublicMenu} from './public-menu'
+
 // Warm the lazy component and public staff query only after the visitor shows
 // intent to visit the staff page. No extra Supabase requests on page load.
 export function prefetchStaffPage(): void {
@@ -29,11 +31,10 @@ export function prefetchServicesPage():void{
  })
 }
 
-/** The menu shell is already in the initial public bundle. Prefetch only
- * its published catalog on navigation intent; avoid a redundant route import. */
+/** The menu shell already imports this catalog in the initial bundle.
+ * Reuse that module and its in-flight cache, without a redundant dynamic import. */
 export function prefetchMenuPage():void{
- void import('./public-menu').then(module=>module.prefetchPublicMenu())
-  .catch(()=>{/* The visitor page displays a safe unavailable state. */})
+ prefetchPublicMenu()
 }
 
 /** Booking: reuse staff thumbnails/data and the two short-lived public
