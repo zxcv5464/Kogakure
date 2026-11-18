@@ -29,13 +29,11 @@ export function prefetchServicesPage():void{
  })
 }
 
-/** Tea banquet: warm the lazily loaded page and published catalog only if
- * the traveller approaches its navigation link. */
+/** The menu shell is already in the initial public bundle. Prefetch only
+ * its published catalog on navigation intent; avoid a redundant route import. */
 export function prefetchMenuPage():void{
- void Promise.all([
-  import('../pages/MenuPage'),
-  import('./public-menu').then(module=>module.prefetchPublicMenu()),
- ]).catch(()=>{/* The visitor page displays a safe unavailable state. */})
+ void import('./public-menu').then(module=>module.prefetchPublicMenu())
+  .catch(()=>{/* The visitor page displays a safe unavailable state. */})
 }
 
 /** Booking: reuse staff thumbnails/data and the two short-lived public

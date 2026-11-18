@@ -20,6 +20,33 @@ const digestHex=async(input:string):Promise<string>=>{
  return Array.from(new Uint8Array(bytes)).map(b=>b.toString(16).padStart(2,'0')).join('')
 }
 
+// Public requests contain only an action and a short code. Bound streamed input
+// before parsing so oversized bodies cannot consume unbounded edge memory.
+const MAX_REQUEST_BYTES=4096
+async function readJsonBody(req:Request):Promise<{action?:string;token?:string}>{
+ const declaredSize=Number(req.headers.get('content-length'))
+ if(declaredSize>MAX_REQUEST_BYTES)throw new RangeError('request too large')
+ const reader=req.body?.getReader()
+ if(!reader)return {}
+ const chunks:Uint8Array[]=[]
+ let total=0
+ try{
+  while(true){
+   const {done,value}=await reader.read()
+   if(done)break
+   total+=value.byteLength
+   if(total>MAX_REQUEST_BYTES){await reader.cancel();throw new RangeError('request too large')}
+   chunks.push(value)
+  }
+ }finally{reader.releaseLock()}
+ const bytes=new Uint8Array(total)
+ let offset=0
+ for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.byteLength}
+ const parsed:unknown=JSON.parse(new TextDecoder().decode(bytes))
+ if(!parsed||typeof parsed!=='object'||Array.isArray(parsed))throw new Error('invalid JSON object')
+ return parsed as {action?:string;token?:string}
+}
+
 Deno.serve(async(req:Request)=>{
  const origin=req.headers.get('origin')
  if(req.method==='OPTIONS')return new Response(null,{status:204,headers:cors(origin)})
@@ -27,9 +54,13 @@ Deno.serve(async(req:Request)=>{
  const url=Deno.env.get('SUPABASE_URL')
  const secret=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
  if(!url||!secret)return reply({error:'交付服務尚未設定完成'},503,origin)
- const db=createClient(url,secret,{auth:{persistSession:false,autoRefreshToken:false}})
  let body:{action?:string;token?:string}
- try{body=await req.json()}catch{return reply({error:'資料格式錯誤'},400,origin)}
+ try{body=await readJsonBody(req)}catch(error){
+  const tooLarge=error instanceof RangeError
+  return reply({error:tooLarge?'請求資料過大':'資料格式錯誤'},tooLarge?413:400,origin)
+ }
+ // Do not initialise the privileged database client for malformed requests.
+ const db=createClient(url,secret,{auth:{persistSession:false,autoRefreshToken:false}})
  try{
   if(body.action==='cleanup'){
    const key=req.headers.get('x-cleanup-key')||''
