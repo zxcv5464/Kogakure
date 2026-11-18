@@ -196,6 +196,29 @@ has(edge,[
 ],'Public album lookup must enforce numeric short-code anti-brute-force limits')
 assert.ok(!edge.includes('const digest=await crypto.subtle.digest'),
  'Public album lookup should reuse one consistent SHA-256 helper for tokens and hashed quota keys')
+has(edge,[
+ 'const MAX_REQUEST_BYTES=4096',
+ 'await readJsonBody(req)',
+ 'tooLarge?413:400',
+ 'reader.cancel()',
+],'Public lookup and cleanup must reject oversized or non-object JSON before database access')
+// Exercise the Edge Function's bounded request parser without starting Deno
+// or touching Supabase. Missing and malformed bodies must not become HTTP 500s.
+const bounded=edge.slice(edge.indexOf('const MAX_REQUEST_BYTES=4096'),edge.indexOf('Deno.serve('))
+const parserContext={TextDecoder,Uint8Array,RangeError,Error,JSON}
+runInNewContext(ts.transpileModule(bounded+'\n;globalThis.readJsonBody=readJsonBody',{
+ compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022},
+}).outputText,parserContext)
+const readJson=parserContext.readJsonBody
+const newRequest=(body,headers)=>new Request('https://example.test/lookup',{method:'POST',body,headers})
+assert.equal((await readJson(newRequest('{"action":"lookup","token":"AB123456"}'))).token,'AB123456')
+for(const invalid of ['null','[]','not-json']){
+ await assert.rejects(readJson(newRequest(invalid)),Error,'Reject non-object or invalid JSON: '+invalid)
+}
+await assert.rejects(readJson(newRequest(JSON.stringify({token:'A'.repeat(5000)}))),
+ RangeError,'Reject an oversized body before JSON parsing')
+await assert.rejects(readJson(newRequest('{}',{'content-length':'8192'})),
+ RangeError,'Reject a declared oversized body without reading it')
 assert.ok(!api.includes('crypto.getRandomValues(new Uint8Array(16))'),
  'Backoffice must require staff-chosen code rather than issuing automatic random tokens')
 assert.ok(!api.includes("token_sha256:sha"),

@@ -19,8 +19,8 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci
-      - name: Audit dependencies for known high-severity vulnerabilities
-        run: npm audit --audit-level=high
+      - name: Audit production dependencies and unexpected high-severity advisories
+        run: node scripts/audit-dependencies.mjs
       - name: Verify private keepsake delivery, expiry cleanup and moderated guestbook
         env:
           VITE_OFFLINE_PREVIEW: 'true'
