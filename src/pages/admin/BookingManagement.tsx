@@ -81,26 +81,82 @@ export default function BookingManagement(){
  useEffect(()=>setEditing(dirty,busy),[dirty,busy,setEditing])
  useEffect(()=>()=>setEditing(false,false),[setEditing])
 
- const refresh=useCallback(async()=>{
-  const [requests,updatedPlans,updatedNominees,usage]=await Promise.all([loadAdminBookings(),loadBookingPlans(true),getStaff(true),loadBookingQuotaUsage().catch(()=>({plans:{},staff:{}}))])
+ const bookingReadVersion=useRef(0)
+ const fullRefreshInFlight=useRef<Promise<void>|null>(null)
+ const liveRefreshInFlight=useRef(false)
+ const applyBookings=useCallback((requests:BookingRequest[])=>{
   if(didLoad.current){
    const newcomers=requests.filter(r=>r.status==='pending'&&!lastSeen.current.has(r.id))
    if(newcomers.length)setIncoming(newcomers[0])
-  } else didLoad.current=true
+  }else didLoad.current=true
   lastSeen.current=new Set(requests.map(r=>r.id))
-  setBookings(requests);setPlans(updatedPlans);setNominees(updatedNominees);setQuotaUsage(usage);setError('')
+  setBookings(requests)
  },[])
+ // Full reads are reserved for the initial view, manual refreshes and successful edits.
+ const refresh=useCallback(()=>{
+  if(fullRefreshInFlight.current)return fullRefreshInFlight.current
+  const version=++bookingReadVersion.current
+  const task=Promise.all([
+   loadAdminBookings(),loadBookingPlans(true),getStaff(true),
+   loadBookingQuotaUsage().catch(()=>({plans:{},staff:{}})),
+  ]).then(([requests,updatedPlans,updatedNominees,usage])=>{
+   if(version===bookingReadVersion.current){
+    applyBookings(requests)
+    setQuotaUsage(usage)
+   }
+   setPlans(updatedPlans);setNominees(updatedNominees);setError('')
+  })
+  const pending=task.finally(()=>{fullRefreshInFlight.current=null})
+  fullRefreshInFlight.current=pending
+  return pending
+ },[applyBookings])
+ // Polling and realtime only refresh live reservations and their usage counters.
+ const refreshLive=useCallback(async()=>{
+  if(fullRefreshInFlight.current||liveRefreshInFlight.current||busyRef.current)return
+  liveRefreshInFlight.current=true
+  const version=++bookingReadVersion.current
+  try{
+   const [requests,usage]=await Promise.all([
+    loadAdminBookings(),loadBookingQuotaUsage().catch(()=>({plans:{},staff:{}})),
+   ])
+   if(version===bookingReadVersion.current){
+    applyBookings(requests)
+    setQuotaUsage(usage)
+    setError('')
+   }
+  }finally{liveRefreshInFlight.current=false}
+ },[applyBookings])
  useEffect(()=>{
   let alive=true
   refresh().catch(e=>{if(alive)setError(describeBookingError(e))})
    .finally(()=>{if(alive)setLoading(false)})
-  const poll=window.setInterval(()=>{if(document.visibilityState==='visible')void refresh().catch(()=>{})},7000)
-  const clock=window.setInterval(()=>setNow(Date.now()),1000)
-  const unwatch=watchBookingChanges(()=>{void refresh().catch(()=>{})},true)
-  const visible=()=>{if(document.visibilityState==='visible')void refresh().catch(()=>{})}
+  const poll=window.setInterval(()=>{if(document.visibilityState==='visible')void refreshLive().catch(()=>{})},7000)
+  const unwatch=watchBookingChanges(()=>{if(document.visibilityState==='visible')void refreshLive().catch(()=>{})},true)
+  const visible=()=>{if(document.visibilityState==='visible')void refreshLive().catch(()=>{})}
   document.addEventListener('visibilitychange',visible)
-  return()=>{alive=false;unwatch();window.clearInterval(poll);window.clearInterval(clock);document.removeEventListener('visibilitychange',visible)}
- },[refresh])
+  return()=>{alive=false;unwatch();window.clearInterval(poll);document.removeEventListener('visibilitychange',visible)}
+ },[refresh,refreshLive])
+ const hasActiveBooking=tab==='requests'&&bookings.some(b=>b.status==='accepted')
+ useEffect(()=>{
+  if(!hasActiveBooking)return
+  let clock:number|undefined
+  const tick=()=>setNow(Date.now())
+  const visible=()=>{
+   if(document.visibilityState==='visible'){
+    tick()
+    if(clock===undefined)clock=window.setInterval(tick,1000)
+   }else if(clock!==undefined){
+    window.clearInterval(clock)
+    clock=undefined
+   }
+  }
+  visible()
+  document.addEventListener('visibilitychange',visible)
+  return()=>{
+   if(clock!==undefined)window.clearInterval(clock)
+   document.removeEventListener('visibilitychange',visible)
+  }
+ },[hasActiveBooking])
  const counts=useMemo(()=>({
   pending:bookings.filter(b=>b.status==='pending').length,
   accepted:bookings.filter(b=>b.status==='accepted').length,
