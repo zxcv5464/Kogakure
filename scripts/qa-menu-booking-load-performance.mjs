@@ -53,10 +53,12 @@ assert.ok(menuCache.includes('45_000')&&
  bookingCache.includes('45_000')&&bookingCache.includes('6_000'),
  'Menu, plans and occupancy should use bounded, separately chosen TTLs')
 assert.ok(prefetch.includes('prefetchMenuPage')&&prefetch.includes('prefetchBookingPage')&&
+ prefetch.includes("import {prefetchPublicMenu} from './public-menu'")&&
+ prefetch.includes('prefetchPublicMenu()')&&
  !prefetch.includes("import('../pages/MenuPage')")&&
- prefetch.includes("import('./public-menu').then(module=>module.prefetchPublicMenu())")&&
+ !prefetch.includes("import('./public-menu')")&&
  prefetch.includes("import('../pages/BookingPage')"),
- 'Avoid re-importing the bundled menu while warming its data and the lazy booking route on intent')
+ 'Reuse the statically bundled menu catalog without a redundant dynamic import, while booking stays lazy')
 assert.ok(layout.includes("to==='/menu'?prefetchMenuPage")&&
  layout.includes("to==='/booking'?prefetchBookingPage"),
  'All desktop/mobile menus should trigger the new on-intent prefetch')
