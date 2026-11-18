@@ -21,6 +21,17 @@ for (const phrase of ['空閒中','指名中','預約者遊戲角色姓名','所
  assert.ok(page.includes(phrase),'Booking form missing '+phrase)
 for (const phrase of ['接取','婉拒','結束服務','同步倒數','剩餘','方案已儲存','待審核'])
  assert.ok(admin.includes(phrase),'Admin workflow missing '+phrase)
+const liveRefresh=admin.match(/const refreshLive=useCallback\(async\(\)=>\{([\s\S]*?)\n \},\[applyBookings\]\)/)?.[1]
+assert.ok(liveRefresh&&liveRefresh.includes('loadAdminBookings()')&&liveRefresh.includes('loadBookingQuotaUsage()'),
+ 'Background booking refresh must retain live requests and quota counters')
+assert.ok(!/loadBookingPlans|getStaff/.test(liveRefresh),
+ 'Background booking refresh must not reload static plans or staff settings')
+assert.ok(admin.includes('const poll=window.setInterval(()=>{if(document.visibilityState===\'visible\')void refreshLive()')&&
+ admin.includes("watchBookingChanges(()=>{if(document.visibilityState==='visible')void refreshLive()"),
+ 'Polling and realtime changes must use lightweight booking refreshes')
+assert.ok(admin.includes("const hasActiveBooking=tab==='requests'&&bookings.some(b=>b.status==='accepted')")&&
+ admin.includes('if(!hasActiveBooking)return')&&admin.includes('window.clearInterval(clock)'),
+ 'The one-second booking countdown must stop when it is not needed')
 assert.ok(notice.includes('新指名申請'), 'Admin-wide toast missing')
 assert.ok(api.includes("rpc('submit_booking_request'"), 'Public requests must go through RPC')
 assert.ok(api.includes("rpc('decide_booking_request'"), 'Admin decisions must go through atomic RPC')
