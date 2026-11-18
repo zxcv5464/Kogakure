@@ -66,14 +66,21 @@ export default function SceneBackdrop({ introReady, path }: { introReady: boolea
   if (introReady && path !== '/admin') showScene(nextIndex.current)
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   const timer = path === '/admin' || reduced || !introReady ? undefined : window.setInterval(() => {
-   if (document.visibilityState !== 'visible') return
+   // Keep one image request in flight on slow networks; advancing early would
+   // discard its result while competing for the same visitor bandwidth.
+   if (document.visibilityState !== 'visible' || preloads.size > 0) return
    nextIndex.current = (nextIndex.current + 1) % SCENES.length
    showScene(nextIndex.current)
   }, 5000)
   return () => {
    cancelled = true
    if (timer !== undefined) window.clearInterval(timer)
-   for (const preload of preloads) { preload.onload = null; preload.onerror = null }
+   for (const preload of preloads) {
+    preload.onload = null
+    preload.onerror = null
+    // Avoid continuing an obsolete download after a route change/unmount.
+    preload.removeAttribute('src')
+   }
   }
  }, [path, introReady])
 
