@@ -300,7 +300,7 @@ export default function ShiftManagement({access}:{access:BackofficeAccess}){
   {!loading&&portraitPeople.length>0&&<section className="shift-admin-portraits" aria-labelledby="shift-portrait-heading">
    <div className="shift-admin-portraits-heading">
     <h2 id="shift-portrait-heading"><ImagePlus size={19}/>值班頭像管理</h2>
-    <p>為出勤人員上傳個人圖片，同一張照片會顯示於所有營業日的出勤名單。支援 JPG、PNG、WebP、AVIF，會自動裁成圓形頭像。</p>
+    <p>為出勤人員上傳個人圖片，同一張照片會顯示於所有營業日的出勤名單。支援 JPG、PNG、WebP、AVIF，照片依原始比例顯示，不會裁成圓形。既有舊照片如曾被裁切，請重新上傳原圖。</p>
    </div>
    <div className="shift-admin-portraits-list">
     {portraitPeople.map(person=>{
