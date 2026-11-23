@@ -14,7 +14,7 @@ export async function listShiftPortraits():Promise<ShiftPortraitRecord[]>{
  return (data||[]).map(row=>({userId:row.user_id,path:row.image_path,url:imageUrl(row.image_path)}))
 }
 
-/** A 360px square WebP portrait is fast to load even on the mobile calendar. */
+/** Retain the source image ratio in an optimized WebP, without any square crop. */
 async function convertPortrait(file:File):Promise<Blob>{
  if(!['image/png','image/jpeg','image/webp','image/avif'].includes(file.type))
   throw new Error('請選擇 JPG、PNG、WebP 或 AVIF 圖片')
@@ -25,12 +25,14 @@ async function convertPortrait(file:File):Promise<Blob>{
  try{
   if(!bitmap.width||!bitmap.height)throw new Error('圖片尺寸無效')
   const canvas=document.createElement('canvas')
-  canvas.width=360;canvas.height=360
+  const scale=Math.min(1,720/Math.max(bitmap.width,bitmap.height))
+  canvas.width=Math.max(1,Math.round(bitmap.width*scale))
+  canvas.height=Math.max(1,Math.round(bitmap.height*scale))
   const context=canvas.getContext('2d')
   if(!context)throw new Error('瀏覽器無法處理圖片')
-  const size=Math.min(bitmap.width,bitmap.height)
+  context.imageSmoothingEnabled=true
   context.imageSmoothingQuality='high'
-  context.drawImage(bitmap,(bitmap.width-size)/2,(bitmap.height-size)/2,size,size,0,0,360,360)
+  context.drawImage(bitmap,0,0,canvas.width,canvas.height)
   const blob=await new Promise<Blob>((resolve,reject)=>
    canvas.toBlob(value=>value?resolve(value):reject(new Error('無法產生頭像縮圖')),'image/webp',.86))
   if(blob.size>3*1024*1024)throw new Error('頭像輸出檔案過大')
