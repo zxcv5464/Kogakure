@@ -185,3 +185,19 @@
  .booking-admin-staff-quota-row select{grid-column:1}
  .booking-admin-staff-quota-row input{grid-column:2}
 }
+
+/* Booking media belongs to booking management only; it does not edit staff-media. */
+.booking-admin-photo-editor{display:grid;gap:10px;padding:13px;border:1px solid rgba(213,177,127,.3);border-radius:7px;background:rgba(87,61,66,.16)}
+.booking-admin-photo-help{display:grid;gap:5px;min-width:0}
+.booking-admin-photo-help strong{color:#efd4ac;font:600 .84rem 'Noto Serif TC',serif}
+.booking-admin-photo-help small{color:#bea99b;font-size:.73rem;line-height:1.7}
+.booking-admin-photo-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.booking-admin-photo-upload,.booking-admin-photo-delete{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:38px;padding:8px 12px;border:1px solid rgba(220,179,124,.47);border-radius:5px;background:rgba(186,136,79,.18);color:#f0d4ac;font:inherit;font-size:.78rem;cursor:pointer}
+.booking-admin-photo-upload:hover,.booking-admin-photo-delete:hover:not(:disabled){background:rgba(195,148,91,.3)}
+.booking-admin-photo-upload.is-disabled,.booking-admin-photo-delete:disabled{opacity:.45;cursor:not-allowed}
+.booking-admin-photo-upload:focus-within{outline:2px solid #dfbd83;outline-offset:2px}
+.booking-admin-photo-upload input{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
+.booking-admin-photo-delete{color:#e9b8ad;background:rgba(124,69,75,.17)}
+.booking-admin-photo-empty{margin:0;color:#baa99e;font-size:.73rem;line-height:1.5}
+.booking-admin-nominee-avatar{flex:0 0 95px;width:95px;height:124px}
+@media(max-width:600px){.booking-admin-nominee-avatar{flex-basis:82px;width:82px;height:108px}.booking-admin-photo-actions{gap:6px}}

@@ -74,6 +74,7 @@
 .booking-form{display:flex;flex-direction:column;gap:16px;padding-top:20px}
 .booking-selected-person{display:flex;gap:14px;align-items:center;padding:10px;border:1px solid rgba(217,182,136,.22);border-radius:7px;background:rgba(255,255,255,.03)}
 .booking-selected-person img{width:65px;height:77px;object-fit:cover;border-radius:4px}
+.booking-selected-photo-empty{display:grid;place-items:center;flex:none;width:65px;height:77px;border-radius:4px;background:rgba(186,150,102,.1);color:#d8bd97}
 .booking-selected-person span{display:flex;flex-direction:column;gap:3px}
 .booking-selected-person small{font-size:.74rem;color:#c9af91}
 .booking-selected-person strong{font-family:'Noto Serif TC',serif;color:#f4dcbb;letter-spacing:.1em;font-size:1.08rem}
