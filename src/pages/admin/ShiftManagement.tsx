@@ -1,12 +1,15 @@
 import {useCallback,useEffect,useRef,useState} from 'react'
 import {Link} from 'react-router-dom'
-import {CalendarDays,CheckCircle2,ExternalLink,RefreshCw,Save,UsersRound,AlertCircle,X,Clock3,ChevronRight,Sparkles} from 'lucide-react'
+import {CalendarDays,CheckCircle2,ExternalLink,RefreshCw,Save,UsersRound,AlertCircle,X,Clock3,ChevronRight,Sparkles,ImagePlus} from 'lucide-react'
 import {supabase} from '../../lib/supabase'
 import {useRollingShiftWeeks,shiftDateLabel,SHIFT_WEEKDAYS} from '../../lib/shift-calendar'
 import {fetchOwnPreferredShiftName,fetchShifts,listActiveShiftEmployees,markOwnerShiftAttendance,markShiftAttendance,renameOwnShiftAttendance,saveOwnPreferredShiftName,setShiftOpening,unmarkShiftAttendance} from '../../lib/shifts'
 import type {ShiftAttendance,ShiftCalendarData,ShiftEmployee,ShiftOpenDay} from '../../lib/shifts'
 import {permitted} from '../../lib/employee-accounts'
 import ScrollCue from '../../components/ScrollCue'
+import ShiftPortrait from '../../components/ShiftPortrait'
+import {listShiftPortraits,removeShiftPortrait,uploadShiftPortrait} from '../../lib/shift-portraits'
+import type {ShiftPortraitRecord} from '../../lib/shift-portraits'
 import type {BackofficeAccess} from '../../lib/employee-accounts'
 import './shift-management.css'
 type ShiftKind='open'|'closed'
@@ -59,8 +62,8 @@ function ShiftDayEditor({date,weekday,today,day,staff,people,access,selfId,owner
   {!owner&&open&&day?.eventTitle&&<p className="shift-admin-event-detail"><Sparkles size={15}/>活動：{day.eventTitle}</p>}
   {open&&<div className="shift-admin-attendance">
    <h3><UsersRound size={15}/>出勤登記 · {staff.length} 位</h3>
-   {staff.length?<ul>{staff.map(person=><li key={person.employeeId}>
-    <span>{person.name}</span>
+   {staff.length?<ul>{staff.map(person=><li key={person.source+':'+person.employeeId}>
+    <ShiftPortrait name={person.name} url={person.imageUrl}/><span className="shift-admin-person-name">{person.name}</span>
     {(person.source==='owner'?person.employeeId===selfId:owner||person.employeeId===selfId)&&<button type="button" disabled={busy}
      aria-label={'取消 '+person.name+' '+date+' 的出勤'} title="取消出勤"
      onClick={()=>void onRemove(date,person)}><X size={15}/></button>}
@@ -96,6 +99,7 @@ export default function ShiftManagement({access}:{access:BackofficeAccess}){
  const modalRef=useRef<HTMLElement|null>(null)
  const closeRef=useRef<HTMLButtonElement|null>(null)
  const [people,setPeople]=useState<ShiftEmployee[]>([])
+ const [portraits,setPortraits]=useState<ShiftPortraitRecord[]>([])
  const [selfId,setSelfId]=useState('')
  const [employeeShiftName,setEmployeeShiftName]=useState(()=>access.kind==='employee'?access.displayName:'')
  const [savedEmployeeShiftName,setSavedEmployeeShiftName]=useState(()=>access.kind==='employee'?access.displayName:'')
@@ -146,18 +150,19 @@ export default function ShiftManagement({access}:{access:BackofficeAccess}){
   if(selectedDate&&(selectedDate<start||selectedDate>end))setSelectedDate(null)
  },[selectedDate,start,end])
  const reload=useCallback(async()=>{
-  const [data,accounts]=await Promise.all([fetchShifts(start,end),owner?listActiveShiftEmployees():Promise.resolve([])])
+  const [data,accounts,images]=await Promise.all([fetchShifts(start,end),owner?listActiveShiftEmployees():Promise.resolve([]),listShiftPortraits().catch(()=>[])])
   setCalendar(data)
   setPeople(accounts)
+  setPortraits(images)
   setError('')
  },[start,end,owner])
  useEffect(()=>{
   let active=true
   setLoading(true)
-  Promise.all([fetchShifts(start,end),owner?listActiveShiftEmployees():Promise.resolve([]),supabase?.auth.getUser()])
-   .then(async ([data,employees,auth])=>{
+  Promise.all([fetchShifts(start,end),owner?listActiveShiftEmployees():Promise.resolve([]),supabase?.auth.getUser(),listShiftPortraits().catch(()=>[])])
+   .then(async ([data,employees,auth,images])=>{
     if(!active)return
-    setCalendar(data);setPeople(employees)
+    setCalendar(data);setPeople(employees);setPortraits(images)
     const signedInId=auth?.data.user?.id||''
     setSelfId(signedInId)
     if(access.kind==='employee'){
@@ -249,6 +254,18 @@ export default function ShiftManagement({access}:{access:BackofficeAccess}){
  function remove(date:string,person:ShiftAttendance){
   return run(()=>unmarkShiftAttendance(date,person.employeeId,person.source),'已取消 '+person.name+' 在 '+date+' 的出勤。')
  }
+ function changePortrait(userId:string,name:string,file:File){
+  return run(async()=>{await uploadShiftPortrait(userId,file)},'已更新「'+name+'」的值班照片。')
+ }
+ function deletePortrait(userId:string,name:string){
+  return run(()=>removeShiftPortrait(userId),'已移除「'+name+'」的值班照片。')
+ }
+ const portraitCandidates:ShiftEmployee[]=[
+  ...(siteOwner&&selfId?[{id:selfId,name:ownerName.trim()||'管理員'}]:[]),
+  ...(owner?people:selfId?[{id:selfId,name:employeeShiftName.trim()||(access.kind==='employee'?access.displayName:'管理員')}]:[]),
+ ]
+ const portraitPeople=portraitCandidates.filter((person,index,all)=>all.findIndex(entry=>entry.id===person.id)===index)
+ const portraitById=new Map(portraits.map(item=>[item.userId,item]))
  const openings=new Map(calendar.days.map(x=>[x.date,x]))
  const byDate=new Map<string,ShiftAttendance[]>()
  for(const member of calendar.attendance){
@@ -280,6 +297,33 @@ export default function ShiftManagement({access}:{access:BackofficeAccess}){
    <button type="button" className="shift-admin-save-preference" disabled={busy||!employeeShiftName.trim()||employeeShiftName.trim().length>100||employeeShiftName.trim()===savedEmployeeShiftName}
     onClick={()=>void savePreferredName()}><Save size={15}/>儲存常用出勤名稱</button>
   </div>}
+  {!loading&&portraitPeople.length>0&&<section className="shift-admin-portraits" aria-labelledby="shift-portrait-heading">
+   <div className="shift-admin-portraits-heading">
+    <h2 id="shift-portrait-heading"><ImagePlus size={19}/>值班頭像管理</h2>
+    <p>為出勤人員上傳個人圖片，同一張照片會顯示於所有營業日的出勤名單。支援 JPG、PNG、WebP、AVIF，會自動裁成圓形頭像。</p>
+   </div>
+   <div className="shift-admin-portraits-list">
+    {portraitPeople.map(person=>{
+     const photo=portraitById.get(person.id)
+     return <div className="shift-admin-portrait-entry" key={person.id}>
+      <ShiftPortrait name={person.name} url={photo?.url}/>
+      <strong>{person.name}</strong>
+      <label className={'shift-admin-portrait-upload'+(busy?' is-disabled':'')}>
+       <ImagePlus size={14}/>{photo?'更換圖片':'上傳圖片'}
+       <input aria-label={'上傳或更換 '+person.name+' 的值班照片'} type="file"
+        accept="image/png,image/jpeg,image/webp,image/avif" disabled={busy}
+        onChange={event=>{
+         const file=event.currentTarget.files?.[0]
+         event.currentTarget.value=''
+         if(file)void changePortrait(person.id,person.name,file)
+        }}/>
+      </label>
+      {photo&&<button type="button" className="shift-admin-portrait-remove"
+       disabled={busy} onClick={()=>void deletePortrait(person.id,person.name)}>移除圖片</button>}
+     </div>
+    })}
+   </div>
+  </section>}
   {notice&&<p className={'shift-admin-message'+(notice.error?' is-error':'')} role={notice.error?'alert':'status'}>
    {notice.error?<AlertCircle size={18}/>:<CheckCircle2 size={18}/>} {notice.message}</p>}
   {error&&<p className="shift-admin-message is-error" role="alert">{error}</p>}

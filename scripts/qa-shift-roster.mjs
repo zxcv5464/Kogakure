@@ -192,7 +192,7 @@ assert.ok(page.includes("weeks.map((week,index)=>")&&page.includes('week.days.ma
  'Public calendar must show all 28 days in four weekly rows')
 assert.ok(page.includes('aria-pressed={selectedDate===date}')&&page.includes('onClick={()=>selectDate(date)}'),
  'All calendar dates must be keyboard-accessible buttons that select a detailed day')
-assert.ok(page.includes('id="shift-selected-detail"')&&page.includes('selectedNames.map('),
+assert.ok(page.includes('id="shift-selected-detail"')&&page.includes('selectedPeople.map('),
  'Selected-day detail must show actual published attendance names')
 assert.ok(page.includes('selectedOpening?.eventTitle')&&page.includes('shift-event-indicator'),
  'Travelers must see scheduled activities and a mobile event marker')
@@ -242,6 +242,33 @@ assert.ok(editor.includes("markOwnerShiftAttendance(date,label)"),
  'Owner self-signup must not attempt the employee account insert')
 assert.ok(editor.includes('unmarkShiftAttendance(date,person.employeeId,person.source)'),
  'Owners and employees must cancel rows from their respective tables')
+// Shift photos are independent of RP names and not exposed via employee account queries.
+const portraitUi=await readFile('src/components/ShiftPortrait.tsx','utf8')
+const portraitApi=await readFile('src/lib/shift-portraits.ts','utf8')
+const portraitSql=await readFile('supabase/migrations/20261123_01_shift_profile_images.sql','utf8')
+for(const path of ['src/components/ShiftPortrait.tsx','src/lib/shift-portraits.ts']){
+ const source=await readFile(path,'utf8')
+ const ast=ts.createSourceFile(path,source,ts.ScriptTarget.Latest,true,path.endsWith('tsx')?ts.ScriptKind.TSX:ts.ScriptKind.TS)
+ assert.equal(ast.parseDiagnostics.length,0,'Invalid portrait TypeScript: '+path)
+}
+assert.ok(portraitUi.includes('onError={()=>setFailed(true)}'),'Broken photos must render a placeholder')
+assert.ok(page.includes('<ShiftPortrait name={person.name} url={person.imageUrl}/>'),
+ 'Public selected-day list must show photos directly before names')
+assert.ok(editor.includes('值班頭像管理')&&editor.includes('uploadShiftPortrait(userId,file)')&&editor.includes('removeShiftPortrait(userId)'),
+ 'Shift backoffice must let a manager add, replace and remove photos')
+assert.ok(editor.includes('portraitCandidates')&&editor.includes('siteOwner&&selfId'),
+ 'Site owners need their own portraits without fake employee accounts')
+assert.ok(lib.includes('portraitById.get(r.employee_id)')&&lib.includes('portraitById.get(r.owner_id)'),
+ 'Both employee and owner attendance must resolve photos by user ID, not duty name')
+assert.ok(portraitApi.includes("upsert({user_id:userId,image_path:path")&&
+ portraitApi.includes("contentType:'image/webp',upsert:false")&&portraitApi.includes('canvas.width=360'),
+ 'Portrait uploader must save one optimized file per account without overwriting shared objects')
+assert.ok(portraitSql.includes('shift_profile_images')&&portraitSql.includes('enable row level security')&&
+ portraitSql.includes('public.can_edit_shift_portrait')&&portraitSql.includes('storage.objects'),
+ 'Database and bucket writes need scoped RLS permissions')
+assert.ok(!portraitSql.includes('drop table')&&!portraitSql.includes('grant select on public.employee_accounts to anon'),
+ 'Portrait migration must not erase rosters or expose account data')
+
 const vite=await createServer({server:{middlewareMode:true,hmr:false},appType:'custom'})
 try{
  const {taipeiToday,rollingShiftWeeks,shiftAddDays,shiftWeekStart}=await vite.ssrLoadModule('/src/lib/shift-calendar.ts')

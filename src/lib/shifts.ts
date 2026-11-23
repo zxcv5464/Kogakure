@@ -1,6 +1,7 @@
 import {supabase} from './supabase'
+import {listShiftPortraits} from './shift-portraits'
 export type ShiftOpenDay={date:string;open:boolean;hours:string;note:string;eventTitle:string}
-export type ShiftAttendance={date:string;employeeId:string;name:string;source:'employee'|'owner'}
+export type ShiftAttendance={date:string;employeeId:string;name:string;source:'employee'|'owner';imageUrl?:string}
 export type ShiftCalendarData={days:ShiftOpenDay[];attendance:ShiftAttendance[]}
 export type ShiftEmployee={id:string;name:string;accountName?:string}
 
@@ -10,19 +11,22 @@ function ensureChanged(rows:{shift_date:string}[]|null,action:string){
 }
 export async function fetchShifts(start:string,end:string):Promise<ShiftCalendarData>{
  const db=client()
- const [a,b,c]=await Promise.all([
+ const [a,b,c,photos]=await Promise.all([
   db.from('shift_open_days').select('shift_date,is_open,hours_label,note,event_title').gte('shift_date',start).lte('shift_date',end).order('shift_date'),
   db.from('shift_attendance').select('shift_date,employee_id,employee_name').gte('shift_date',start).lte('shift_date',end).order('employee_name'),
   db.from('shift_owner_attendance').select('shift_date,owner_id,display_name').gte('shift_date',start).lte('shift_date',end).order('display_name'),
+  // A not-yet-deployed optional portrait table must never break attendance.
+  listShiftPortraits().catch(()=>[]),
  ])
  if(a.error)throw new Error('讀取營業日期失敗：'+a.error.message)
  if(b.error)throw new Error('讀取員工出勤失敗：'+b.error.message)
  if(c.error)throw new Error('讀取管理員出勤失敗：'+c.error.message)
+ const portraitById=new Map(photos.map(photo=>[photo.userId,photo.url]))
  return {
   days:(a.data||[]).map(r=>({date:r.shift_date,open:r.is_open,hours:r.hours_label||'',note:r.note||'',eventTitle:r.event_title||''})),
   attendance:[
-   ...(b.data||[]).map(r=>({date:r.shift_date,employeeId:r.employee_id,name:r.employee_name,source:'employee' as const})),
-   ...(c.data||[]).map(r=>({date:r.shift_date,employeeId:r.owner_id,name:r.display_name,source:'owner' as const})),
+   ...(b.data||[]).map(r=>({date:r.shift_date,employeeId:r.employee_id,name:r.employee_name,source:'employee' as const,imageUrl:portraitById.get(r.employee_id)||''})),
+   ...(c.data||[]).map(r=>({date:r.shift_date,employeeId:r.owner_id,name:r.display_name,source:'owner' as const,imageUrl:portraitById.get(r.owner_id)||''})),
   ].sort((first,second)=>first.date.localeCompare(second.date)||first.name.localeCompare(second.name,'zh-TW')),
  }
 }
