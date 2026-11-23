@@ -5,7 +5,8 @@ import {configured} from '../lib/config'
 import {useRollingShiftWeeks,shiftDateLabel,SHIFT_WEEKDAYS} from '../lib/shift-calendar'
 import {loadPublicShifts,peekPublicShifts} from '../lib/public-shifts'
 import {SHIFT_PAGE_READY_EVENT} from '../lib/route-events'
-import type {ShiftCalendarData} from '../lib/shifts'
+import type {ShiftAttendance,ShiftCalendarData} from '../lib/shifts'
+import ShiftPortrait from '../components/ShiftPortrait'
 import './shifts-page.css'
 
 const blank:ShiftCalendarData={days:[],attendance:[]}
@@ -81,10 +82,10 @@ export default function ShiftsPage(){
  // schedule; derive these only when new public shift data actually arrives.
  const {openings,members,openingCount,activityCount}=useMemo(()=>{
   const openings=new Map(calendar.days.map(x=>[x.date,x]))
-  const members=new Map<string,string[]>()
+  const members=new Map<string,ShiftAttendance[]>()
   for(const entry of calendar.attendance){
    if(!members.has(entry.date))members.set(entry.date,[])
-   members.get(entry.date)?.push(entry.name)
+   members.get(entry.date)?.push(entry)
   }
   return {
    openings,members,
@@ -98,7 +99,7 @@ export default function ShiftsPage(){
  const unavailableLabel=loading?'讀取中':'暫無資料'
  const selectedOpening=openings.get(selectedDate)
  const selectedStatus:DayState=selectedOpening?.open?'open':'closed'
- const selectedNames=selectedOpening?.open?members.get(selectedDate)||[]:[]
+ const selectedPeople=selectedOpening?.open?members.get(selectedDate)||[]:[]
  const dayNumber=weeks.flatMap(week=>week.days).indexOf(selectedDate)
  const selectedWeekday=dayNumber>=0?SHIFT_WEEKDAYS[dayNumber%7]:''
  function selectDate(date:string){
@@ -193,9 +194,11 @@ export default function ShiftsPage(){
        {selectedOpening?.note&&<p className="shift-detail-note">館方備註：{selectedOpening.note}</p>}
       </div>
       <div className="shift-detail-roster">
-       <h3><UsersRound size={18}/>當晚出勤狐姬 <span>{selectedNames.length} 位</span></h3>
-       {selectedNames.length?<div className="shift-attendees" aria-label="當日出勤人員">
-        {selectedNames.map((name,index)=><span key={index}>{name}</span>)}
+       <h3><UsersRound size={18}/>當晚出勤狐姬 <span>{selectedPeople.length} 位</span></h3>
+       {selectedPeople.length?<div className="shift-attendees" aria-label="當日出勤人員">
+        {selectedPeople.map(person=><div className="shift-attendee" key={person.source+':'+person.employeeId}>
+         <ShiftPortrait name={person.name} url={person.imageUrl}/><span>{person.name}</span>
+        </div>)}
        </div>:<p className="shift-no-staff">出勤名單尚待公布，請留意後續更新。</p>}
       </div>
       <Link className="shift-booking-link" to="/booking">查看預約方式 <ArrowRight size={16}/></Link>
