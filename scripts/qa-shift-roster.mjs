@@ -244,6 +244,7 @@ assert.ok(editor.includes('unmarkShiftAttendance(date,person.employeeId,person.s
  'Owners and employees must cancel rows from their respective tables')
 // Shift photos are independent of RP names and not exposed via employee account queries.
 const portraitUi=await readFile('src/components/ShiftPortrait.tsx','utf8')
+const portraitCss=await readFile('src/components/shift-portrait.css','utf8')
 const portraitApi=await readFile('src/lib/shift-portraits.ts','utf8')
 const portraitSql=await readFile('supabase/migrations/20261123_01_shift_profile_images.sql','utf8')
 for(const path of ['src/components/ShiftPortrait.tsx','src/lib/shift-portraits.ts']){
@@ -252,6 +253,9 @@ for(const path of ['src/components/ShiftPortrait.tsx','src/lib/shift-portraits.t
  assert.equal(ast.parseDiagnostics.length,0,'Invalid portrait TypeScript: '+path)
 }
 assert.ok(portraitUi.includes('onError={()=>setFailed(true)}'),'Broken photos must render a placeholder')
+assert.ok(portraitCss.includes('object-fit:contain')&&!portraitCss.includes('border-radius:50%')&&!portraitCss.includes('object-fit:cover'),
+ 'Roster photos must keep their original shape without a circular crop')
+assert.ok(portraitCss.includes('width:76px;height:92px'),'Roster photos should be large enough to see clearly')
 assert.ok(page.includes('<ShiftPortrait name={person.name} url={person.imageUrl}/>'),
  'Public selected-day list must show photos directly before names')
 assert.ok(editor.includes('值班頭像管理')&&editor.includes('uploadShiftPortrait(userId,file)')&&editor.includes('removeShiftPortrait(userId)'),
@@ -261,7 +265,7 @@ assert.ok(editor.includes('portraitCandidates')&&editor.includes('siteOwner&&sel
 assert.ok(lib.includes('portraitById.get(r.employee_id)')&&lib.includes('portraitById.get(r.owner_id)'),
  'Both employee and owner attendance must resolve photos by user ID, not duty name')
 assert.ok(portraitApi.includes("upsert({user_id:userId,image_path:path")&&
- portraitApi.includes("contentType:'image/webp',upsert:false")&&portraitApi.includes('canvas.width=360'),
+ portraitApi.includes("contentType:'image/webp',upsert:false")&&portraitApi.includes('canvas.width=Math.max(1,Math.round(bitmap.width*scale))')&&portraitApi.includes('canvas.height=Math.max(1,Math.round(bitmap.height*scale))'),
  'Portrait uploader must save one optimized file per account without overwriting shared objects')
 assert.ok(portraitSql.includes('shift_profile_images')&&portraitSql.includes('enable row level security')&&
  portraitSql.includes('public.can_edit_shift_portrait')&&portraitSql.includes('storage.objects'),
