@@ -262,7 +262,7 @@ export default function ShiftManagement({access}:{access:BackofficeAccess}){
  }
  const portraitCandidates:ShiftEmployee[]=[
   ...(siteOwner&&selfId?[{id:selfId,name:ownerName.trim()||'管理員'}]:[]),
-  ...(owner?people:selfId?[{id:selfId,name:employeeShiftName.trim()||access.displayName}]:[]),
+  ...(owner?people:selfId?[{id:selfId,name:employeeShiftName.trim()||(access.kind==='employee'?access.displayName:'管理員')}]:[]),
  ]
  const portraitPeople=portraitCandidates.filter((person,index,all)=>all.findIndex(entry=>entry.id===person.id)===index)
  const portraitById=new Map(portraits.map(item=>[item.userId,item]))
