@@ -325,7 +325,7 @@ export default function ShiftManagement({access}:{access:BackofficeAccess}){
    </div>
   </section>}
   {notice&&<p className={'shift-admin-message'+(notice.error?' is-error':'')} role={notice.error?'alert':'status'}>
-   {notice.error?<AlertCircle size={18}/>:<CheckCircle2 size={18}/>} {notice.message}</p>
+   {notice.error?<AlertCircle size={18}/>:<CheckCircle2 size={18}/>} {notice.message}</p>}
   {error&&<p className="shift-admin-message is-error" role="alert">{error}</p>}
   {loading&&<p className="shift-admin-message" role="status">正在載入四週出勤表…</p>}
   {!loading&&!error&&<div className="shift-calendar-container">
