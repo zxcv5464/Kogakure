@@ -8,6 +8,6 @@ export default function ShiftPortrait({name,url}:{name:string;url?:string}){
  useEffect(()=>setFailed(false),[url])
  return <span className="shift-person-portrait" aria-hidden="true" title={name}>
   {url&&!failed?<img src={url} alt="" loading="lazy" decoding="async"
-   onError={()=>setFailed(true)}/>:<UserRound size={17} strokeWidth={1.6}/>}
+   onError={()=>setFailed(true)}/>:<UserRound size={28} strokeWidth={1.5}/>}
  </span>
 }
