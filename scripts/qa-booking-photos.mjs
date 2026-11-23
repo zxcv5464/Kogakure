@@ -54,6 +54,6 @@ assert.ok(sql.includes("public.has_backoffice_permission('booking.manage')")&&
 assert.ok(!sql.includes('delete from public.staff')&&!sql.includes('update public.staff')&&
  !sql.includes('grant update on public.staff to authenticated'),
  'Migration must not rewrite employee profiles or booking rules')
-assert.ok(staff.includes('image_url:s.imageUrl')&&shift.includes('shift_profile_images')===false,
+assert.ok(staff.includes('image_url:s.imageUrl')&&shift.includes("const BUCKET='shift-avatars'"),
  'Existing unrelated staff photo writes must remain independent')
 console.log('PASS: booking-only photo lifecycle, public card media, scoped permissions and untouched staff profile')
