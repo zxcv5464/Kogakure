@@ -40,7 +40,7 @@
 .shift-admin-attendance h3{display:flex;align-items:center;gap:8px;margin:0 0 12px;color:#e3c79f;font-size:.82rem;font-weight:500}
 .shift-admin-attendance>p{margin:0 0 10px;color:#ac9c90;font-size:.78rem}
 .shift-admin-attendance ul{padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:7px;margin:0}
-.shift-admin-attendance li{display:flex;align-items:center;gap:6px;min-height:34px;padding:4px 6px 4px 11px;border:1px solid rgba(218,182,130,.26);border-radius:4px;background:rgba(61,49,59,.42);color:#e7d2b5;font-size:.8rem}
+.shift-admin-attendance li{display:flex;align-items:center;gap:9px;min-height:80px;padding:6px 10px 6px 7px;border:1px solid rgba(218,182,130,.26);border-radius:4px;background:rgba(61,49,59,.42);color:#e7d2b5;font-size:.8rem}
 .shift-admin-attendance li button{display:grid;place-items:center;border:0;background:none;color:#e8aea3;cursor:pointer;padding:5px}
 .shift-admin-add-person{display:flex;gap:8px;margin-top:12px}
 .shift-admin-add-person select{flex:1}
@@ -138,7 +138,7 @@
 .shift-admin-portraits-heading h2{display:flex;align-items:center;gap:9px;margin:0;color:#efd8b7;font:600 1rem 'Noto Serif TC',serif}
 .shift-admin-portraits-heading p{max-width:790px;margin:9px 0 15px;color:#bfb0a2;font-size:.8rem;line-height:1.7}
 .shift-admin-portraits-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:9px}
-.shift-admin-portrait-entry{display:flex;align-items:center;gap:9px;flex-wrap:wrap;min-width:0;padding:9px;border:1px solid rgba(207,174,138,.25);border-radius:6px;background:rgba(46,38,52,.75)}
+.shift-admin-portrait-entry{display:flex;align-items:center;gap:12px;flex-wrap:wrap;min-width:0;padding:10px;border:1px solid rgba(207,174,138,.25);border-radius:6px;background:rgba(46,38,52,.75)}
 .shift-admin-portrait-entry strong{flex:1;min-width:78px;overflow-wrap:anywhere;font-size:.85rem;font-weight:500;color:#f0d9bb}
 .shift-admin-portrait-upload,.shift-admin-portrait-remove{display:inline-flex;align-items:center;justify-content:center;gap:5px;min-height:34px;padding:6px 9px;border:1px solid rgba(214,175,127,.5);border-radius:4px;background:rgba(118,79,75,.3);color:#f0d2aa;font:inherit;font-size:.74rem;white-space:nowrap;cursor:pointer}
 .shift-admin-portrait-upload:hover,.shift-admin-portrait-remove:hover:not(:disabled){background:rgba(161,110,84,.4)}
@@ -146,6 +146,7 @@
 .shift-admin-portrait-upload:focus-within{outline:2px solid #d9b98d;outline-offset:2px}
 .shift-admin-portrait-upload input{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
 .shift-admin-portrait-remove{background:transparent;color:#d9b7aa}
-.shift-admin-attendance li .shift-person-portrait{width:27px;height:27px}
+.shift-admin-portrait-entry .shift-person-portrait{width:76px;height:92px}
+.shift-admin-attendance li .shift-person-portrait{width:60px;height:74px}
 .shift-admin-attendance li .shift-admin-person-name{min-width:0;overflow-wrap:anywhere}
 @media(max-width:580px){.shift-admin-portraits{padding:13px}.shift-admin-portraits-list{grid-template-columns:minmax(0,1fr)}.shift-admin-portrait-entry{gap:7px}}
