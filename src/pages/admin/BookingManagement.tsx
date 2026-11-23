@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Bell, Check, CheckCircle2, Clock3, ExternalLink, Plus, RefreshCw, Save, Trash2, X, XCircle } from 'lucide-react'
+import { Bell, Check, CheckCircle2, Clock3, ExternalLink, ImagePlus, Plus, RefreshCw, Save, Trash2, X, XCircle } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import {
  countdown, decideBooking, deleteAdminBooking, describeBookingError, loadAdminBookings,
@@ -9,6 +9,8 @@ import type { BookingPlan, BookingRequest, BookingStatus, BookingQuotaUsage } fr
 import type { Staff } from '../../types'
 import { getStaff } from '../../lib/staff'
 import { invalidatePublicStaffCache } from '../../lib/public-staff'
+import { deleteBookingPhoto,loadBookingPhotos,uploadBookingPhoto } from '../../lib/booking-photos'
+import type { BookingPhoto } from '../../lib/booking-photos'
 import { useAdminEditGuard } from './AdminEditGuard'
 import AdminBookingCreate from './AdminBookingCreate'
 import ScrollCue from '../../components/ScrollCue'
@@ -59,6 +61,7 @@ export default function BookingManagement(){
  const [bookings,setBookings]=useState<BookingRequest[]>([])
  const [plans,setPlans]=useState<BookingPlan[]>([])
  const [nominees,setNominees]=useState<Staff[]>([])
+ const [photos,setPhotos]=useState<BookingPhoto[]>([])
  const [tab,setTab]=useState<'requests'|'plans'|'nominees'>('requests')
  const [filter,setFilter]=useState<'all'|BookingStatus>('pending')
  const [loading,setLoading]=useState(true)
@@ -98,13 +101,13 @@ export default function BookingManagement(){
   const version=++bookingReadVersion.current
   const task=Promise.all([
    loadAdminBookings(),loadBookingPlans(true),getStaff(true),
-   loadBookingQuotaUsage().catch(()=>({plans:{},staff:{}})),
-  ]).then(([requests,updatedPlans,updatedNominees,usage])=>{
+   loadBookingQuotaUsage().catch(()=>({plans:{},staff:{}})),loadBookingPhotos({force:true}),
+  ]).then(([requests,updatedPlans,updatedNominees,usage,updatedPhotos])=>{
    if(version===bookingReadVersion.current){
     applyBookings(requests)
     setQuotaUsage(usage)
    }
-   setPlans(updatedPlans);setNominees(updatedNominees);setError('')
+   setPlans(updatedPlans);setNominees(updatedNominees);setPhotos(updatedPhotos);setError('')
   })
   const pending=task.finally(()=>{fullRefreshInFlight.current=null})
   fullRefreshInFlight.current=pending
@@ -165,6 +168,7 @@ export default function BookingManagement(){
  }),[bookings])
  const shown=useMemo(()=>bookings.filter(b=>filter==='all'||b.status===filter),[bookings,filter])
  const selectedBooking=bookings.find(b=>b.id===focused)
+ const photosById=useMemo(()=>new Map(photos.map(photo=>[photo.staffId,photo])),[photos])
 
  async function changeNominationAvailability(person:Staff,visible:boolean){
   if(busyRef.current||person.bookingVisible===visible)return
@@ -181,6 +185,29 @@ export default function BookingManagement(){
    }catch{
     setNotice(message+' 已成功儲存，但重新載入清單失敗，請稍後按「更新」。')
    }
+  }catch(e){setError(describeBookingError(e))}
+  finally{busyRef.current=false;setBusy(false)}
+ }
+ async function changeBookingPhoto(person:Staff,file:File){
+  if(busyRef.current)return
+  busyRef.current=true;setBusy(true);setError('');setNotice('')
+  try{
+   const photo=await uploadBookingPhoto(person.id,file)
+   setPhotos(old=>[...old.filter(item=>item.staffId!==person.id),photo])
+   try{await refresh()}catch{/* Updated photo remains visible even if refreshed data fails. */}
+   setNotice('已更新「'+person.name+'」的預約專用照片；員工名帖與值班照片不受影響。')
+  }catch(e){setError(describeBookingError(e))}
+  finally{busyRef.current=false;setBusy(false)}
+ }
+ async function removeBookingPhoto(person:Staff){
+  if(busyRef.current||!photosById.has(person.id))return
+  if(!window.confirm('確定刪除「'+person.name+'」的預約照片？刪除後預約頁將顯示預設圖示，不會恢復名帖照片。'))return
+  busyRef.current=true;setBusy(true);setError('');setNotice('')
+  try{
+   await deleteBookingPhoto(person.id)
+   setPhotos(old=>old.filter(item=>item.staffId!==person.id))
+   try{await refresh()}catch{/* Deleted image must not reappear on local UI. */}
+   setNotice('已刪除「'+person.name+'」的預約專用照片；員工名帖照片仍完整保留。')
   }catch(e){setError(describeBookingError(e))}
   finally{busyRef.current=false;setBusy(false)}
  }
@@ -331,7 +358,7 @@ export default function BookingManagement(){
   {!loading&&tab==='nominees'&&<section className="booking-admin-nominee-settings">
    <div className="booking-admin-nominee-settings-head">
     <div><h2>可指名人員設定</h2>
-     <p>在這裡設定各位狐姬是否開放指名、可接受的預約方案及是否允許與其他狐姬同時指名。顯示開關立即儲存，個人預約規則請按下「儲存此狐姬設定」。</p>
+     <p>預約形象照片可在此獨立上傳、更換及刪除，不會更動員工名帖照片。此處也可設定開放指名、預約方案與同時指名權限。</p>
     </div>
     <div className="booking-admin-nominee-summary"><strong>{nominees.filter(p=>p.published&&p.bookingVisible).length}</strong><span>位目前公開接受指名</span></div>
    </div>
@@ -340,14 +367,36 @@ export default function BookingManagement(){
      {nominees.map(person=>{
       const rules=ruleDrafts[person.id]||currentRules(person)
       const rulesDirty=!rulesEqual(rules,currentRules(person))
+      const photo=photosById.get(person.id)
       return <article className="booking-admin-nominee-card" key={person.id}>
       <div className="booking-admin-nominee-identity">
        <span className="booking-admin-nominee-avatar">
-        {(person.thumbnailUrl||person.imageUrl)?<img src={person.thumbnailUrl||person.imageUrl} alt="" loading="lazy"/>:person.name.slice(0,1)}
+        {photo?.imageUrl?<img src={photo.imageUrl} alt="" loading="lazy"/>:person.name.slice(0,1)}
        </span>
        <div><h3>{person.name}</h3><p>{person.role||'館員'}</p>
         <span className={'booking-admin-nominee-publish'+(person.published?' is-published':'')}>{person.published?'名帖已公開':'名帖未公開'}</span>
        </div>
+      </div>
+      <div className="booking-admin-photo-editor">
+       <div className="booking-admin-photo-help">
+        <strong>預約專用照片</strong>
+        <small>僅影響預約名片與指名視窗，與名帖、值班排班照片完全獨立。支援 JPG、PNG、WebP、AVIF（原圖 12 MB 以內）。</small>
+       </div>
+       <div className="booking-admin-photo-actions">
+        <label className={'booking-admin-photo-upload'+(busy?' is-disabled':'')}>
+         <ImagePlus size={15}/>{photo?'更換照片':'上傳照片'}
+         <input type="file" disabled={busy} accept="image/jpeg,image/png,image/webp,image/avif"
+          aria-label={'上傳或更換 '+person.name+' 的預約專用照片'}
+          onChange={event=>{
+           const file=event.currentTarget.files?.[0]
+           event.currentTarget.value=''
+           if(file)void changeBookingPhoto(person,file)
+          }}/>
+        </label>
+        <button type="button" className="booking-admin-photo-delete" disabled={busy||!photo}
+         onClick={()=>void removeBookingPhoto(person)}><Trash2 size={15}/>刪除照片</button>
+       </div>
+       {!photo&&<p className="booking-admin-photo-empty">目前無預約照片，前台將顯示預設圖示。</p>}
       </div>
       <label className="booking-admin-visibility-switch">
        <input type="checkbox" checked={person.bookingVisible} disabled={busy}
