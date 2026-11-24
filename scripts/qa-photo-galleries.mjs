@@ -6,11 +6,12 @@ import {renderToStaticMarkup} from 'react-dom/server'
 import ts from 'typescript'
 import {createServer} from 'vite'
 
-const [galleryFile,css,staffPage,bookingPage,staffAdmin,bookingAdmin,migration]=await Promise.all([
+const [galleryFile,css,staffPage,bookingPage,staffAdmin,bookingAdmin,migration,staffCard,staffDialog]=await Promise.all([
  'src/components/MysticPhotoGallery.tsx','src/components/mystic-photo-gallery.css',
  'src/components/StaffCard.tsx','src/pages/BookingPage.tsx',
  'src/pages/admin/StaffManagement.tsx','src/pages/admin/BookingPhotoManager.tsx',
  'supabase/migrations/20261124_01_staff_booking_photo_galleries.sql',
+ 'src/components/StaffCard.tsx','src/components/StaffDialog.tsx',
 ].map(path=>readFile(path,'utf8')))
 for(const path of ['src/components/MysticPhotoGallery.tsx','src/components/StaffCard.tsx',
  'src/pages/BookingPage.tsx','src/pages/admin/StaffManagement.tsx',
@@ -21,6 +22,11 @@ for(const path of ['src/components/MysticPhotoGallery.tsx','src/components/Staff
 }
 assert.ok(staffPage.includes('MysticPhotoGallery')&&staffPage.includes('staff.photoDisplayMode'),
  'Staff cards must use the shared photo gallery')
+assert.ok(staffCard.includes('<button')&&!staffCard.includes('role="button"')&&
+ staffCard.includes('showCounter={false}')&&staffCard.includes('showPagination={false}'),
+ 'Roster cards must retain the original button/card behavior without counters or dots')
+assert.ok(staffDialog.includes('showCounter={false}')&&staffDialog.includes('showPagination={false}'),
+ 'Roster detail must also hide slideshow counters and pagination')
 assert.ok(bookingPage.includes('MysticPhotoGallery')&&bookingPage.includes('secondaryImageUrl'),
  'Booking cards must use the shared gallery and separate overlay')
 assert.ok(staffAdmin.includes('新增照片（可多選）')&&staffAdmin.includes('多張輪播'),
@@ -45,7 +51,13 @@ try{
  assert.ok(multi.includes('thumb-1.webp')&&multi.includes('sticker.webp')&&
   galleryFile.includes('services-photo-shoji-edges')&&multi.includes('01 / 03'),
   'Gallery must show thumbnails, counter, overlay and mysterious reveal')
- const single=renderToStaticMarkup(createElement(MysticPhotoGallery,{photos,mode:'single',alt:'單張狐姬'}))
+ const roster=renderToStaticMarkup(createElement(MysticPhotoGallery,{
+  photos,mode:'gallery',showCounter:false,showPagination:false,alt:'名冊輪播',
+ }))
+ assert.ok(!roster.includes('services-photo-dot')&&!roster.includes('services-photo-counter')&&
+  galleryFile.includes('setInterval')&&galleryFile.includes('},5000)'),
+  'Roster gallery must auto-rotate without pagination or photo counts')
+const single=renderToStaticMarkup(createElement(MysticPhotoGallery,{photos,mode:'single',alt:'單張狐姬'}))
  assert.ok(single.includes('thumb-1.webp')&&!single.includes('thumb-2.webp')&&
   !single.includes('services-photo-dot'),
   'Single mode must display only the first photo and hide pagination')
