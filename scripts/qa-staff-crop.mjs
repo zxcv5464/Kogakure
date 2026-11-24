@@ -9,8 +9,8 @@ const files=['src/components/StaffPhotoCrop.tsx','src/pages/admin/StaffManagemen
  'src/lib/upload.ts','src/lib/staff-crop.ts','src/components/staff-card.css',
  'src/components/StaffCard.tsx','src/pages/BookingPage.tsx',
  'src/pages/admin/BookingPhotoManager.tsx','src/lib/booking-photos.ts',
- 'src/pages/admin/staff-management.css']
-const [editor,admin,upload,model,cardCss,card,booking,bookingAdmin,bookingApi,adminCss]=
+ 'src/pages/admin/staff-management.css','src/components/staff-photo-crop.css']
+const [editor,admin,upload,model,cardCss,card,booking,bookingAdmin,bookingApi,adminCss,previewCss]=
  await Promise.all(files.map(path=>readFile(path,'utf8')))
 for(const phrase of [
  '自訂{title}照片顯示範圍','套用這個範圍','onPointerDown','onPointerMove',
@@ -29,7 +29,8 @@ assert.ok(cardCss.includes('.staff-entry .omamori-art .mystic-photo-gallery .ser
 assert.ok(card.includes('MysticPhotoGallery')&&card.includes("staff.photoDisplayMode||'single'"),
  'Staff cards must render single or multi-photo mode')
 assert.ok(booking.includes('MysticPhotoGallery')&&bookingAdmin.includes('StaffPhotoCrop')&&
- bookingAdmin.includes('aspectRatio={BOOKING_CARD_RATIO}'),
+ bookingAdmin.includes('aspectRatio={BOOKING_CARD_RATIO}')&&bookingAdmin.includes('previewShape="rectangle"')&&
+ previewCss.includes('.staff-crop-card-preview.is-rectangle{clip-path:none'),
  'Booking photos must reuse the selection UI with their own framing ratio')
 assert.ok(bookingApi.includes('croppedWebp')&&bookingApi.includes('BOOKING_CARD_RATIO'),
  'Booking uploads and re-crops must persist the selected range')
@@ -68,10 +69,10 @@ try{
  assert.throws(()=>cropPixels({x:0,y:0,width:.8,height:.8},1200,800))
  const {default:StaffPhotoCrop}=await vite.ssrLoadModule('/src/components/StaffPhotoCrop.tsx')
  const markup=renderToStaticMarkup(createElement(StaffPhotoCrop,{
-  source:'https://example.invalid/portrait.webp',title:'指名',aspectRatio:BOOKING_CARD_RATIO,
+  source:'https://example.invalid/portrait.webp',title:'指名',aspectRatio:BOOKING_CARD_RATIO,previewShape:'rectangle',
   onConfirm:()=>{},onCancel:()=>{},
  }))
- assert.ok(markup.includes('自訂指名照片顯示範圍')&&markup.includes('0.55'),
+ assert.ok(markup.includes('自訂指名照片顯示範圍')&&markup.includes('0.55')&&markup.includes('is-rectangle'),
   'The booking crop selector must identify the booking card frame')
  console.log('PASS: multi-photo profile editor, per-image crop, separate booking crop ratio and legacy 0.655 staff crop')
 }finally{await vite.close()}
