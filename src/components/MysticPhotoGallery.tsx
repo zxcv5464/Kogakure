@@ -1,5 +1,5 @@
 import {useCallback,useEffect,useMemo,useRef,useState} from 'react'
-import type {CSSProperties} from 'react'
+import type {MouseEvent} from 'react'
 import './mystic-photo-gallery.css'
 
 type GalleryPhoto={imageUrl:string;thumbnailUrl?:string}
@@ -89,7 +89,7 @@ export default function MysticPhotoGallery({
   },5000)
   return()=>window.clearInterval(timer)
  },[activeSources.length,nearViewport,requestSlide,navigationEpoch])
- function choose(index:number,event:React.MouseEvent<HTMLButtonElement>){
+ function choose(index:number,event:MouseEvent<HTMLButtonElement>){
   event.stopPropagation()
   setNavigationEpoch(value=>value+1)
   if(index===nextIndex.current)return
