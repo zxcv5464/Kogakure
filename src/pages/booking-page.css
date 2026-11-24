@@ -27,11 +27,14 @@
 .booking-profile{display:flex;min-width:0;width:100%}
 .booking-profile-action{position:relative;flex:1;width:100%;height:auto;min-height:298px;min-width:0;padding:0;display:grid;grid-template-columns:minmax(145px,34%) minmax(0,1fr);align-items:stretch;text-align:left;isolation:isolate;border:1px solid rgba(217,181,128,.38);border-radius:10px;color:#f1e1cb;background:linear-gradient(120deg,rgba(42,33,47,.98),rgba(20,19,29,.98));box-shadow:0 18px 36px rgba(0,0,0,.25);transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease}
 .booking-profile-action:before{content:none}
-.booking-profile-action:hover:not(:disabled){transform:translateY(-3px);border-color:rgba(232,197,147,.72);box-shadow:0 23px 44px rgba(0,0,0,.4)}
+.booking-profile-action:hover:not(.is-disabled){transform:translateY(-3px);border-color:rgba(232,197,147,.72);box-shadow:0 23px 44px rgba(0,0,0,.4)}
 .booking-profile-action:focus-visible{outline:2px solid #ebc68b;outline-offset:3px}
-.booking-profile-action:disabled{cursor:not-allowed;opacity:.84}
+.booking-profile-action:disabled,.booking-profile-action.is-disabled{cursor:not-allowed;opacity:.84}
+.booking-profile-action[role=button]{cursor:pointer}
+.booking-profile-action[role=button].is-disabled{cursor:not-allowed}
 .booking-portrait{position:relative;display:block;min-width:0;min-height:100%;overflow:hidden;border-radius:9px 0 0 9px;background:#13111c;border:0}
 .booking-portrait:after{content:none}
+.booking-portrait .mystic-photo-gallery{position:absolute;inset:0}
 .booking-portrait img{position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:cover;object-position:center;transform:none}
 .booking-profile.has-manual-crop .booking-portrait img{object-fit:cover;object-position:center;transform:none}
 .booking-photo-placeholder{display:grid;place-items:center;width:100%;height:100%;min-height:280px;color:#c0a27e;background:radial-gradient(circle at center,#342a3d,#14131c)}
@@ -74,6 +77,7 @@
 .booking-form{display:flex;flex-direction:column;gap:16px;padding-top:20px}
 .booking-selected-person{display:flex;gap:14px;align-items:center;padding:10px;border:1px solid rgba(217,182,136,.22);border-radius:7px;background:rgba(255,255,255,.03)}
 .booking-selected-person img{width:65px;height:77px;object-fit:cover;border-radius:4px}
+.booking-selected-gallery{flex:none;width:65px;height:77px;border-radius:4px;overflow:hidden}
 .booking-selected-photo-empty{display:grid;place-items:center;flex:none;width:65px;height:77px;border-radius:4px;background:rgba(186,150,102,.1);color:#d8bd97}
 .booking-selected-person span{display:flex;flex-direction:column;gap:3px}
 .booking-selected-person small{font-size:.74rem;color:#c9af91}
