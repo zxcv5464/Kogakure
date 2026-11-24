@@ -161,7 +161,7 @@ export async function uploadBookingPhoto(staffId:string,file:File,crop:StaffCrop
  try{
   const imageUrl=await uploadObject(imagePath,full);uploaded.push(imagePath)
   const thumbnailUrl=await uploadObject(thumbnailPath,thumb);uploaded.push(thumbnailPath)
-  const next:BookingPhoto={...current,photos:[...current.photos,{
+  const next:BookingPhoto={...current,displayMode:current.photos.length+1>1?'gallery':current.displayMode,photos:[...current.photos,{
    id:crypto.randomUUID(),imageUrl,thumbnailUrl,imagePath,thumbnailPath,
   }]}
   return await writePhoto(next)
