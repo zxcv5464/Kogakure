@@ -16,8 +16,8 @@ export default function MysticPhotoGallery({
  photos,mode='single',useThumbnail=true,alt,className='',overlayUrl='',showCounter=true,showPagination=true,loading='lazy',
 }:Props){
  const galleryPhotos=useMemo(()=>photos.filter(photo=>Boolean(useThumbnail?(photo.thumbnailUrl||photo.imageUrl):photo.imageUrl)).slice(0,12),[photos,useThumbnail])
- const sources=galleryPhotos.map(photo=>useThumbnail?(photo.thumbnailUrl||photo.imageUrl):photo.imageUrl)
- const activeSources=mode==='gallery'?sources:sources.slice(0,1)
+ const sources=useMemo(()=>galleryPhotos.map(photo=>useThumbnail?(photo.thumbnailUrl||photo.imageUrl):photo.imageUrl),[galleryPhotos,useThumbnail])
+ const activeSources=useMemo(()=>mode==='gallery'?sources:sources.slice(0,1),[mode,sources])
  const photoKey=activeSources.join('\n')
  const root=useRef<HTMLDivElement>(null)
  const nextIndex=useRef(0)
