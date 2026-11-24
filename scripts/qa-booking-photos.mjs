@@ -11,6 +11,7 @@ const targets=[
  'supabase/migrations/20261123_02_booking_staff_photos.sql',
  'supabase/migrations/20261124_01_staff_booking_photo_galleries.sql',
  'supabase/migrations/20261124_02_booking_photo_read_policy.sql',
+ 'supabase/migrations/20261125_01_booking_photo_anon_read_policy.sql',
  'src/lib/staff.ts','src/lib/staff-crop.ts','src/lib/shift-portraits.ts',
 ]
 const files=await Promise.all(targets.map(path=>readFile(path,'utf8')))
@@ -25,6 +26,7 @@ const page=sourceByPath['src/pages/BookingPage.tsx']
 const manager=sourceByPath['src/pages/admin/BookingPhotoManager.tsx']
 const sql=sourceByPath['supabase/migrations/20261124_01_staff_booking_photo_galleries.sql']
 const policySql=sourceByPath['supabase/migrations/20261124_02_booking_photo_read_policy.sql']
+const publicPolicySql=sourceByPath['supabase/migrations/20261125_01_booking_photo_anon_read_policy.sql']
 const managerCss=sourceByPath['src/pages/admin/booking-photo-manager.css']
 assert.ok(api.includes("const BUCKET='booking-media'")&&api.includes("from('booking_staff_photos')"),
  'Booking photos must remain isolated in their own data table and bucket')
@@ -65,15 +67,27 @@ assert.ok(sql.includes('alter column image_url drop not null')&&
 assert.ok(sql.includes('update public.booking_staff_photos')&&
  sql.includes('image_path', 'image_path')&&sql.includes('on delete cascade')===false,
  'Existing booking photos must be migrated in place, not dropped')
-assert.ok(sql.includes('photo_display_mode in (\'single\',\'gallery\')'),
+assert.ok(sql.includes("photo_display_mode in ('single','gallery')"),
  'Display mode must be constrained to known values')
 assert.ok(policySql.includes('drop policy if exists "visitors see booking portraits of visible staff"')&&
  policySql.includes('drop policy if exists "booking managers read all booking portraits"')&&
  policySql.includes('visitors and booking managers read booking portraits'),
- 'Public visitors and booking managers must share one SELECT policy without changing access')
+ 'The prior migration must remain represented for reproducible migration history')
+const anonStart=publicPolicySql.indexOf('create policy "visitors read booking portraits"')
+const anonEnd=publicPolicySql.indexOf(';',anonStart)
+const managerStart=publicPolicySql.indexOf('create policy "booking managers read booking portraits"')
+const managerEnd=publicPolicySql.indexOf(';',managerStart)
+const anonPolicy=anonStart>=0&&anonEnd>=0?publicPolicySql.slice(anonStart,anonEnd+1):''
+const managerPolicy=managerStart>=0&&managerEnd>=0?publicPolicySql.slice(managerStart,managerEnd+1):''
+assert.ok(anonPolicy.includes('for select to anon')&&!anonPolicy.includes('has_backoffice_permission'),
+ 'Anonymous photo reads must not invoke authenticated-only permission helpers')
+assert.ok(managerPolicy.includes('for select to authenticated')&&managerPolicy.includes('has_backoffice_permission'),
+ 'Authenticated booking managers must retain their private photo-management read access')
+assert.ok(!publicPolicySql.includes('to anon,authenticated'),
+ 'Public and authenticated read policies must remain role-separated')
 assert.ok(sourceByPath['src/lib/shift-portraits.ts'].includes("const BUCKET='shift-avatars'"),
  'Duty roster photos must remain in their independent storage')
 assert.ok(sourceByPath['src/lib/staff.ts'].includes('photo_gallery:')&&
  sourceByPath['src/lib/staff.ts'].includes('photo_display_mode:'),
  'Staff profiles must save their own separate gallery metadata')
-console.log('PASS: booking gallery, crop, single/gallery mode, overlay lifecycle, legacy photo migration and storage isolation')
+console.log('PASS: booking gallery, crop, single/gallery mode, overlay lifecycle, public anon read policy, legacy photo migration and storage isolation')
