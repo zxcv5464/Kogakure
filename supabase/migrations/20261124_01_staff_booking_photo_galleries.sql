@@ -9,7 +9,7 @@ do $staff_gallery$
 begin
  if not exists(select 1 from pg_constraint where conname='staff_photo_gallery_limit' and conrelid='public.staff'::regclass) then
   alter table public.staff add constraint staff_photo_gallery_limit
-   check(jsonb_typeof(photo_gallery)='array' and jsonb_array_length(photo_gallery)<=12);
+   check(case when jsonb_typeof(photo_gallery)='array' then jsonb_array_length(photo_gallery)<=12 else false end);
  end if;
  if not exists(select 1 from pg_constraint where conname='staff_photo_display_mode_valid' and conrelid='public.staff'::regclass) then
   alter table public.staff add constraint staff_photo_display_mode_valid
@@ -53,6 +53,10 @@ begin
  if not exists(select 1 from pg_constraint where conname='booking_photo_display_mode_valid' and conrelid='public.booking_staff_photos'::regclass) then
   alter table public.booking_staff_photos add constraint booking_photo_display_mode_valid
    check(photo_display_mode in ('single','gallery'));
+ end if;
+ if not exists(select 1 from pg_constraint where conname='booking_secondary_image_url_valid' and conrelid='public.booking_staff_photos'::regclass) then
+  alter table public.booking_staff_photos add constraint booking_secondary_image_url_valid
+   check(secondary_image_url is null or char_length(secondary_image_url) between 1 and 2048);
  end if;
  if not exists(select 1 from pg_constraint where conname='booking_secondary_object_path_valid' and conrelid='public.booking_staff_photos'::regclass) then
   alter table public.booking_staff_photos add constraint booking_secondary_object_path_valid
