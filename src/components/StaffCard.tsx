@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { ChevronRight } from 'lucide-react'
-import type { CSSProperties } from 'react'
+import type { CSSProperties, MouseEvent } from 'react'
 import type { Staff } from '../types'
 import MysticPhotoGallery from './MysticPhotoGallery'
 import './staff-card.css'
@@ -9,7 +9,7 @@ export default function StaffCard({staff,onOpen,index}:Props){
  const ref=useRef<HTMLDivElement>(null)
  const [style,setStyle]=useState<CSSProperties>({})
  const accent=staff.themeColor||'#c4ac83'
- function move(e:React.MouseEvent<HTMLElement>){
+ function move(e:MouseEvent<HTMLElement>){
   if(window.matchMedia('(prefers-reduced-motion: reduce)').matches || window.matchMedia('(pointer: coarse)').matches)return
   const rect=ref.current?.getBoundingClientRect();if(!rect)return
   const x=(e.clientX-rect.left)/rect.width;const y=(e.clientY-rect.top)/rect.height
