@@ -2,6 +2,7 @@ import {useEffect,useRef,useState} from 'react'
 import type {ChangeEvent} from 'react'
 import {ArrowDown,ArrowUp,Crop,ImagePlus,Trash2,X} from 'lucide-react'
 import type {Staff} from '../../types'
+import {BOOKING_CARD_RATIO} from '../../lib/staff-crop'
 import StaffPhotoCrop from '../../components/StaffPhotoCrop'
 import {
  deleteBookingGalleryPhoto,deleteBookingOverlay,moveBookingPhoto,setBookingPhotoDisplayMode,
@@ -173,7 +174,7 @@ export default function BookingPhotoManager({person,value,disabled=false,onChang
   </div>
   {notice&&<p className="booking-gallery-notice" role="status">{notice}</p>}
   {cropTarget&&<div className="booking-gallery-crop">
-   <StaffPhotoCrop key={cropTarget.id+cropTarget.source} source={cropTarget.source} title="指名"
+   <StaffPhotoCrop key={cropTarget.id+cropTarget.source} source={cropTarget.source} title="指名" aspectRatio={BOOKING_CARD_RATIO}
     onConfirm={crop=>void applyCrop(crop)} onCancel={()=>setCropTarget(null)}/>
   </div>}
  </section>
