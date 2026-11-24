@@ -1,5 +1,5 @@
 import {supabase} from './supabase'
-import {cropPixels} from './staff-crop'
+import {BOOKING_CARD_RATIO,cropPixels} from './staff-crop'
 import type {StaffCrop} from './staff-crop'
 
 const BUCKET='booking-media'
@@ -128,10 +128,10 @@ async function webp(source:Blob,maxSide:number,quality:number):Promise<Blob>{
 async function croppedWebp(source:Blob,crop:StaffCrop):Promise<Blob>{
  const bitmap=await createImageBitmap(source)
  try{
-  const box=cropPixels(crop,bitmap.width,bitmap.height)
+  const box=cropPixels(crop,bitmap.width,bitmap.height,BOOKING_CARD_RATIO)
   const canvas=document.createElement('canvas')
   canvas.width=Math.max(1,Math.min(760,Math.round(box.width)))
-  canvas.height=Math.max(1,Math.round(canvas.width/.655))
+  canvas.height=Math.max(1,Math.round(canvas.width/BOOKING_CARD_RATIO))
   const ctx=canvas.getContext('2d')
   if(!ctx)throw new Error('此瀏覽器無法處理照片取景範圍')
   ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high'
