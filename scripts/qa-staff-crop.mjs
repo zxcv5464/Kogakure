@@ -12,6 +12,7 @@ const files=['src/components/StaffPhotoCrop.tsx','src/pages/admin/StaffManagemen
  'src/pages/admin/staff-management.css']
 const [editor,admin,upload,model,cardCss,card,booking,bookingAdmin,bookingApi,adminCss]=
  await Promise.all(files.map(path=>readFile(path,'utf8')))
+const cropCss=await readFile('src/components/staff-photo-crop.css','utf8')
 for(const phrase of [
  '自訂{title}照片顯示範圍','套用這個範圍','onPointerDown','onPointerMove',
  'type="range"','staff-crop-card-preview','defaultStaffCrop','aspectRatio',
@@ -68,10 +69,16 @@ try{
  assert.throws(()=>cropPixels({x:0,y:0,width:.8,height:.8},1200,800))
  const {default:StaffPhotoCrop}=await vite.ssrLoadModule('/src/components/StaffPhotoCrop.tsx')
  const markup=renderToStaticMarkup(createElement(StaffPhotoCrop,{
-  source:'https://example.invalid/portrait.webp',title:'指名',aspectRatio:BOOKING_CARD_RATIO,
+  source:'https://example.invalid/portrait.webp',title:'指名',aspectRatio:BOOKING_CARD_RATIO,previewShape:'booking',
   onConfirm:()=>{},onCancel:()=>{},
  }))
- assert.ok(markup.includes('自訂指名照片顯示範圍')&&markup.includes('0.55'),
-  'The booking crop selector must identify the booking card frame')
+ assert.ok(markup.includes('自訂指名照片顯示範圍')&&markup.includes('0.55')&&
+  markup.includes('staff-crop-card-preview is-booking'),
+  'The booking crop selector must identify and render the rectangular booking card frame')
+ assert.ok(editor.includes("previewShape?:'omamori'|'booking'")&&editor.includes("previewShape='omamori'")&&
+  cropCss.includes('clip-path:polygon(0 12%,50% 0,100% 12%,100% 100%,0 100%)')&&
+  cropCss.includes('.staff-crop-card-preview.is-booking{clip-path:none')&&
+  cropCss.includes('.staff-crop-card-preview.is-booking .staff-crop-preview-mask{background:none'),
+  'Booking preview must be rectangular and omit the omamori mask while staff preview keeps its roof shape')
  console.log('PASS: multi-photo profile editor, per-image crop, separate booking crop ratio and legacy 0.655 staff crop')
 }finally{await vite.close()}
