@@ -168,3 +168,9 @@
  transform-origin: center;
  transition: none;
 }
+
+.staff-entry .omamori-card[role=button]{cursor:pointer}
+.staff-entry .omamori-art .mystic-photo-gallery{position:absolute;inset:0}
+.staff-entry .omamori-art .mystic-photo-gallery .services-photo-slide{transform:none;object-position:center;transition:clip-path 1450ms cubic-bezier(.62,0,.12,1)}
+.staff-entry .omamori-card:hover .omamori-art .mystic-photo-gallery .services-photo-slide{transform:none}
+.staff-entry .omamori-art .mystic-photo-gallery .services-photo-dots{bottom:43%;}
