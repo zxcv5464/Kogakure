@@ -58,6 +58,6 @@
 - 預約相簿另有一張獨立副圖片，顯示於前台預約主照片右下角；管理者可新增、更換、刪除。支援透明 PNG 等格式，上傳後轉 WebP 並保留透明背景。
 - 名帖沿用原有 0.655 取景比例；預約相片新增 0.55 專用取景比例。兩者都保留完整原圖，逐張儲存取景縮圖；預約圖片取景直接儲存，名帖取景隨名帖儲存。
 - 前台名帖、預約共用狐門揭幕效果：新照片由中央向外揭開，帶金色邊線，並使用與服務內容相同的墨金分頁點；輪播間隔 5 秒，尊重減少動態效果設定。
-- migration 20261124_01_staff_booking_photo_galleries.sql 只新增相簿欄位及模式欄位，並將既有單張 URL 複製為第一張相簿照片；不搬移或刪除既有 Storage 物件。
+- migration 20261124_01_staff_booking_photo_galleries.sql 只新增相簿欄位及模式欄位，並將既有單張 URL 複製為第一張相簿照片；不搬移或刪除既有 Storage 物件。migration 20261124_02_booking_photo_read_policy.sql 將訪客與預約管理員的 SELECT 規則合併為單一 RLS policy，保留原本可讀範圍。
 - 預約副圖片使用原本 booking-media bucket 與 booking.manage Storage 寫入／刪除政策；名帖相簿沿用 staff-media 與 staff.manage 權限。不得將兩個 bucket 合併。
 - 部署順序：先套用本次 Supabase migration，再合併 GitHub PR 與發布 Pages。部署後驗收單張／多張模式、每張取景、排序／刪除、右下角透明副圖片，以及匿名訪客只能讀取公開且開放指名人員的預約照片。
