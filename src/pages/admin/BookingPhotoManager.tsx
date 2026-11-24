@@ -105,7 +105,7 @@ export default function BookingPhotoManager({person,value,disabled=false,onChang
   catch(error){setNotice(describe(error))}
   finally{setBusy(false)}
  }
- async function addOverlay(event:React.ChangeEvent<HTMLInputElement>){
+ async function addOverlay(event:ChangeEvent<HTMLInputElement>){
   const file=event.currentTarget.files?.[0]
   event.currentTarget.value=''
   if(!file||busy)return
