@@ -7,8 +7,8 @@ import {
 import type { StaffCrop } from '../lib/staff-crop'
 import './staff-photo-crop.css'
 
-type Props={source:string;onConfirm:(crop:StaffCrop)=>void;onCancel:()=>void}
-export default function StaffPhotoCrop({source,onConfirm,onCancel}:Props){
+type Props={source:string;title?:string;onConfirm:(crop:StaffCrop)=>void;onCancel:()=>void}
+export default function StaffPhotoCrop({source,title='名冊',onConfirm,onCancel}:Props){
  const [size,setSize]=useState<{width:number;height:number}|null>(null)
  const [crop,setCrop]=useState<StaffCrop|null>(null)
  const [failure,setFailure]=useState('')
@@ -42,9 +42,9 @@ export default function StaffPhotoCrop({source,onConfirm,onCancel}:Props){
    event.currentTarget.releasePointerCapture(event.pointerId)
  }
  const slider=size&&crop?Math.round(cropScale(crop,size.width,size.height)*100):100
- return <section className="staff-crop-workspace" aria-label="名冊圖片範圍圈選">
+ return <section className="staff-crop-workspace" aria-label={title+"圖片範圍圈選"}>
   <div className="staff-crop-heading">
-   <div><h4>自訂名冊照片顯示範圍</h4><p>拖曳金色選取框來移動照片範圍，使用縮放調整畫面大小。卡片將完整呈現你圈選的範圍，不再自行放大裁切。</p></div>
+   <div><h4>自訂{title}照片顯示範圍</h4><p>拖曳金色選取框來移動照片範圍，使用縮放調整畫面大小。卡片將完整呈現你圈選的範圍，不再自行放大裁切。</p></div>
    <button className="staff-crop-close" type="button" onClick={onCancel} aria-label="取消範圍圈選"><X size={18}/></button>
   </div>
   {failure&&<p className="staff-crop-error" role="alert">{failure}</p>}
