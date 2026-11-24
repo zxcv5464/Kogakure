@@ -60,7 +60,7 @@ export default function BookingPage(){
   if(!configured){setLoading(false);setError('預約系統尚未連線，請洽館方。');return}
   let live=true
   void loadBookingQuotaUsage().then(q=>{if(live)setQuotaUsage(q)}).catch(()=>{})
-  void loadBookingPhotos().then(photos=>{if(live)setBookingPhotos(photos)}).catch(()=>{})
+  void loadBookingPhotos({force:true}).then(photos=>{if(live)setBookingPhotos(photos)}).catch(()=>{})
   Promise.all([loadPublicStaff(),loadPublicBookingPlans(),loadPublicStaffPresence()])
    .then(([staff,loadedPlans,status])=>{
     if(!live)return
