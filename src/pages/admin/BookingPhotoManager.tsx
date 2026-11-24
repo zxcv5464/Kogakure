@@ -1,4 +1,5 @@
 import {useEffect,useRef,useState} from 'react'
+import type {ChangeEvent} from 'react'
 import {ArrowDown,ArrowUp,Crop,ImagePlus,Trash2,X} from 'lucide-react'
 import type {Staff} from '../../types'
 import StaffPhotoCrop from '../../components/StaffPhotoCrop'
@@ -28,11 +29,13 @@ export default function BookingPhotoManager({person,value,disabled=false,onChang
  const [busy,setBusy]=useState(false)
  const [notice,setNotice]=useState('')
  const urls=useRef<string[]>([])
+ const dirtyCallback=useRef(onDirtyChange)
+ useEffect(()=>{dirtyCallback.current=onDirtyChange},[onDirtyChange])
  const total=(value?.photos.length||0)+queue.length
  useEffect(()=>()=>{urls.current.forEach(url=>URL.revokeObjectURL(url))},[])
- useEffect(()=>{onDirtyChange?.(queue.length>0||cropTarget!==null)},[queue.length,cropTarget,onDirtyChange])
+ useEffect(()=>{dirtyCallback.current?.(queue.length>0||cropTarget!==null||busy);return()=>dirtyCallback.current?.(false)},[queue.length,cropTarget,busy])
 
- function addPhotos(event:React.ChangeEvent<HTMLInputElement>){
+ function addPhotos(event:ChangeEvent<HTMLInputElement>){
   const files=event.currentTarget.files?Array.from(event.currentTarget.files):[]
   event.currentTarget.value=''
   if(!files.length)return
