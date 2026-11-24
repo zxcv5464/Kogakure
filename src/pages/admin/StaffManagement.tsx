@@ -434,26 +434,52 @@ export default function StaffManagement() {
        <label>特效主題 <select value={selected.effect} onChange={event => patch('effect', event.target.value as Effect)}>{Object.entries(EFFECTS).map(([key, label]) => <option value={key} key={key}>{label}</option>)}</select></label>
        <label>主題色 <div className="color-field"><input type="color" value={/^#[0-9a-fA-F]{6}$/.test(selected.themeColor) ? selected.themeColor : '#82c8bc'} onChange={event => patch('themeColor', event.target.value)} aria-label="選擇主題色"/><input aria-label="主題色 HEX 色碼" value={selected.themeColor} onChange={event => patch('themeColor', event.target.value)} maxLength={7}/></div></label>
       </div>
-      <div className="staff-editor-section-title"><h3>角色照片</h3><small>自行圈選名冊範圍，原圖會保留</small></div>
-      <div className="staff-editor-photo">
-       <div className="staff-editor-photo-preview">
-        {previewUrl || selected.thumbnailUrl || selected.imageUrl ? <img src={previewUrl || selected.thumbnailUrl || selected.imageUrl} alt="員工照片預覽"/> : <ImagePlus size={36}/>}
+      <div className="staff-editor-section-title"><h3>角色照片相簿</h3><small>最多 12 張 · 每張可獨立圈選顯示範圍</small></div>
+      <div className="staff-gallery-editor">
+       <div className="staff-gallery-toolbar">
+        <label className="upload-control"><ImagePlus size={18}/>新增照片（可多選）
+         <input type="file" multiple accept="image/png,image/jpeg,image/webp,image/avif" onChange={stagePhoto}/>
+        </label>
+        <label className="staff-gallery-mode">前台顯示
+         <select value={selected.photoDisplayMode||'single'} onChange={event=>patch('photoDisplayMode',event.target.value as 'single'|'gallery')}>
+          <option value="single">單張顯示（只顯示第一張）</option>
+          <option value="gallery">多張輪播（含神祕分頁點）</option>
+         </select>
+        </label>
        </div>
-       <div className="staff-editor-photo-actions">
-        <p>{photoFile ? '已選取：' + photoFile.name : selected.imageUrl ? '目前使用的員工照片' : '尚未設定照片'}</p>
-        <small>{photoFile ? '新照片尚未上傳。請先套用名冊顯示範圍，儲存才會上傳。' : '原始照片完整保留；可重新圈選名冊卡片範圍，不影響詳情大圖。'}</small>
-        <label className="upload-control"><ImagePlus size={19}/> {photoFile ? '重新選擇照片' : '選擇照片'}<input type="file" accept="image/png,image/jpeg,image/webp,image/avif" onChange={stagePhoto}/></label>
-        {photoFile && <button className="staff-admin-secondary" type="button" onClick={() => {setPhotoFile(null);setConfirmedCrop(null);setCropEditing(false)}}>取消這次照片變更</button>}
-        {!photoFile && (selected.imageUrl || selected.thumbnailUrl) && <button className="staff-admin-secondary" type="button" onClick={() => {setConfirmedCrop(null);setCropEditing(true)}}>重新圈選名冊照片範圍</button>}
-        {confirmedCrop && !cropEditing && <small className="staff-crop-applied" role="status">✓ 已套用自訂範圍，儲存後前台立即使用此構圖</small>}
+       <div className="staff-gallery-photo-grid">
+        {(selected.photos||[]).map((photo,index)=><article key={photo.id} className="staff-gallery-photo">
+         <img src={photo.thumbnailUrl||photo.imageUrl} alt={'名帖照片第 '+(index+1)+' 張預覽'} loading="lazy"/>
+         <strong>已儲存 · 第 {index+1} 張</strong>
+         <div>
+          <button type="button" disabled={index===0} onClick={()=>movePhoto(photo.id,-1)} aria-label="照片上移">↑</button>
+          <button type="button" onClick={()=>editPhotoCrop(photo.id)}>圈選範圍</button>
+          <button type="button" className="is-delete" onClick={()=>removePhoto(photo.id)}>刪除</button>
+          <button type="button" disabled={index===(selected.photos||[]).length-1} onClick={()=>movePhoto(photo.id,1)} aria-label="照片下移">↓</button>
+         </div>
+         {photoCrops[photo.id]&&<small className="staff-crop-applied">已調整範圍，儲存後生效</small>}
+        </article>)}
+        {pendingPhotos.map((photo,index)=><article key={photo.id} className="staff-gallery-photo is-pending">
+         <img src={photo.url} alt={'待新增名帖照片 '+(index+1)} loading="lazy"/>
+         <strong>待新增 · {photo.file.name}</strong>
+         <div>
+          <button type="button" onClick={()=>editPhotoCrop(photo.id)}>圈選範圍</button>
+          <button type="button" className="is-delete" onClick={()=>removePhoto(photo.id)}>移除</button>
+         </div>
+         <small>{photoCrops[photo.id]?'已完成取景':'尚未完成取景'}</small>
+        </article>)}
        </div>
+       {!selected.photos?.length&&!pendingPhotos.length&&<p className="staff-gallery-empty">尚未上傳照片，前台會顯示預設圖示。</p>}
+       <small className="staff-field-note">原始照片會完整保留；名帖卡片使用你圈選的縮圖。多張模式會以神祕揭幕效果自動輪播，也可點選分頁點切換。</small>
       </div>
-      {cropEditing && (previewUrl || selected.imageUrl || selected.thumbnailUrl) && <StaffPhotoCrop
-       key={(previewUrl || selected.imageUrl || selected.thumbnailUrl) + selected.id}
-       source={previewUrl || selected.imageUrl || selected.thumbnailUrl}
-       onConfirm={crop => {setConfirmedCrop(crop);setCropEditing(false);setNotice({kind:'info',text:'名冊構圖已選定；請按「儲存名帖」將自訂縮圖同步到前台。'})}}
-       onCancel={() => {setCropEditing(false);if(photoFile){setPhotoFile(null);setConfirmedCrop(null)}}}
-      />}
+      {cropEditingId&&(()=>{
+       const pending=pendingPhotos.find(photo=>photo.id===cropEditingId)
+       const existing=(selected.photos||[]).find(photo=>photo.id===cropEditingId)
+       const source=pending?.url||existing?.imageUrl||''
+       return source?<StaffPhotoCrop key={cropEditingId+source} source={source} title="名帖照片"
+        onConfirm={crop=>{setPhotoCrops(old=>({...old,[cropEditingId]:crop}));setCropEditingId(null);setNotice({kind:'info',text:'照片取景範圍已套用；請按「儲存名帖」同步前台。'})}}
+        onCancel={()=>setCropEditingId(null)}/>:null
+      })()}
       <div className="editor-block staff-editor-social"><div className="editor-block-header"><h3>社群連結</h3><button type="button" className="text-button" onClick={() => patch('socials', [...selected.socials, { id:crypto.randomUUID(), label:'Threads', url:'' }])}><Plus size={17}/> 新增社群</button></div><p>支援 Threads、X、Instagram 或個人網站，網址須包含 https://。</p>
        {selected.socials.length === 0 && <p className="staff-field-note">目前沒有社群連結。</p>}
        {selected.socials.map((social, index) => <div className="social-edit-row" key={social.id}>
