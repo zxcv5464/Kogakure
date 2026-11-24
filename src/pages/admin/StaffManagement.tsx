@@ -126,86 +126,124 @@ export default function StaffManagement() {
  function patch<K extends keyof Staff>(field: K, value: Staff[K]) {
   setSelected(current => current ? { ...current, [field]: value } : null)
  }
- function stagePhoto(event: ChangeEvent<HTMLInputElement>) {
-  const file = event.currentTarget.files?.[0]
-  event.currentTarget.value = ''
-  if (!file) return
-  try {
-   validateStaffImage(file)
-   setPhotoFile(file)
-   setConfirmedCrop(null)
-   setCropEditing(true)
-   setNotice({ kind:'info', text:'請先拖曳圈選要顯示的照片範圍，套用後再儲存。' })
-  } catch (error) {
-   setNotice({ kind:'error', text:describeError(error) })
+ function stagePhoto(event:ChangeEvent<HTMLInputElement>){
+  const incoming=event.currentTarget.files?Array.from(event.currentTarget.files):[]
+  event.currentTarget.value=''
+  if(!incoming.length||!selected)return
+  if((selected.photos?.length||0)+pendingPhotos.length+incoming.length>12){
+   setNotice({kind:'error',text:'每位狐姬最多可設定 12 張名帖照片，請先移除部分照片。'});return
   }
+  try{
+   incoming.forEach(validateStaffImage)
+   const added=incoming.map(file=>{
+    const url=URL.createObjectURL(file);stagedPhotoUrls.current.push(url)
+    return {id:crypto.randomUUID(),file,url}
+   })
+   setPendingPhotos(previous=>[...previous,...added])
+   setCropEditingId(added[0].id)
+   setNotice({kind:'info',text:'已加入 '+added.length+' 張照片，請逐張圈選名帖顯示範圍後儲存。'})
+  }catch(error){setNotice({kind:'error',text:describeError(error)})}
+ }
+ function editPhotoCrop(id:string){
+  setPhotoCrops(previous=>{const next={...previous};delete next[id];return next})
+  setCropEditingId(id)
+ }
+ function removePhoto(id:string){
+  const pending=pendingPhotos.find(photo=>photo.id===id)
+  if(pending){
+   URL.revokeObjectURL(pending.url)
+   stagedPhotoUrls.current=stagedPhotoUrls.current.filter(url=>url!==pending.url)
+   setPendingPhotos(previous=>previous.filter(photo=>photo.id!==id))
+  }else if(selected){
+   const next=(selected.photos||[]).filter(photo=>photo.id!==id)
+   patch('photos',next);patch('imageUrl',next[0]?.imageUrl||'');patch('thumbnailUrl',next[0]?.thumbnailUrl||'')
+  }
+  setPhotoCrops(previous=>{const next={...previous};delete next[id];return next})
+  if(cropEditingId===id)setCropEditingId(null)
+ }
+ function movePhoto(id:string,direction:-1|1){
+  if(!selected)return
+  const current=selected.photos||[],index=current.findIndex(photo=>photo.id===id),target=index+direction
+  if(index<0||target<0||target>=current.length)return
+  const next=[...current];[next[index],next[target]]=[next[target],next[index]]
+  patch('photos',next);patch('imageUrl',next[0]?.imageUrl||'');patch('thumbnailUrl',next[0]?.thumbnailUrl||'')
  }
 
- async function save() {
-  if (!selected || busyRef.current || !dirty) return
-  if (cropEditing || (photoFile && !confirmedCrop)) {
-   setNotice({ kind:'error', text:'請先在照片圈選工具按「套用這個範圍」，再儲存名帖。' }); return
+ async function save(){
+  if(!selected||busyRef.current||!dirty)return
+  if(cropEditingId||pendingPhotos.some(photo=>!photoCrops[photo.id])){
+   setNotice({kind:'error',text:'請先逐張完成照片範圍圈選，再儲存名帖。'});return
   }
-  const name = selected.name.trim()
-  if (!name) { setNotice({ kind:'error', text:'請填寫員工名稱' }); return }
-  const color = selected.themeColor.trim()
-  if (!/^#[0-9a-fA-F]{6}$/.test(color)) { setNotice({ kind:'error', text:'主題色必須是 #RRGGBB 格式，例如 #82c8bc' }); return }
-  if (selected.socials.some(s => s.url.trim() && (!s.label.trim() || !safeExternalUrl(s.url.trim())))) {
-   setNotice({ kind:'error', text:'請為已填網址的社群設定名稱，並檢查網址必須以 http:// 或 https:// 開頭' }); return
+  const name=selected.name.trim()
+  if(!name){setNotice({kind:'error',text:'請填寫員工名稱'});return}
+  const color=selected.themeColor.trim()
+  if(!/^#[0-9a-fA-F]{6}$/.test(color)){
+   setNotice({kind:'error',text:'主題色必須是 #RRGGBB 格式，例如 #82c8bc'});return
   }
-  const sanitized: Staff = {
-   ...selected, name, role: selected.role.trim() || '接待者', themeColor: color,
-   services: parseServices(servicesText),
-   socials: selected.socials.filter(s => s.url.trim()).map(s => ({ ...s, label: s.label.trim(), url: s.url.trim() })),
+  if(selected.socials.some(s=>s.url.trim()&&(!s.label.trim()||!safeExternalUrl(s.url.trim())))){
+   setNotice({kind:'error',text:'請為已填網址的社群設定名稱，並檢查網址必須以 http:// 或 https:// 開頭'});return
   }
-  busyRef.current = true
-  setBusy(true)
-  setNotice({ kind:'info', text:photoFile ? '正在上傳原圖與手動圈選縮圖…' : confirmedCrop ? '正在儲存新的圈選縮圖…' : '正在儲存名帖…' })
-  let uploaded: { paths: string[] } | undefined
-  try {
-   let saving = sanitized
-   if (photoFile && confirmedCrop) {
-    const photos = await uploadStaffImage(photoFile, sanitized.id, confirmedCrop)
-    uploaded = photos
-    saving = { ...sanitized, imageUrl: photos.full, thumbnailUrl: photos.thumb }
-   } else if (confirmedCrop) {
-    const photo = await uploadStaffCrop(sanitized.imageUrl || sanitized.thumbnailUrl, sanitized.id, confirmedCrop)
-    uploaded = photo
-    saving = { ...sanitized, thumbnailUrl: photo.thumb }
+  const sanitized:Staff={
+   ...selected,name,role:selected.role.trim()||'接待者',themeColor:color,
+   services:parseServices(servicesText),
+   socials:selected.socials.filter(s=>s.url.trim()).map(s=>({...s,label:s.label.trim(),url:s.url.trim()})),
+  }
+  busyRef.current=true;setBusy(true)
+  setNotice({kind:'info',text:pendingPhotos.length?'正在上傳多張原圖與圈選縮圖…':Object.keys(photoCrops).length?'正在更新照片取景範圍…':'正在儲存名帖…'})
+  const uploadedPaths:string[]=[]
+  const replacedPaths:string[]=[]
+  const removedPaths:string[]=[]
+  try{
+   let nextPhotos=[...(sanitized.photos||[])]
+   for(const photo of nextPhotos){
+    const crop=photoCrops[photo.id]
+    if(!crop)continue
+    const updated=await uploadStaffCrop(photo.imageUrl,sanitized.id,crop)
+    uploadedPaths.push(...updated.paths)
+    if(photo.thumbnailPath)replacedPaths.push(photo.thumbnailPath)
+    nextPhotos=nextPhotos.map(item=>item.id===photo.id
+     ?{...item,thumbnailUrl:updated.thumb,thumbnailPath:updated.paths[0]}:item)
    }
-   await saveStaff(saving, isNew)
+   for(const pending of pendingPhotos){
+    const uploaded=await uploadStaffImage(pending.file,sanitized.id,photoCrops[pending.id])
+    uploadedPaths.push(...uploaded.paths)
+    nextPhotos.push({id:crypto.randomUUID(),imageUrl:uploaded.full,thumbnailUrl:uploaded.thumb,
+     imagePath:uploaded.paths[0],thumbnailPath:uploaded.paths[1]})
+   }
+   const kept=new Set(nextPhotos.map(photo=>photo.id))
+   for(const oldPhoto of baseline?.photos||[]){
+    if(!kept.has(oldPhoto.id))
+     removedPaths.push(...[oldPhoto.imagePath,oldPhoto.thumbnailPath].filter((value):value is string=>Boolean(value)))
+   }
+   const first=nextPhotos[0]
+   const saving:Staff={
+    ...sanitized,photos:nextPhotos,imageUrl:first?.imageUrl||'',thumbnailUrl:first?.thumbnailUrl||'',
+    photoDisplayMode:sanitized.photoDisplayMode==='gallery'?'gallery':'single',
+   }
+   await saveStaff(saving,isNew)
    invalidatePublicStaffCache()
-   // Commit the successful local state first; a refresh failure must not
-   // misreport an already-written record as a failed save.
-   setSelected(cloneStaff(saving))
-   setBaseline(cloneStaff(saving))
-   setIsNew(false)
+   setSelected(cloneStaff(saving));setBaseline(cloneStaff(saving));setIsNew(false)
    setServicesText(saving.services.join('、'))
-   setPhotoFile(null)
-   setConfirmedCrop(null)
-   setCropEditing(false)
-   setNotice({ kind:'success', text:saving.published ? '名帖已儲存並公開。' : '名帖已儲存為草稿。' })
-   try {
-    await refresh()
-   } catch (error) {
-    setRows(current => {
-     const next = current.filter(staff => staff.id !== saving.id)
-     next.push(saving)
-     return next.sort((a, b) => a.sortOrder - b.sortOrder)
+   resetPhotoDrafts()
+   try{await removeUploadedStaffImages([...replacedPaths,...removedPaths])}
+   catch(error){console.warn('舊名帖照片清理失敗：',error)}
+   setNotice({kind:'success',text:saving.published?'名帖已儲存並公開。':'名帖已儲存為草稿。'})
+   try{await refresh()}
+   catch(error){
+    setRows(current=>{
+     const next=current.filter(staff=>staff.id!==saving.id);next.push(saving)
+     return next.sort((a,b)=>a.sortOrder-b.sortOrder)
     })
-    setNotice({ kind:'info', text:'名帖已儲存成功，但更新左側清單失敗。可以稍後重新整理清單。' })
-    console.warn('Staff list refresh failed:', error)
+    setNotice({kind:'info',text:'名帖已儲存成功，但更新左側清單失敗。可以稍後重新整理清單。'})
+    console.warn('Staff list refresh failed:',error)
    }
-  } catch (error) {
-   if (uploaded) {
-    try { await removeUploadedStaffImages(uploaded.paths) }
-    catch (cleanupError) { console.warn('Unable to clean up unused photo upload:', cleanupError) }
+  }catch(error){
+   if(uploadedPaths.length){
+    try{await removeUploadedStaffImages(uploadedPaths)}
+    catch(cleanupError){console.warn('Unable to clean up unused photo uploads:',cleanupError)}
    }
-   setNotice({ kind:'error', text:'儲存失敗：' + (describeError(error)) })
-  } finally {
-   busyRef.current = false
-   setBusy(false)
-  }
+   setNotice({kind:'error',text:'儲存失敗：'+describeError(error)})
+  }finally{busyRef.current=false;setBusy(false)}
  }
 
  async function remove() {
