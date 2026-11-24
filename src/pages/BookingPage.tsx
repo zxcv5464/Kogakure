@@ -89,7 +89,7 @@ export default function BookingPage(){
    void loadBookingQuotaUsage().then(q=>{if(live)setQuotaUsage(q)}).catch(()=>{})
    // Plans are editable in the admin console; refresh while this page is open.
    void getStaff().then(rows=>{if(live)setPeople(rows.filter(p=>p.published&&p.bookingVisible))}).catch(()=>{})
-   void loadBookingPhotos().then(photos=>{if(live)setPhotoUrls(Object.fromEntries(photos.map(p=>[p.staffId,p.imageUrl])))}).catch(()=>{})
+   void loadBookingPhotos().then(photos=>{if(live)setBookingPhotos(photos)}).catch(()=>{})
    void loadPublicBookingPlans({force:true}).then(updated=>{
     if(!live)return
     setPlans(updated)
