@@ -35,7 +35,7 @@
 .booking-portrait{position:relative;display:block;min-width:0;min-height:100%;overflow:hidden;border-radius:9px 0 0 9px;background:#13111c;border:0}
 .booking-portrait:after{content:none}
 .booking-portrait .mystic-photo-gallery{position:absolute;inset:0}
-.booking-portrait .mystic-photo-overlay{inset:auto;right:3%;bottom:7%;width:44%;height:43%;max-width:180px;max-height:220px;object-fit:contain;object-position:right bottom}
+.booking-portrait .mystic-photo-overlay{inset:auto;right:3%;bottom:7%;width:36%;height:28%;max-width:160px;max-height:180px;object-fit:contain;object-position:right bottom}
 .booking-selected-gallery .mystic-photo-overlay{inset:auto;right:1%;bottom:4%;width:44%;height:43%;object-fit:contain}
 .booking-portrait img{position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:cover;object-position:center;transform:none}
 .booking-profile.has-manual-crop .booking-portrait img{object-fit:cover;object-position:center;transform:none}
