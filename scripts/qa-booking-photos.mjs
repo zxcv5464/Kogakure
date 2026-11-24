@@ -61,6 +61,10 @@ assert.ok(sql.includes('update public.booking_staff_photos')&&
  'Existing booking photos must be migrated in place, not dropped')
 assert.ok(sql.includes('photo_display_mode in (\'single\',\'gallery\')'),
  'Display mode must be constrained to known values')
+assert.ok(policySql.includes('drop policy if exists "visitors see booking portraits of visible staff"')&&
+ policySql.includes('drop policy if exists "booking managers read all booking portraits"')&&
+ policySql.includes('visitors and booking managers read booking portraits'),
+ 'Public visitors and booking managers must share one SELECT policy without changing access')
 assert.ok(sourceByPath['src/lib/shift-portraits.ts'].includes("const BUCKET='shift-avatars'"),
  'Duty roster photos must remain in their independent storage')
 assert.ok(sourceByPath['src/lib/staff.ts'].includes('photo_gallery:')&&
