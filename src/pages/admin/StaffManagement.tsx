@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ChangeEvent } from 'react'
-import { AlertCircle, ArrowDown, ArrowUp, CheckCircle2, ExternalLink, GripVertical, ImagePlus, ListOrdered, Plus, RefreshCw, Save, Search, Trash2, X } from 'lucide-react'
+import { AlertCircle, ArrowDown, ArrowUp, CheckCircle2, Crop, ExternalLink, GripVertical, ImagePlus, ListOrdered, Plus, RefreshCw, Save, Search, Trash2, X } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { Staff, Effect } from '../../types'
 import { EFFECTS } from '../../types'
@@ -440,7 +440,7 @@ export default function StaffManagement() {
         <label className="staff-gallery-mode">前台顯示
          <select value={selected.photoDisplayMode||'single'} onChange={event=>patch('photoDisplayMode',event.target.value as 'single'|'gallery')}>
           <option value="single">單張顯示（只顯示第一張）</option>
-          <option value="gallery">多張輪播（含神祕分頁點）</option>
+          <option value="gallery">多張輪播（自動切換）</option>
          </select>
         </label>
        </div>
@@ -449,10 +449,10 @@ export default function StaffManagement() {
          <img src={photo.thumbnailUrl||photo.imageUrl} alt={'名帖照片第 '+(index+1)+' 張預覽'} loading="lazy"/>
          <strong>已儲存 · 第 {index+1} 張</strong>
          <div>
-          <button type="button" disabled={index===0} onClick={()=>movePhoto(photo.id,-1)} aria-label="照片上移">↑</button>
-          <button type="button" onClick={()=>editPhotoCrop(photo.id)}>圈選範圍</button>
-          <button type="button" className="is-delete" onClick={()=>removePhoto(photo.id)}>刪除</button>
-          <button type="button" disabled={index===(selected.photos||[]).length-1} onClick={()=>movePhoto(photo.id,1)} aria-label="照片下移">↓</button>
+          <button type="button" disabled={index===0} onClick={()=>movePhoto(photo.id,-1)} aria-label={"將名帖照片第 "+(index+1)+" 張上移"} title="上移"><ArrowUp size={15}/></button>
+          <button type="button" onClick={()=>editPhotoCrop(photo.id)} aria-label={"調整名帖照片第 "+(index+1)+" 張取景範圍"} title="取景"><Crop size={15}/></button>
+          <button type="button" className="is-delete" onClick={()=>removePhoto(photo.id)} aria-label={"刪除名帖照片第 "+(index+1)+" 張"} title="刪除"><Trash2 size={15}/></button>
+          <button type="button" disabled={index===(selected.photos||[]).length-1} onClick={()=>movePhoto(photo.id,1)} aria-label={"將名帖照片第 "+(index+1)+" 張下移"} title="下移"><ArrowDown size={15}/></button>
          </div>
          {photoCrops[photo.id]&&<small className="staff-crop-applied">已調整範圍，儲存後生效</small>}
         </article>)}
@@ -460,14 +460,14 @@ export default function StaffManagement() {
          <img src={photo.url} alt={'待新增名帖照片 '+(index+1)} loading="lazy"/>
          <strong>待新增 · {photo.file.name}</strong>
          <div>
-          <button type="button" onClick={()=>editPhotoCrop(photo.id)}>圈選範圍</button>
-          <button type="button" className="is-delete" onClick={()=>removePhoto(photo.id)}>移除</button>
+          <button type="button" onClick={()=>editPhotoCrop(photo.id)} aria-label={"調整待新增名帖照片 "+(index+1)+" 取景範圍"} title="取景"><Crop size={15}/></button>
+          <button type="button" className="is-delete" onClick={()=>removePhoto(photo.id)} aria-label={"移除待新增名帖照片 "+(index+1)} title="移除"><X size={15}/></button>
          </div>
          <small>{photoCrops[photo.id]?'已完成取景':'尚未完成取景'}</small>
         </article>)}
        </div>
        {!selected.photos?.length&&!pendingPhotos.length&&<p className="staff-gallery-empty">尚未上傳照片，前台會顯示預設圖示。</p>}
-       <small className="staff-field-note">原始照片會完整保留；名帖卡片使用你圈選的縮圖。多張模式會以神祕揭幕效果自動輪播，也可點選分頁點切換。</small>
+       <small className="staff-field-note">原始照片會完整保留；名帖卡片使用你圈選的縮圖。多張模式會以神祕揭幕效果自動輪播，不顯示分頁點與照片數量。</small>
       </div>
       {cropEditingId&&(()=>{
        const pending=pendingPhotos.find(photo=>photo.id===cropEditingId)
