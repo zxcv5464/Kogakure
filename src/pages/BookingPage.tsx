@@ -209,7 +209,7 @@ export default function BookingPage(){
       <div className={'booking-profile-action'+(disabled?' is-disabled':'')} role="button"
        tabIndex={disabled?-1:0} aria-disabled={disabled}
        onClick={()=>{if(!disabled)openBooking(person)}}
-       onKeyDown={event=>{if(disabled)return;if(event.key==='Enter'||event.key===' '){event.preventDefault();openBooking(person)}}}
+       onKeyDown={event=>{if(disabled||event.target!==event.currentTarget)return;if(event.key==='Enter'||event.key===' '){event.preventDefault();openBooking(person)}}}
        aria-label={person.name+(busy?'指名中，暫不開放預約':acceptsAnyPlan?'空閒中，點選預約':'目前沒有可接受的指名方案')}>
        <span className="booking-portrait">
         {photo?.photos.length
