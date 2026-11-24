@@ -102,7 +102,7 @@ export default function MysticPhotoGallery({
  return <div ref={root} className={'mystic-photo-gallery '+className} aria-label={alt}>
   <div className={'services-photo-slides'+(slides.revealing?' is-opening':'')} aria-live="off">
    {slides.indices.map((photoIndex,layer)=><img key={layer} src={activeSources[photoIndex]||activeSources[0]}
-    alt={alt+'，第 '+(photoIndex+1)+' 張'} decoding="async" loading="lazy"
+    alt={alt+'，第 '+(photoIndex+1)+' 張'} decoding="async" loading={layer===slides.active?"eager":"lazy"}
     aria-hidden={layer!==slides.active}
     className={'services-photo-slide'+(layer===slides.active?' is-visible'+(slides.revealing?' is-revealing':''):layer===slides.previous?' is-previous':'')}/>)}
    {slides.revealing&&<span className="services-photo-shoji-edges" aria-hidden="true"><i/><i/></span>}
