@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { ChevronRight } from 'lucide-react'
 import type { CSSProperties, MouseEvent } from 'react'
 import type { Staff } from '../types'
@@ -16,10 +16,11 @@ export default function StaffCard({staff,onOpen,index}:Props){
   setStyle({'--rx':String((.5-y)*4)+'deg','--ry':String((x-.5)*5)+'deg','--glow-x':String(x*100)+'%','--glow-y':String(y*100)+'%'} as CSSProperties)
  }
  function leave(){setStyle({'--rx':'0deg','--ry':'0deg'} as CSSProperties)}
- const photos=staff.photos?.length?staff.photos.map(photo=>({...photo,preserveCrop:Boolean(photo.thumbnailPath?.endsWith('-crop.webp'))})):
+ const photos=useMemo(()=>staff.photos?.length?staff.photos.map(photo=>({...photo,preserveCrop:Boolean(photo.thumbnailPath?.endsWith('-crop.webp'))})):
   (staff.imageUrl||staff.thumbnailUrl?[{id:'legacy-'+staff.id,imageUrl:staff.imageUrl||staff.thumbnailUrl,
    thumbnailUrl:staff.thumbnailUrl||staff.imageUrl,imagePath:null,thumbnailPath:null,
-   preserveCrop:Boolean((staff.thumbnailUrl||staff.imageUrl).includes('-crop.webp'))}]:[])
+   preserveCrop:Boolean((staff.thumbnailUrl||staff.imageUrl).includes('-crop.webp'))}]:[]),
+  [staff.photos,staff.id,staff.imageUrl,staff.thumbnailUrl])
  return <article className={'staff-entry effect-'+staff.effect} style={{'--accent':accent,'--delay':String(index*80)+'ms',...style} as CSSProperties}>
   <button ref={ref} type="button" className="omamori-card"
    onPointerMove={move} onPointerLeave={leave} onClick={()=>onOpen(staff)}
