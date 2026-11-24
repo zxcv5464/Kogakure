@@ -213,7 +213,7 @@ export default function BookingPage(){
        aria-label={person.name+(busy?'指名中，暫不開放預約':acceptsAnyPlan?'空閒中，點選預約':'目前沒有可接受的指名方案')}>
        <span className="booking-portrait">
         {photo?.photos.length
-         ? <MysticPhotoGallery photos={photo.photos} mode={photo.displayMode} alt={person.name+'的預約形象照片'} overlayUrl={photo.secondaryImageUrl}/>
+         ? <MysticPhotoGallery photos={photo.photos} mode={photo.displayMode} alt={person.name+'的預約形象照片'} overlayUrl={photo.secondaryImageUrl} loading={index>2?'lazy':'eager'}/>
          : <span className="booking-photo-placeholder"><Sparkles size={32}/></span>}
        </span>
        <span className="booking-card-details">
@@ -252,7 +252,7 @@ export default function BookingPage(){
      <div className="booking-selected-person">{bookingPhotosByStaff.get(selected.id)?.photos.length
       ?<MysticPhotoGallery className="booking-selected-gallery" photos={bookingPhotosByStaff.get(selected.id)!.photos}
         mode="single" showCounter={false} alt={selected.name+'的預約形象照片'}
-        overlayUrl={bookingPhotosByStaff.get(selected.id)!.secondaryImageUrl}/>
+        overlayUrl={bookingPhotosByStaff.get(selected.id)!.secondaryImageUrl} loading="eager"/>
       :<div className="booking-selected-photo-empty"><Sparkles size={23}/></div>}
       <span><small>本次指名</small><strong>{selected.name}</strong></span></div>
      {!applicablePlans.length&&<p role="status" className="booking-plan-unavailable">這位狐姬目前沒有可接受的方案，或方案／個人接取次數已滿；請重新選擇。</p>}
