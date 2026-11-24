@@ -7,6 +7,7 @@ import type { BookingNominee } from '../lib/booking-selection'
 import { BOOKING_PAGE_READY_EVENT } from '../lib/route-events'
 import BookingLoading from '../components/BookingLoading'
 import ScrollCue from '../components/ScrollCue'
+import MysticPhotoGallery from '../components/MysticPhotoGallery'
 import TcWorldSelect from '../components/TcWorldSelect'
 import { getCachedPublicStaff,loadPublicStaff } from '../lib/public-staff'
 import { getCachedBookingPhotos,loadBookingPhotos } from '../lib/booking-photos'
@@ -35,7 +36,7 @@ function NomineeSummary({nominees}: {nominees: BookingNominee[]}) {
 export default function BookingPage(){
  const [people,setPeople]=useState<Staff[]>(()=>getCachedPublicStaff()?.filter(p=>p.published&&p.bookingVisible)??[])
  const [plans,setPlans]=useState<BookingPlan[]>(()=>peekPublicBookingPlans()??[])
- const [photoUrls,setPhotoUrls]=useState<Record<string,string>>(()=>Object.fromEntries((getCachedBookingPhotos()??[]).map(p=>[p.staffId,p.imageUrl])))
+ const [bookingPhotos,setBookingPhotos]=useState(()=>getCachedBookingPhotos()??[])
  const [presence,setPresence]=useState<StaffPresence[]>(()=>peekPublicStaffPresence()??[])
  const [quotaUsage,setQuotaUsage]=useState<BookingQuotaUsage>({plans:{},staff:{}})
  const [loading,setLoading]=useState(()=>!(configured&&getCachedPublicStaff()&&peekPublicBookingPlans()&&peekPublicStaffPresence()))
@@ -59,7 +60,7 @@ export default function BookingPage(){
   if(!configured){setLoading(false);setError('預約系統尚未連線，請洽館方。');return}
   let live=true
   void loadBookingQuotaUsage().then(q=>{if(live)setQuotaUsage(q)}).catch(()=>{})
-  void loadBookingPhotos().then(photos=>{if(live)setPhotoUrls(Object.fromEntries(photos.map(p=>[p.staffId,p.imageUrl])))}).catch(()=>{})
+  void loadBookingPhotos().then(photos=>{if(live)setBookingPhotos(photos)}).catch(()=>{})
   Promise.all([loadPublicStaff(),loadPublicBookingPlans(),loadPublicStaffPresence()])
    .then(([staff,loadedPlans,status])=>{
     if(!live)return
@@ -104,7 +105,7 @@ export default function BookingPage(){
  },[loading])
 
  const statusByStaff=useMemo(()=>new Map(presence.map(p=>[p.staffId,p.busyUntil])),[presence])
- const bookingImage=(staffId:string)=>photoUrls[staffId]||''
+ const bookingPhotosByStaff=useMemo(()=>new Map(bookingPhotos.map(photo=>[photo.staffId,photo])),[bookingPhotos])
  const extraPerson=withOthers?people.find(p=>p.id===others[0]):null
  const applicablePlans=plans.filter(p=>selected&&staffAcceptsPlan(selected,p.id)&&
   quotaAvailable(p,selected,quotaUsage)&&
@@ -201,14 +202,18 @@ export default function BookingPage(){
      const busyUntil=statusByStaff.get(person.id)
      const busy=isStaffBusy(busyUntil,now)
      const acceptsAnyPlan=plans.some(plan=>staffAcceptsPlan(person,plan.id)&&quotaAvailable(plan,person,quotaUsage))
-     return <article className={'booking-profile effect-'+person.effect+(bookingImage(person.id).includes('-crop.webp')?' has-manual-crop':'')} key={person.id}
+     const photo=bookingPhotosByStaff.get(person.id)
+     const disabled=busy||(plans.length>0&&!acceptsAnyPlan)
+     return <article className={'booking-profile effect-'+person.effect} key={person.id}
       style={{'--accent':person.themeColor||'#c4ac83','--booking-delay':Math.min(index,8)*80+'ms'} as CSSProperties}>
-      <button className="booking-profile-action" type="button"
-       onClick={()=>openBooking(person)} disabled={busy||(plans.length>0&&!acceptsAnyPlan)}
+      <div className={'booking-profile-action'+(disabled?' is-disabled':'')} role="button"
+       tabIndex={disabled?-1:0} aria-disabled={disabled}
+       onClick={()=>{if(!disabled)openBooking(person)}}
+       onKeyDown={event=>{if(disabled)return;if(event.key==='Enter'||event.key===' '){event.preventDefault();openBooking(person)}}}
        aria-label={person.name+(busy?'指名中，暫不開放預約':acceptsAnyPlan?'空閒中，點選預約':'目前沒有可接受的指名方案')}>
        <span className="booking-portrait">
-        {bookingImage(person.id)
-         ? <img src={bookingImage(person.id)} alt={person.name+'的預約形象照片'} loading={index>2?'lazy':'eager'} decoding="async"/>
+        {photo?.photos.length
+         ? <MysticPhotoGallery photos={photo.photos} mode={photo.displayMode} alt={person.name+'的預約形象照片'} overlayUrl={photo.secondaryImageUrl}/>
          : <span className="booking-photo-placeholder"><Sparkles size={32}/></span>}
        </span>
        <span className="booking-card-details">
@@ -222,7 +227,7 @@ export default function BookingPage(){
         {person.services.length>0&&<span className="booking-card-services">{person.services.slice(0,2).map(service=><span key={service}>{service}</span>)}</span>}
         <span className="booking-card-cta">{busy?'此刻正在接待，暫不開放指名':acceptsAnyPlan?'點選名片 · 提出指名申請':'目前沒有可接受的指名方案'} <Sparkles size={15}/></span>
        </span>
-      </button>
+      </div>
      </article>
     })}
    </div>}
@@ -244,7 +249,12 @@ export default function BookingPage(){
      <p className="booking-number">申請編號：{result.slice(0,8).toUpperCase()}</p>
      <button className="booking-primary" type="button" onClick={close}>返回狐隱</button>
     </div> : <form onSubmit={e=>void submit(e)} className="booking-form">
-     <div className="booking-selected-person">{bookingImage(selected.id)?<img src={bookingImage(selected.id)} alt=""/>:<div className="booking-selected-photo-empty"><Sparkles size={23}/></div>}<span><small>本次指名</small><strong>{selected.name}</strong></span></div>
+     <div className="booking-selected-person">{bookingPhotosByStaff.get(selected.id)?.photos.length
+      ?<MysticPhotoGallery className="booking-selected-gallery" photos={bookingPhotosByStaff.get(selected.id)!.photos}
+        mode="single" showCounter={false} alt={selected.name+'的預約形象照片'}
+        overlayUrl={bookingPhotosByStaff.get(selected.id)!.secondaryImageUrl}/>
+      :<div className="booking-selected-photo-empty"><Sparkles size={23}/></div>}
+      <span><small>本次指名</small><strong>{selected.name}</strong></span></div>
      {!applicablePlans.length&&<p role="status" className="booking-plan-unavailable">這位狐姬目前沒有可接受的方案，或方案／個人接取次數已滿；請重新選擇。</p>}
      <label>預約者遊戲角色姓名 <input required value={name} onChange={e=>setName(e.target.value)} placeholder="請輸入遊戲中的角色姓名" autoComplete="off"/></label>
      <label>所在伺服器 <TcWorldSelect value={world} onChange={setWorld}/></label>
