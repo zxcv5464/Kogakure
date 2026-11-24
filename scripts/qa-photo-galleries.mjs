@@ -6,12 +6,12 @@ import {renderToStaticMarkup} from 'react-dom/server'
 import ts from 'typescript'
 import {createServer} from 'vite'
 
-const [galleryFile,css,staffPage,bookingPage,staffAdmin,bookingAdmin,migration,staffCard,staffDialog]=await Promise.all([
+const [galleryFile,css,staffCard,bookingPage,staffAdmin,bookingAdmin,migration,staffDialog]=await Promise.all([
  'src/components/MysticPhotoGallery.tsx','src/components/mystic-photo-gallery.css',
  'src/components/StaffCard.tsx','src/pages/BookingPage.tsx',
  'src/pages/admin/StaffManagement.tsx','src/pages/admin/BookingPhotoManager.tsx',
  'supabase/migrations/20261124_01_staff_booking_photo_galleries.sql',
- 'src/components/StaffCard.tsx','src/components/StaffDialog.tsx',
+ 'src/components/StaffDialog.tsx',
 ].map(path=>readFile(path,'utf8')))
 for(const path of ['src/components/MysticPhotoGallery.tsx','src/components/StaffCard.tsx',
  'src/pages/BookingPage.tsx','src/pages/admin/StaffManagement.tsx',
@@ -20,7 +20,7 @@ for(const path of ['src/components/MysticPhotoGallery.tsx','src/components/Staff
  const parsed=ts.createSourceFile(path,source,ts.ScriptTarget.Latest,true,path.endsWith('.tsx')?ts.ScriptKind.TSX:ts.ScriptKind.TS)
  assert.equal(parsed.parseDiagnostics.length,0,'TSX parse error: '+path)
 }
-assert.ok(staffPage.includes('MysticPhotoGallery')&&staffPage.includes('staff.photoDisplayMode'),
+assert.ok(staffCard.includes('MysticPhotoGallery')&&staffCard.includes('staff.photoDisplayMode'),
  'Staff cards must use the shared photo gallery')
 assert.ok(staffCard.includes('<button')&&!staffCard.includes('role="button"')&&
  staffCard.includes('showCounter={false}')&&staffCard.includes('showPagination={false}'),
