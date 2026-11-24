@@ -41,7 +41,7 @@ try{
  const multi=renderToStaticMarkup(createElement(MysticPhotoGallery,{
   photos,mode:'gallery',alt:'測試狐姬',overlayUrl:'https://example.invalid/sticker.webp',
  }))
- assert.equal((multi.match(/class="services-photo-dot(?:\\s|\")/g)||[]).length,3,'Gallery must render one pagination dot per photo')
+ assert.equal((multi.match(/class="services-photo-dot(?:\s|")/g)||[]).length,3,'Gallery must render one pagination dot per photo')
  assert.ok(multi.includes('thumb-1.webp')&&multi.includes('sticker.webp')&&
   galleryFile.includes('services-photo-shoji-edges')&&multi.includes('01 / 03'),
   'Gallery must show thumbnails, counter, overlay and mysterious reveal')
