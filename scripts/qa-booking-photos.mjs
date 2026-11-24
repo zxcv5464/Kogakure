@@ -49,6 +49,13 @@ assert.ok(manager.includes('uploadBookingOverlay')&&manager.includes('deleteBook
  'Booking manager must independently add, replace and delete the floating overlay')
 assert.ok(manager.includes('setBookingPhotoDisplayMode')&&manager.includes('moveBookingPhoto'),
  'Booking manager must persist single/gallery mode and photo ordering')
+assert.ok(manager.includes('previewShape="booking"')&&manager.includes('booking-gallery-action-crop'),
+ 'Booking photo crop preview and its action must use the booking-specific presentation')
+const managerCss=sourceByPath['src/pages/admin/booking-photo-manager.css']
+assert.ok(managerCss.includes('repeat(3,minmax(0,1fr))')&&managerCss.includes('white-space:nowrap')&&
+ managerCss.includes('booking-gallery-action-crop{grid-column:1/-1')&&
+ managerCss.includes('minmax(min(100%,148px),1fr)'),
+ 'Booking photo tiles must keep controls readable and responsive on narrow screens')
 assert.ok(sql.includes('add column if not exists photo_gallery jsonb')&&
  sql.includes('add column if not exists photo_display_mode text')&&
  sql.includes('secondary_image_url text')&&sql.includes('secondary_object_path text'),
