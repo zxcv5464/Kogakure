@@ -26,16 +26,17 @@ revoke all on public.booking_staff_photos from public,anon,authenticated;
 grant select on public.booking_staff_photos to anon,authenticated;
 grant insert,update,delete on public.booking_staff_photos to authenticated;
 
-create policy "visitors see booking portraits of visible staff"
+create policy "visitors and booking managers read booking portraits"
  on public.booking_staff_photos for select to anon,authenticated
- using (exists (
-  select 1 from public.staff s
-  where s.id=booking_staff_photos.staff_id and s.is_published=true
-   and s.is_booking_visible=true
- ));
-create policy "booking managers read all booking portraits"
- on public.booking_staff_photos for select to authenticated
- using ((select public.has_backoffice_permission('booking.manage')));
+ using (
+  exists (
+   select 1 from public.staff s
+   where s.id=booking_staff_photos.staff_id and s.is_published=true
+    and s.is_booking_visible=true
+  )
+  or ((select auth.role())='authenticated'
+   and (select public.has_backoffice_permission('booking.manage')))
+ );
 create policy "booking managers create booking portraits"
  on public.booking_staff_photos for insert to authenticated
  with check ((select public.has_backoffice_permission('booking.manage')));

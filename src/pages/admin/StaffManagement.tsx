@@ -21,13 +21,13 @@ type Notice = { kind: 'success' | 'error' | 'info'; text: string }
 function blankStaff(sortOrder = 1024): Staff {
  return {
   id: crypto.randomUUID(), name: '', role: '接待者', tagline: '', bio: '',
-  imageUrl: '', thumbnailUrl: '', themeColor: '#82c8bc',
+  imageUrl: '', thumbnailUrl: '', photos:[], photoDisplayMode:'single', themeColor: '#82c8bc',
   effect: 'foxfire', socials: [], services: [], published: false, bookingVisible: true,
   bookingAllowedPlanIds:null,bookingAllowJoint:true,bookingPlanCaps:{},sortOrder,
  }
 }
 function cloneStaff(staff: Staff): Staff {
- return { ...staff, services: [...staff.services], socials: staff.socials.map(s => ({ ...s })) }
+ return { ...staff, services:[...staff.services], socials:staff.socials.map(s=>({...s})), photos:(staff.photos||[]).map(photo=>({...photo})) }
 }
 function parseServices(value: string): string[] {
  return [...new Set(value.split(/[，,、\n]/).map(s => s.trim()).filter(Boolean))]
@@ -53,27 +53,27 @@ export default function StaffManagement() {
  const [ordering, setOrdering] = useState(false)
  const [draggingId, setDraggingId] = useState<string | null>(null)
  const [dropTargetId, setDropTargetId] = useState<string | null>(null)
- const [photoFile, setPhotoFile] = useState<File | null>(null)
- const [confirmedCrop, setConfirmedCrop] = useState<StaffCrop | null>(null)
- const [cropEditing, setCropEditing] = useState(false)
- const [previewUrl, setPreviewUrl] = useState('')
+ const [pendingPhotos,setPendingPhotos]=useState<{id:string;file:File;url:string}[]>([])
+ const [photoCrops,setPhotoCrops]=useState<Record<string,StaffCrop>>({})
+ const [cropEditingId,setCropEditingId]=useState<string|null>(null)
+ const stagedPhotoUrls=useRef<string[]>([])
  const editorRef = useRef<HTMLDivElement>(null)
  const { setEditing } = useAdminEditGuard()
 
  const dirty = useMemo(() => Boolean(selected && baseline && (
   JSON.stringify(selected) !== JSON.stringify(baseline)
   || servicesText !== baseline.services.join('、')
-  || photoFile || confirmedCrop || cropEditing
- )), [selected, baseline, servicesText, photoFile, confirmedCrop, cropEditing])
+  || pendingPhotos.length>0 || Object.keys(photoCrops).length>0 || cropEditingId!==null
+ )), [selected,baseline,servicesText,pendingPhotos,photoCrops,cropEditingId])
 
  useEffect(() => { setEditing(dirty, busy) }, [dirty, busy, setEditing])
  useEffect(() => () => setEditing(false, false), [setEditing])
- useEffect(() => {
-  if (!photoFile) { setPreviewUrl(''); return }
-  const url = URL.createObjectURL(photoFile)
-  setPreviewUrl(url)
-  return () => URL.revokeObjectURL(url)
- }, [photoFile])
+ useEffect(()=>()=>{stagedPhotoUrls.current.forEach(url=>URL.revokeObjectURL(url))},[])
+ function resetPhotoDrafts(){
+  stagedPhotoUrls.current.forEach(url=>URL.revokeObjectURL(url))
+  stagedPhotoUrls.current=[]
+  setPendingPhotos([]);setPhotoCrops({});setCropEditingId(null)
+ }
 
  const refresh = useCallback(async () => {
   const data = await getStaff(true)
@@ -108,9 +108,7 @@ export default function StaffManagement() {
   setBaseline(cloneStaff(draft))
   setIsNew(creating)
   setServicesText(draft.services.join('、'))
-  setPhotoFile(null)
-  setConfirmedCrop(null)
-  setCropEditing(false)
+  resetPhotoDrafts()
   setNotice(null)
   setOrdering(false)
   if (window.matchMedia('(max-width: 850px)').matches) {
@@ -122,94 +120,131 @@ export default function StaffManagement() {
   setSelected(null)
   setBaseline(null)
   setIsNew(false)
-  setPhotoFile(null)
-  setConfirmedCrop(null)
-  setCropEditing(false)
+  resetPhotoDrafts()
   setNotice(null)
  }
  function patch<K extends keyof Staff>(field: K, value: Staff[K]) {
   setSelected(current => current ? { ...current, [field]: value } : null)
  }
- function stagePhoto(event: ChangeEvent<HTMLInputElement>) {
-  const file = event.currentTarget.files?.[0]
-  event.currentTarget.value = ''
-  if (!file) return
-  try {
-   validateStaffImage(file)
-   setPhotoFile(file)
-   setConfirmedCrop(null)
-   setCropEditing(true)
-   setNotice({ kind:'info', text:'請先拖曳圈選要顯示的照片範圍，套用後再儲存。' })
-  } catch (error) {
-   setNotice({ kind:'error', text:describeError(error) })
+ function stagePhoto(event:ChangeEvent<HTMLInputElement>){
+  const incoming=event.currentTarget.files?Array.from(event.currentTarget.files):[]
+  event.currentTarget.value=''
+  if(!incoming.length||!selected)return
+  if((selected.photos?.length||0)+pendingPhotos.length+incoming.length>12){
+   setNotice({kind:'error',text:'每位狐姬最多可設定 12 張名帖照片，請先移除部分照片。'});return
   }
+  try{
+   incoming.forEach(validateStaffImage)
+   const added=incoming.map(file=>{
+    const url=URL.createObjectURL(file);stagedPhotoUrls.current.push(url)
+    return {id:crypto.randomUUID(),file,url}
+   })
+   setPendingPhotos(previous=>[...previous,...added])
+   if((selected.photos?.length||0)+pendingPhotos.length+added.length>1)patch('photoDisplayMode','gallery')
+   setCropEditingId(added[0].id)
+   setNotice({kind:'info',text:'已加入 '+added.length+' 張照片，請逐張圈選名帖顯示範圍後儲存。'})
+  }catch(error){setNotice({kind:'error',text:describeError(error)})}
+ }
+ function editPhotoCrop(id:string){
+  setPhotoCrops(previous=>{const next={...previous};delete next[id];return next})
+  setCropEditingId(id)
+ }
+ function removePhoto(id:string){
+  const pending=pendingPhotos.find(photo=>photo.id===id)
+  if(pending){
+   URL.revokeObjectURL(pending.url)
+   stagedPhotoUrls.current=stagedPhotoUrls.current.filter(url=>url!==pending.url)
+   setPendingPhotos(previous=>previous.filter(photo=>photo.id!==id))
+  }else if(selected){
+   const next=(selected.photos||[]).filter(photo=>photo.id!==id)
+   patch('photos',next);patch('imageUrl',next[0]?.imageUrl||'');patch('thumbnailUrl',next[0]?.thumbnailUrl||'')
+  }
+  setPhotoCrops(previous=>{const next={...previous};delete next[id];return next})
+  if(cropEditingId===id)setCropEditingId(null)
+ }
+ function movePhoto(id:string,direction:-1|1){
+  if(!selected)return
+  const current=selected.photos||[],index=current.findIndex(photo=>photo.id===id),target=index+direction
+  if(index<0||target<0||target>=current.length)return
+  const next=[...current];[next[index],next[target]]=[next[target],next[index]]
+  patch('photos',next);patch('imageUrl',next[0]?.imageUrl||'');patch('thumbnailUrl',next[0]?.thumbnailUrl||'')
  }
 
- async function save() {
-  if (!selected || busyRef.current || !dirty) return
-  if (cropEditing || (photoFile && !confirmedCrop)) {
-   setNotice({ kind:'error', text:'請先在照片圈選工具按「套用這個範圍」，再儲存名帖。' }); return
+ async function save(){
+  if(!selected||busyRef.current||!dirty)return
+  if(cropEditingId||pendingPhotos.some(photo=>!photoCrops[photo.id])){
+   setNotice({kind:'error',text:'請先逐張完成照片範圍圈選，再儲存名帖。'});return
   }
-  const name = selected.name.trim()
-  if (!name) { setNotice({ kind:'error', text:'請填寫員工名稱' }); return }
-  const color = selected.themeColor.trim()
-  if (!/^#[0-9a-fA-F]{6}$/.test(color)) { setNotice({ kind:'error', text:'主題色必須是 #RRGGBB 格式，例如 #82c8bc' }); return }
-  if (selected.socials.some(s => s.url.trim() && (!s.label.trim() || !safeExternalUrl(s.url.trim())))) {
-   setNotice({ kind:'error', text:'請為已填網址的社群設定名稱，並檢查網址必須以 http:// 或 https:// 開頭' }); return
+  const name=selected.name.trim()
+  if(!name){setNotice({kind:'error',text:'請填寫員工名稱'});return}
+  const color=selected.themeColor.trim()
+  if(!/^#[0-9a-fA-F]{6}$/.test(color)){
+   setNotice({kind:'error',text:'主題色必須是 #RRGGBB 格式，例如 #82c8bc'});return
   }
-  const sanitized: Staff = {
-   ...selected, name, role: selected.role.trim() || '接待者', themeColor: color,
-   services: parseServices(servicesText),
-   socials: selected.socials.filter(s => s.url.trim()).map(s => ({ ...s, label: s.label.trim(), url: s.url.trim() })),
+  if(selected.socials.some(s=>s.url.trim()&&(!s.label.trim()||!safeExternalUrl(s.url.trim())))){
+   setNotice({kind:'error',text:'請為已填網址的社群設定名稱，並檢查網址必須以 http:// 或 https:// 開頭'});return
   }
-  busyRef.current = true
-  setBusy(true)
-  setNotice({ kind:'info', text:photoFile ? '正在上傳原圖與手動圈選縮圖…' : confirmedCrop ? '正在儲存新的圈選縮圖…' : '正在儲存名帖…' })
-  let uploaded: { paths: string[] } | undefined
-  try {
-   let saving = sanitized
-   if (photoFile && confirmedCrop) {
-    const photos = await uploadStaffImage(photoFile, sanitized.id, confirmedCrop)
-    uploaded = photos
-    saving = { ...sanitized, imageUrl: photos.full, thumbnailUrl: photos.thumb }
-   } else if (confirmedCrop) {
-    const photo = await uploadStaffCrop(sanitized.imageUrl || sanitized.thumbnailUrl, sanitized.id, confirmedCrop)
-    uploaded = photo
-    saving = { ...sanitized, thumbnailUrl: photo.thumb }
+  const sanitized:Staff={
+   ...selected,name,role:selected.role.trim()||'接待者',themeColor:color,
+   services:parseServices(servicesText),
+   socials:selected.socials.filter(s=>s.url.trim()).map(s=>({...s,label:s.label.trim(),url:s.url.trim()})),
+  }
+  busyRef.current=true;setBusy(true)
+  setNotice({kind:'info',text:pendingPhotos.length?'正在上傳多張原圖與圈選縮圖…':Object.keys(photoCrops).length?'正在更新照片取景範圍…':'正在儲存名帖…'})
+  const uploadedPaths:string[]=[]
+  const replacedPaths:string[]=[]
+  const removedPaths:string[]=[]
+  try{
+   let nextPhotos=[...(sanitized.photos||[])]
+   for(const photo of nextPhotos){
+    const crop=photoCrops[photo.id]
+    if(!crop)continue
+    const updated=await uploadStaffCrop(photo.imageUrl,sanitized.id,crop)
+    uploadedPaths.push(...updated.paths)
+    if(photo.thumbnailPath)replacedPaths.push(photo.thumbnailPath)
+    nextPhotos=nextPhotos.map(item=>item.id===photo.id
+     ?{...item,thumbnailUrl:updated.thumb,thumbnailPath:updated.paths[0]}:item)
    }
-   await saveStaff(saving, isNew)
+   for(const pending of pendingPhotos){
+    const uploaded=await uploadStaffImage(pending.file,sanitized.id,photoCrops[pending.id])
+    uploadedPaths.push(...uploaded.paths)
+    nextPhotos.push({id:crypto.randomUUID(),imageUrl:uploaded.full,thumbnailUrl:uploaded.thumb,
+     imagePath:uploaded.paths[0],thumbnailPath:uploaded.paths[1]})
+   }
+   const kept=new Set(nextPhotos.map(photo=>photo.id))
+   for(const oldPhoto of baseline?.photos||[]){
+    if(!kept.has(oldPhoto.id))
+     removedPaths.push(...[oldPhoto.imagePath,oldPhoto.thumbnailPath].filter((value):value is string=>Boolean(value)))
+   }
+   const first=nextPhotos[0]
+   const saving:Staff={
+    ...sanitized,photos:nextPhotos,imageUrl:first?.imageUrl||'',thumbnailUrl:first?.thumbnailUrl||'',
+    photoDisplayMode:sanitized.photoDisplayMode==='gallery'?'gallery':'single',
+   }
+   await saveStaff(saving,isNew)
    invalidatePublicStaffCache()
-   // Commit the successful local state first; a refresh failure must not
-   // misreport an already-written record as a failed save.
-   setSelected(cloneStaff(saving))
-   setBaseline(cloneStaff(saving))
-   setIsNew(false)
+   setSelected(cloneStaff(saving));setBaseline(cloneStaff(saving));setIsNew(false)
    setServicesText(saving.services.join('、'))
-   setPhotoFile(null)
-   setConfirmedCrop(null)
-   setCropEditing(false)
-   setNotice({ kind:'success', text:saving.published ? '名帖已儲存並公開。' : '名帖已儲存為草稿。' })
-   try {
-    await refresh()
-   } catch (error) {
-    setRows(current => {
-     const next = current.filter(staff => staff.id !== saving.id)
-     next.push(saving)
-     return next.sort((a, b) => a.sortOrder - b.sortOrder)
+   resetPhotoDrafts()
+   try{await removeUploadedStaffImages([...replacedPaths,...removedPaths])}
+   catch(error){console.warn('舊名帖照片清理失敗：',error)}
+   setNotice({kind:'success',text:saving.published?'名帖已儲存並公開。':'名帖已儲存為草稿。'})
+   try{await refresh()}
+   catch(error){
+    setRows(current=>{
+     const next=current.filter(staff=>staff.id!==saving.id);next.push(saving)
+     return next.sort((a,b)=>a.sortOrder-b.sortOrder)
     })
-    setNotice({ kind:'info', text:'名帖已儲存成功，但更新左側清單失敗。可以稍後重新整理清單。' })
-    console.warn('Staff list refresh failed:', error)
+    setNotice({kind:'info',text:'名帖已儲存成功，但更新左側清單失敗。可以稍後重新整理清單。'})
+    console.warn('Staff list refresh failed:',error)
    }
-  } catch (error) {
-   if (uploaded) {
-    try { await removeUploadedStaffImages(uploaded.paths) }
-    catch (cleanupError) { console.warn('Unable to clean up unused photo upload:', cleanupError) }
+  }catch(error){
+   if(uploadedPaths.length){
+    try{await removeUploadedStaffImages(uploadedPaths)}
+    catch(cleanupError){console.warn('Unable to clean up unused photo uploads:',cleanupError)}
    }
-   setNotice({ kind:'error', text:'儲存失敗：' + (describeError(error)) })
-  } finally {
-   busyRef.current = false
-   setBusy(false)
-  }
+   setNotice({kind:'error',text:'儲存失敗：'+describeError(error)})
+  }finally{busyRef.current=false;setBusy(false)}
  }
 
  async function remove() {
@@ -223,9 +258,7 @@ export default function StaffManagement() {
    setRows(current => current.filter(person => person.id !== selected.id))
    setSelected(null)
    setBaseline(null)
-   setPhotoFile(null)
-   setConfirmedCrop(null)
-   setCropEditing(false)
+   resetPhotoDrafts()
    setNotice({ kind:'success', text:'名帖已刪除。已上傳的圖片暫時保留在 Storage，避免誤刪其他資料。' })
   } catch (error) {
    setNotice({ kind:'error', text:'刪除失敗：' + (describeError(error)) })
@@ -244,9 +277,7 @@ export default function StaffManagement() {
    setOrdering(false)
    setSelected(null)
    setBaseline(null)
-   setPhotoFile(null)
-   setConfirmedCrop(null)
-   setCropEditing(false)
+   resetPhotoDrafts()
    setNotice({ kind:'info', text:'清單已更新，共 ' + next.length + ' 位員工。' })
   } catch (error) {
    setNotice({ kind:'error', text:'重新整理失敗：' + (describeError(error)) })
@@ -400,26 +431,52 @@ export default function StaffManagement() {
        <label>特效主題 <select value={selected.effect} onChange={event => patch('effect', event.target.value as Effect)}>{Object.entries(EFFECTS).map(([key, label]) => <option value={key} key={key}>{label}</option>)}</select></label>
        <label>主題色 <div className="color-field"><input type="color" value={/^#[0-9a-fA-F]{6}$/.test(selected.themeColor) ? selected.themeColor : '#82c8bc'} onChange={event => patch('themeColor', event.target.value)} aria-label="選擇主題色"/><input aria-label="主題色 HEX 色碼" value={selected.themeColor} onChange={event => patch('themeColor', event.target.value)} maxLength={7}/></div></label>
       </div>
-      <div className="staff-editor-section-title"><h3>角色照片</h3><small>自行圈選名冊範圍，原圖會保留</small></div>
-      <div className="staff-editor-photo">
-       <div className="staff-editor-photo-preview">
-        {previewUrl || selected.thumbnailUrl || selected.imageUrl ? <img src={previewUrl || selected.thumbnailUrl || selected.imageUrl} alt="員工照片預覽"/> : <ImagePlus size={36}/>}
+      <div className="staff-editor-section-title"><h3>角色照片相簿</h3><small>最多 12 張 · 每張可獨立圈選顯示範圍</small></div>
+      <div className="staff-gallery-editor">
+       <div className="staff-gallery-toolbar">
+        <label className="upload-control"><ImagePlus size={18}/>新增照片（可多選）
+         <input type="file" multiple accept="image/png,image/jpeg,image/webp,image/avif" onChange={stagePhoto}/>
+        </label>
+        <label className="staff-gallery-mode">前台顯示
+         <select value={selected.photoDisplayMode||'single'} onChange={event=>patch('photoDisplayMode',event.target.value as 'single'|'gallery')}>
+          <option value="single">單張顯示（只顯示第一張）</option>
+          <option value="gallery">多張輪播（含神祕分頁點）</option>
+         </select>
+        </label>
        </div>
-       <div className="staff-editor-photo-actions">
-        <p>{photoFile ? '已選取：' + photoFile.name : selected.imageUrl ? '目前使用的員工照片' : '尚未設定照片'}</p>
-        <small>{photoFile ? '新照片尚未上傳。請先套用名冊顯示範圍，儲存才會上傳。' : '原始照片完整保留；可重新圈選名冊卡片範圍，不影響詳情大圖。'}</small>
-        <label className="upload-control"><ImagePlus size={19}/> {photoFile ? '重新選擇照片' : '選擇照片'}<input type="file" accept="image/png,image/jpeg,image/webp,image/avif" onChange={stagePhoto}/></label>
-        {photoFile && <button className="staff-admin-secondary" type="button" onClick={() => {setPhotoFile(null);setConfirmedCrop(null);setCropEditing(false)}}>取消這次照片變更</button>}
-        {!photoFile && (selected.imageUrl || selected.thumbnailUrl) && <button className="staff-admin-secondary" type="button" onClick={() => {setConfirmedCrop(null);setCropEditing(true)}}>重新圈選名冊照片範圍</button>}
-        {confirmedCrop && !cropEditing && <small className="staff-crop-applied" role="status">✓ 已套用自訂範圍，儲存後前台立即使用此構圖</small>}
+       <div className="staff-gallery-photo-grid">
+        {(selected.photos||[]).map((photo,index)=><article key={photo.id} className="staff-gallery-photo">
+         <img src={photo.thumbnailUrl||photo.imageUrl} alt={'名帖照片第 '+(index+1)+' 張預覽'} loading="lazy"/>
+         <strong>已儲存 · 第 {index+1} 張</strong>
+         <div>
+          <button type="button" disabled={index===0} onClick={()=>movePhoto(photo.id,-1)} aria-label="照片上移">↑</button>
+          <button type="button" onClick={()=>editPhotoCrop(photo.id)}>圈選範圍</button>
+          <button type="button" className="is-delete" onClick={()=>removePhoto(photo.id)}>刪除</button>
+          <button type="button" disabled={index===(selected.photos||[]).length-1} onClick={()=>movePhoto(photo.id,1)} aria-label="照片下移">↓</button>
+         </div>
+         {photoCrops[photo.id]&&<small className="staff-crop-applied">已調整範圍，儲存後生效</small>}
+        </article>)}
+        {pendingPhotos.map((photo,index)=><article key={photo.id} className="staff-gallery-photo is-pending">
+         <img src={photo.url} alt={'待新增名帖照片 '+(index+1)} loading="lazy"/>
+         <strong>待新增 · {photo.file.name}</strong>
+         <div>
+          <button type="button" onClick={()=>editPhotoCrop(photo.id)}>圈選範圍</button>
+          <button type="button" className="is-delete" onClick={()=>removePhoto(photo.id)}>移除</button>
+         </div>
+         <small>{photoCrops[photo.id]?'已完成取景':'尚未完成取景'}</small>
+        </article>)}
        </div>
+       {!selected.photos?.length&&!pendingPhotos.length&&<p className="staff-gallery-empty">尚未上傳照片，前台會顯示預設圖示。</p>}
+       <small className="staff-field-note">原始照片會完整保留；名帖卡片使用你圈選的縮圖。多張模式會以神祕揭幕效果自動輪播，也可點選分頁點切換。</small>
       </div>
-      {cropEditing && (previewUrl || selected.imageUrl || selected.thumbnailUrl) && <StaffPhotoCrop
-       key={(previewUrl || selected.imageUrl || selected.thumbnailUrl) + selected.id}
-       source={previewUrl || selected.imageUrl || selected.thumbnailUrl}
-       onConfirm={crop => {setConfirmedCrop(crop);setCropEditing(false);setNotice({kind:'info',text:'名冊構圖已選定；請按「儲存名帖」將自訂縮圖同步到前台。'})}}
-       onCancel={() => {setCropEditing(false);if(photoFile){setPhotoFile(null);setConfirmedCrop(null)}}}
-      />}
+      {cropEditingId&&(()=>{
+       const pending=pendingPhotos.find(photo=>photo.id===cropEditingId)
+       const existing=(selected.photos||[]).find(photo=>photo.id===cropEditingId)
+       const source=pending?.url||existing?.imageUrl||''
+       return source?<StaffPhotoCrop key={cropEditingId+source} source={source} title="名帖"
+        onConfirm={crop=>{setPhotoCrops(old=>({...old,[cropEditingId]:crop}));setCropEditingId(null);setNotice({kind:'info',text:'照片取景範圍已套用；請按「儲存名帖」同步前台。'})}}
+        onCancel={()=>setCropEditingId(null)}/>:null
+      })()}
       <div className="editor-block staff-editor-social"><div className="editor-block-header"><h3>社群連結</h3><button type="button" className="text-button" onClick={() => patch('socials', [...selected.socials, { id:crypto.randomUUID(), label:'Threads', url:'' }])}><Plus size={17}/> 新增社群</button></div><p>支援 Threads、X、Instagram 或個人網站，網址須包含 https://。</p>
        {selected.socials.length === 0 && <p className="staff-field-note">目前沒有社群連結。</p>}
        {selected.socials.map((social, index) => <div className="social-edit-row" key={social.id}>

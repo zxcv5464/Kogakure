@@ -1,9 +1,29 @@
 import type { Staff, StaffRow } from '../types'
 import { supabase } from './supabase'
 import type { StaffOrderChange } from './staff-order'
+function normalizePhotos(value:unknown,staffId:string,imageUrl:string,thumbnailUrl:string){
+ const raw=Array.isArray(value)?value:[]
+ const photos=raw.flatMap((item,index)=>{
+  if(!item||typeof item!=='object')return []
+  const photo=item as Record<string,unknown>
+  const full=typeof photo.image_url==='string'?photo.image_url:''
+  const thumb=typeof photo.thumbnail_url==='string'?photo.thumbnail_url:full
+  if(!full&&!thumb)return []
+  return [{id:typeof photo.id==='string'?photo.id:'legacy-'+staffId+'-'+index,
+   imageUrl:full||thumb,thumbnailUrl:thumb||full,
+   imagePath:typeof photo.image_path==='string'?photo.image_path:null,
+   thumbnailPath:typeof photo.thumbnail_path==='string'?photo.thumbnail_path:null}]
+ })
+ if(photos.length)return photos
+ if(imageUrl||thumbnailUrl)return [{id:'legacy-'+staffId,imageUrl:imageUrl||thumbnailUrl,
+  thumbnailUrl:thumbnailUrl||imageUrl,imagePath:null,thumbnailPath:null}]
+ return []
+}
 export function rowToStaff(s: StaffRow): Staff {
+ const imageUrl=s.image_url||'',thumbnailUrl=s.thumbnail_url||s.image_url||''
  return {id:s.id,name:s.display_name,role:s.role,tagline:s.tagline,bio:s.bio,
- imageUrl:s.image_url || '',thumbnailUrl:s.thumbnail_url || s.image_url || '',
+ imageUrl,thumbnailUrl,photos:normalizePhotos(s.photo_gallery,s.id,imageUrl,thumbnailUrl),
+ photoDisplayMode:s.photo_display_mode==='gallery'?'gallery':'single',
  themeColor:s.theme_color,effect:s.effect,
  socials:Array.isArray(s.socials) ? s.socials : [],
  services:Array.isArray(s.services) ? s.services : [],published:s.is_published,bookingVisible:s.is_booking_visible!==false,
@@ -13,7 +33,11 @@ export function rowToStaff(s: StaffRow): Staff {
 }
 export function staffToRow(s: Staff): StaffRow {
  return {id:s.id,display_name:s.name,role:s.role,tagline:s.tagline,bio:s.bio,
- image_url:s.imageUrl || null,thumbnail_url:s.thumbnailUrl || null,
+ image_url:s.photos?.[0]?.imageUrl||s.imageUrl||null,
+ thumbnail_url:s.photos?.[0]?.thumbnailUrl||s.thumbnailUrl||null,
+ photo_gallery:(s.photos||[]).map(photo=>({id:photo.id,image_url:photo.imageUrl,
+  thumbnail_url:photo.thumbnailUrl,image_path:photo.imagePath,thumbnail_path:photo.thumbnailPath})),
+ photo_display_mode:s.photoDisplayMode==='gallery'?'gallery':'single',
  theme_color:s.themeColor,effect:s.effect,socials:s.socials,services:s.services,
  is_published:s.published,is_booking_visible:s.bookingVisible,
  booking_allowed_plan_ids:s.bookingAllowedPlanIds,booking_allow_joint:s.bookingAllowJoint,

@@ -1,0 +1,35 @@
+.mystic-photo-gallery{position:relative;display:block;width:100%;height:100%;min-width:0;min-height:0;overflow:hidden;background:#211d2a;isolation:isolate}
+.mystic-photo-gallery.is-empty{background:radial-gradient(ellipse at 48% 35%,rgba(112,79,103,.24),transparent 58%),#17141e}
+.mystic-photo-gallery .services-photo-slides{position:absolute;inset:0;overflow:hidden;background:#211d2a;isolation:isolate}
+.mystic-photo-gallery .services-photo-slide{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;opacity:0;clip-path:inset(0 50% 0 50%);z-index:0;pointer-events:none}
+.mystic-photo-gallery .services-photo-slide.is-visible{opacity:1;clip-path:inset(0 0 0 0);z-index:2}
+.mystic-photo-gallery .services-photo-slide.is-previous{opacity:1;clip-path:inset(0 0 0 0);z-index:1}
+.mystic-photo-gallery .services-photo-slide.is-revealing{transition:clip-path 1450ms cubic-bezier(.62,0,.12,1)}
+.mystic-photo-gallery .services-photo-shoji-edges{position:absolute;z-index:3;inset:0;overflow:hidden;pointer-events:none}
+.mystic-photo-gallery .services-photo-shoji-edges i{position:absolute;top:0;bottom:0;width:1px;background:linear-gradient(to bottom,transparent 5%,rgba(224,191,142,.45) 24%,rgba(247,214,170,.67) 50%,rgba(224,191,142,.32) 78%,transparent 97%);box-shadow:0 0 9px 1px rgba(201,156,111,.13);opacity:0}
+.mystic-photo-gallery .services-photo-shoji-edges i:first-child{animation:servicesShogiLeft 1450ms cubic-bezier(.62,0,.12,1) both}
+.mystic-photo-gallery .services-photo-shoji-edges i:last-child{animation:servicesShogiRight 1450ms cubic-bezier(.62,0,.12,1) both}
+@keyframes servicesShogiLeft{0%{left:50%;opacity:0}12%{opacity:.6}85%{opacity:.4}100%{left:0;opacity:0}}
+@keyframes servicesShogiRight{0%{left:50%;opacity:0}12%{opacity:.6}85%{opacity:.4}100%{left:100%;opacity:0}}
+.mystic-photo-gallery .services-photo-counter{position:absolute;z-index:5;top:20px;right:21px;padding:5px 9px;border:1px solid rgba(222,186,143,.24);border-radius:3px;background:rgba(20,16,28,.59);color:#f1d7b5;font:.7rem Georgia,'Times New Roman',serif;letter-spacing:.13em;font-variant-numeric:tabular-nums;pointer-events:none}
+.mystic-photo-gallery .services-photo-dots{position:absolute;z-index:6;left:50%;bottom:9px;transform:translateX(-50%);width:max-content;max-width:calc(100% - 20px);display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:0;padding:1px 4px;border:0;border-radius:999px;background:rgba(18,15,25,.28)}
+.mystic-photo-gallery .services-photo-dot{display:grid;place-items:center;flex:0 0 23px;width:23px;height:24px;min-width:23px;min-height:24px;margin:0;padding:0;border:0;border-radius:50%;background:transparent;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.mystic-photo-gallery .services-photo-dot::before{content:'';display:block;width:3px;height:3px;border-radius:50%;border:1px solid rgba(227,198,155,.58);background:rgba(218,190,150,.12);transition:background .22s ease,border-color .22s ease,box-shadow .22s ease}
+.mystic-photo-gallery .services-photo-dot:hover::before{background:rgba(232,195,145,.5);border-color:rgba(244,219,180,.86)}
+.mystic-photo-gallery .services-photo-dot.is-active::before{background:#e8c391;border-color:#e8c391;box-shadow:0 0 5px rgba(232,195,145,.24)}
+.mystic-photo-gallery .services-photo-dot:focus-visible{outline:2px solid #f0ca95;outline-offset:1px}
+.mystic-photo-overlay{position:absolute;z-index:5;right:3%;bottom:7%;width:36%;height:28%;max-width:160px;max-height:180px;object-fit:contain;object-position:right bottom;filter:drop-shadow(0 5px 13px rgba(0,0,0,.48));pointer-events:none}
+.staff-entry .mystic-photo-gallery .services-photo-dots{bottom:43%;background:rgba(18,15,25,.32)}
+.dialog-photo .mystic-photo-gallery{position:absolute;inset:0}
+.dialog-photo .mystic-photo-gallery .services-photo-dots{bottom:13px}
+@media(max-width:570px){
+ .mystic-photo-gallery .services-photo-counter{top:9px;right:9px;font-size:.64rem}
+ .mystic-photo-gallery .services-photo-dots{bottom:7px;max-width:calc(100% - 12px);padding:1px 2px}
+ .mystic-photo-gallery .services-photo-dot{flex-basis:22px;width:22px;height:23px;min-width:22px;min-height:23px}
+ .mystic-photo-overlay{right:1%;bottom:6%;width:38%;height:30%}
+}
+@media(prefers-reduced-motion:reduce){
+ .mystic-photo-gallery .services-photo-slide.is-revealing{transition:none}
+ .mystic-photo-gallery .services-photo-shoji-edges{display:none}
+ .mystic-photo-gallery .services-photo-dot::before{transition:none}
+}

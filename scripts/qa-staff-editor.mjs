@@ -232,11 +232,11 @@ try {
   const bytes=Uint8Array.from(atob(base64),x=>x.charCodeAt(0))
   const file=new File([bytes],'staged.png',{type:'image/png'})
   const transfer=new DataTransfer();transfer.items.add(file)
-  const input=document.querySelector('.staff-editor-photo input[type=file]')
+  const input=document.querySelector('.staff-gallery-toolbar .upload-control input[type=file]')
   input.files=transfer.files;input.dispatchEvent(new Event('change',{bubbles:true}))
  })()`)
- await until('!!document.querySelector(".staff-editor-photo-actions .staff-admin-secondary")')
- const stage=await run('({uploads:window.__qa.uploads.length,preview:!!document.querySelector(".staff-editor-photo-preview img"),dirty:document.querySelector(".staff-edit-status")?.textContent})')
+ await until('!!document.querySelector(".staff-gallery-photo.is-pending")')
+ const stage=await run('({uploads:window.__qa.uploads.length,preview:!!document.querySelector(".staff-gallery-photo.is-pending img"),dirty:document.querySelector(".staff-edit-status")?.textContent})')
  console.log('STAGED PHOTO',stage)
  if(stage.uploads||!stage.dirty.includes('未儲存'))throw Error('Photo uploaded prematurely')
  await run('window.__qa.allowConfirm=true;document.querySelector(".staff-editor-title .icon-button").click()')
@@ -255,10 +255,10 @@ try {
   const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'))
   const file=new File([blob],'upload-on-save.png',{type:'image/png'})
   const transfer=new DataTransfer();transfer.items.add(file)
-  const input=document.querySelector('.staff-editor-photo input[type=file]')
+  const input=document.querySelector('.staff-gallery-toolbar .upload-control input[type=file]')
   input.files=transfer.files;input.dispatchEvent(new Event('change',{bubbles:true}))
  })()`)
- await until('document.querySelector(".staff-editor-photo-actions .staff-admin-secondary")!==null')
+ await until('document.querySelector(".staff-gallery-photo.is-pending")!==null')
  await until('!!document.querySelector(".staff-crop-selection")')
  if(await run('window.__qa.uploads.length')!==0) throw Error('Selected photo uploaded before Save')
  // An unconfirmed crop must never upload (nor silently use object-fit:cover).
@@ -272,7 +272,7 @@ try {
  const photoSave=await run(`({
    uploads:window.__qa.uploads.length,
    photo:window.__qa.rows.find(r=>r.display_name==='測試新角色')?.image_url,
-   stageCleared:!document.querySelector('.staff-editor-photo-actions .staff-admin-secondary')
+   stageCleared:!document.querySelector('.staff-gallery-photo.is-pending')
  })`)
  console.log('PHOTO UPLOAD ON SAVE',photoSave)
  if(photoSave.uploads!==2 || !photoSave.photo?.includes('staff-media') || !photoSave.stageCleared) throw Error('Photo-save transaction failed')
@@ -316,7 +316,7 @@ try {
    searchVisible:!!document.querySelector('.staff-roster-search input'),
    panelWidth:Math.round(document.querySelector('.staff-admin-editor').getBoundingClientRect().width),
    socialFields:document.querySelectorAll('.staff-editor-social .social-edit-row input').length,
-   pickerDisplay:getComputedStyle(document.querySelector('.staff-editor-photo input[type=file]')).display
+   pickerDisplay:getComputedStyle(document.querySelector('.staff-gallery-toolbar .upload-control input[type=file]')).display
   })`)
   console.log('RESPONSIVE',state)
   if(state.doc>state.client+1||!state.saveVisible||!state.searchVisible||state.socialFields!==2||state.pickerDisplay==='none')throw Error('Overflow or missing controls at '+width)

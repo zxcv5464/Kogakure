@@ -7,8 +7,8 @@ import {
 import type { StaffCrop } from '../lib/staff-crop'
 import './staff-photo-crop.css'
 
-type Props={source:string;onConfirm:(crop:StaffCrop)=>void;onCancel:()=>void}
-export default function StaffPhotoCrop({source,onConfirm,onCancel}:Props){
+type Props={source:string;title?:string;aspectRatio?:number;onConfirm:(crop:StaffCrop)=>void;onCancel:()=>void}
+export default function StaffPhotoCrop({source,title='名帖',aspectRatio=STAFF_CARD_RATIO,onConfirm,onCancel}:Props){
  const [size,setSize]=useState<{width:number;height:number}|null>(null)
  const [crop,setCrop]=useState<StaffCrop|null>(null)
  const [failure,setFailure]=useState('')
@@ -20,7 +20,7 @@ export default function StaffPhotoCrop({source,onConfirm,onCancel}:Props){
   const el=event.currentTarget
   if(!el.naturalWidth||!el.naturalHeight){setFailure('圖片尺寸無效，請重新選擇');return}
   setSize({width:el.naturalWidth,height:el.naturalHeight})
-  setCrop(defaultStaffCrop(el.naturalWidth,el.naturalHeight))
+  setCrop(defaultStaffCrop(el.naturalWidth,el.naturalHeight,aspectRatio))
  }
  function pointerDown(event:PointerEvent<HTMLDivElement>){
   if(!crop||event.button!==0)return
@@ -41,10 +41,10 @@ export default function StaffPhotoCrop({source,onConfirm,onCancel}:Props){
   if(event.currentTarget.hasPointerCapture(event.pointerId))
    event.currentTarget.releasePointerCapture(event.pointerId)
  }
- const slider=size&&crop?Math.round(cropScale(crop,size.width,size.height)*100):100
- return <section className="staff-crop-workspace" aria-label="名冊圖片範圍圈選">
+ const slider=size&&crop?Math.round(cropScale(crop,size.width,size.height,aspectRatio)*100):100
+ return <section className="staff-crop-workspace" aria-label={title+"圖片範圍圈選"}>
   <div className="staff-crop-heading">
-   <div><h4>自訂名冊照片顯示範圍</h4><p>拖曳金色選取框來移動照片範圍，使用縮放調整畫面大小。卡片將完整呈現你圈選的範圍，不再自行放大裁切。</p></div>
+   <div><h4>自訂{title}照片顯示範圍</h4><p>拖曳金色選取框來移動照片範圍，使用縮放調整畫面大小。卡片將完整呈現你圈選的範圍，不再自行放大裁切。</p></div>
    <button className="staff-crop-close" type="button" onClick={onCancel} aria-label="取消範圍圈選"><X size={18}/></button>
   </div>
   {failure&&<p className="staff-crop-error" role="alert">{failure}</p>}
@@ -52,7 +52,7 @@ export default function StaffPhotoCrop({source,onConfirm,onCancel}:Props){
    <div className="staff-crop-stage">
     <div className="staff-crop-image-wrap">
      <img ref={image} src={source} alt="照片原圖，請在上方圈選要展示的範圍" onLoad={ready} onError={()=>setFailure('無法載入照片，請重新上傳原始圖片')} draggable={false}/>
-     {crop&&size&&<div className="staff-crop-selection" role="img" aria-label="可拖曳的名冊照片圈選範圍"
+     {crop&&size&&<div className="staff-crop-selection" role="img" aria-label={'可拖曳的'+title+'照片圈選範圍'}
       style={{left:(crop.x*100)+'%',top:(crop.y*100)+'%',width:(crop.width*100)+'%',height:(crop.height*100)+'%'}}
       onPointerDown={pointerDown} onPointerMove={pointerMove}
       onPointerUp={pointerUp} onPointerCancel={pointerUp}>
@@ -62,8 +62,8 @@ export default function StaffPhotoCrop({source,onConfirm,onCancel}:Props){
     </div>
    </div>
    <div className="staff-crop-controls">
-    <p className="staff-crop-side-title">名冊卡片預覽</p>
-    <div className="staff-crop-card-preview" style={{aspectRatio:String(STAFF_CARD_RATIO)}}>
+    <p className="staff-crop-side-title">{title}卡片預覽</p>
+    <div className="staff-crop-card-preview" style={{aspectRatio:String(aspectRatio)}}>
      {crop&&<img src={source} alt="目前圈選範圍的實際卡片預覽" draggable={false}
       style={{
        width:(100/crop.width)+'%',
@@ -76,17 +76,17 @@ export default function StaffPhotoCrop({source,onConfirm,onCancel}:Props){
     <label className="staff-crop-zoom">顯示範圍 <strong>{slider}%</strong>
      <input type="range" min={25} max={100} step={1} value={slider}
       disabled={!crop||!size} onChange={e=>{
-       if(size&&crop)setCrop(resizeStaffCrop(crop,Number(e.target.value)/100,size.width,size.height))
+       if(size&&crop)setCrop(resizeStaffCrop(crop,Number(e.target.value)/100,size.width,size.height,aspectRatio))
       }}/>
     </label>
     <div className="staff-crop-controls-actions">
      <button type="button" className="staff-crop-reset" disabled={!size} onClick={()=>{
-      if(size)setCrop(defaultStaffCrop(size.width,size.height))
+      if(size)setCrop(defaultStaffCrop(size.width,size.height,aspectRatio))
      }}><RotateCcw size={16}/>重設</button>
      <button type="button" className="staff-crop-confirm" disabled={!crop||!!failure}
       onClick={()=>{if(crop&&!failure)onConfirm(crop)}}><Check size={17}/>套用這個範圍</button>
     </div>
-    <small>套用後仍需按「儲存名帖」才會更新前台與 Supabase；原始照片會保留。</small>
+    <small>套用後會更新所屬照片；名帖需按「儲存名帖」，預約照片則會直接儲存。原始照片會保留。</small>
    </div>
   </div>
  </section>

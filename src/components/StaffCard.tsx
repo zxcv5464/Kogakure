@@ -1,26 +1,33 @@
 import { useRef, useState } from 'react'
 import { ChevronRight } from 'lucide-react'
-import type { CSSProperties } from 'react'
+import type { CSSProperties, MouseEvent } from 'react'
 import type { Staff } from '../types'
+import MysticPhotoGallery from './MysticPhotoGallery'
 import './staff-card.css'
 type Props={staff:Staff;onOpen:(staff:Staff)=>void;index:number}
 export default function StaffCard({staff,onOpen,index}:Props){
- const ref=useRef<HTMLElement>(null)
+ const ref=useRef<HTMLDivElement>(null)
  const [style,setStyle]=useState<CSSProperties>({})
  const accent=staff.themeColor||'#c4ac83'
- function move(e:React.MouseEvent<HTMLElement>){
+ function move(e:MouseEvent<HTMLElement>){
   if(window.matchMedia('(prefers-reduced-motion: reduce)').matches || window.matchMedia('(pointer: coarse)').matches)return
   const rect=ref.current?.getBoundingClientRect();if(!rect)return
   const x=(e.clientX-rect.left)/rect.width;const y=(e.clientY-rect.top)/rect.height
   setStyle({'--rx':String((.5-y)*4)+'deg','--ry':String((x-.5)*5)+'deg','--glow-x':String(x*100)+'%','--glow-y':String(y*100)+'%'} as CSSProperties)
  }
  function leave(){setStyle({'--rx':'0deg','--ry':'0deg'} as CSSProperties)}
- return <article className={'staff-entry effect-'+staff.effect+(staff.thumbnailUrl.includes('-crop.webp')?' has-manual-crop':'')} style={{'--accent':accent,'--delay':String(index*80)+'ms',...style} as CSSProperties}>
-  <button ref={ref as React.RefObject<HTMLButtonElement>} type="button" className="omamori-card" onPointerMove={move} onPointerLeave={leave} onClick={()=>onOpen(staff)} aria-label={'查看 '+staff.name+' 的個人介紹'}>
+ const photos=staff.photos?.length?staff.photos:
+  (staff.imageUrl||staff.thumbnailUrl?[{id:'legacy-'+staff.id,imageUrl:staff.imageUrl||staff.thumbnailUrl,
+   thumbnailUrl:staff.thumbnailUrl||staff.imageUrl,imagePath:null,thumbnailPath:null}]:[])
+ return <article className={'staff-entry effect-'+staff.effect} style={{'--accent':accent,'--delay':String(index*80)+'ms',...style} as CSSProperties}>
+  <div ref={ref} role="button" tabIndex={0} className="omamori-card"
+   onPointerMove={move} onPointerLeave={leave} onClick={()=>onOpen(staff)}
+   onKeyDown={event=>{if(event.target!==event.currentTarget)return;if(event.key==='Enter'||event.key===' '){event.preventDefault();onOpen(staff)}}}
+   aria-label={'查看 '+staff.name+' 的個人介紹'}>
    <span className="omamori-body">
     <span className="omamori-border" aria-hidden="true"/>
     <span className="omamori-art">
-     <img src={staff.thumbnailUrl||staff.imageUrl} alt={staff.name+'的角色照片'} loading={index>1?'lazy':'eager'} decoding="async"/>
+     <MysticPhotoGallery photos={photos} mode={staff.photoDisplayMode||'single'} alt={staff.name+'的角色照片'} className="staff-card-gallery" loading={index>1?'lazy':'eager'}/>
      <span className="photo-shadow"/>
     </span>
     <span className="effect-particles" aria-hidden="true">{[0,1,2,3,4].map(i=><i key={i}/>)}</span>
@@ -32,6 +39,6 @@ export default function StaffCard({staff,onOpen,index}:Props){
     </span>
     <span className="card-shine" aria-hidden="true"/>
    </span>
-  </button>
+  </div>
  </article>
 }

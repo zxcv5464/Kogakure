@@ -3,6 +3,7 @@ import { X, ArrowUpRight, ChevronDown, Flower2, MoonStar } from 'lucide-react'
 import type { CSSProperties } from 'react'
 import type { Staff } from '../types'
 import { safeExternalUrl } from '../lib/url'
+import MysticPhotoGallery from './MysticPhotoGallery'
 import './staff-dialog-scroll.css'
 export default function StaffDialog({staff,onClose}:{staff:Staff;onClose:()=>void}){
  const closeRef=useRef<HTMLButtonElement>(null)
@@ -36,7 +37,9 @@ export default function StaffDialog({staff,onClose}:{staff:Staff;onClose:()=>voi
     <button className="dialog-close" ref={closeRef} type="button" onClick={onClose} aria-label="關閉介紹"><X size={22}/></button>
    </div>
   <section ref={dialogRef} tabIndex={0} onScroll={()=>{const area=scrollingElement();setHasMore(Boolean(area&&area.scrollHeight-area.scrollTop-area.clientHeight>26))}} className="staff-dialog" role="dialog" aria-modal="true" aria-labelledby="detail-name" style={{'--accent':staff.themeColor} as CSSProperties}>
-   <div className="dialog-photo"><img src={staff.imageUrl||staff.thumbnailUrl} alt={staff.name+'的角色照片'}/><span/></div>
+   <div className="dialog-photo"><MysticPhotoGallery
+    photos={staff.photos?.length?staff.photos:[{imageUrl:staff.imageUrl||staff.thumbnailUrl,thumbnailUrl:staff.thumbnailUrl||staff.imageUrl}]}
+    mode={staff.photoDisplayMode||'single'} useThumbnail={false} alt={staff.name+'的角色照片'} loading="eager"/><span/></div>
    <div ref={contentRef} tabIndex={0} role="region" aria-label="完整員工介紹，可捲動" className="dialog-content" onScroll={()=>{const area=scrollingElement();setHasMore(Boolean(area&&area.scrollHeight-area.scrollTop-area.clientHeight>26))}}>
     <div className="detail-stamp" aria-hidden="true">狐<br/>隱</div>
     <p className="detail-role">{staff.role||'接待者'}</p>

@@ -112,6 +112,8 @@ jobs:
         run: node scripts/qa-staff-crop.mjs
       - name: Verify separate booking photos, manager upload/delete and RLS
         run: node scripts/qa-booking-photos.mjs
+      - name: Verify profile and booking galleries, mysterious reveal, dots, crops and floating sticker
+        run: node scripts/qa-photo-galleries.mjs
       - name: Verify booking cards visibility and admin create/delete workflow
         env:
           VITE_OFFLINE_PREVIEW: 'true'
