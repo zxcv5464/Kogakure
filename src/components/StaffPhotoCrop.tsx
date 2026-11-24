@@ -8,7 +8,7 @@ import type { StaffCrop } from '../lib/staff-crop'
 import './staff-photo-crop.css'
 
 type Props={source:string;title?:string;aspectRatio?:number;onConfirm:(crop:StaffCrop)=>void;onCancel:()=>void}
-export default function StaffPhotoCrop({source,title='名冊',aspectRatio=STAFF_CARD_RATIO,onConfirm,onCancel}:Props){
+export default function StaffPhotoCrop({source,title='名帖',aspectRatio=STAFF_CARD_RATIO,onConfirm,onCancel}:Props){
  const [size,setSize]=useState<{width:number;height:number}|null>(null)
  const [crop,setCrop]=useState<StaffCrop|null>(null)
  const [failure,setFailure]=useState('')
