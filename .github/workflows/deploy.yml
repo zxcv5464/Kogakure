@@ -114,6 +114,8 @@ jobs:
         run: node scripts/qa-shift-roster.mjs
       - name: Verify independent booking photo upload and delete before publication
         run: node scripts/qa-booking-photos.mjs
+      - name: Verify profile and booking galleries, mysterious reveal, dots, crops and floating sticker
+        run: node scripts/qa-photo-galleries.mjs
       - name: Verify nomination visibility moved to booking management with scoped permissions
         env:
           VITE_OFFLINE_PREVIEW: 'true'
