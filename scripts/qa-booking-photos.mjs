@@ -10,6 +10,7 @@ const targets=[
  'src/components/MysticPhotoGallery.tsx','src/components/mystic-photo-gallery.css',
  'supabase/migrations/20261123_02_booking_staff_photos.sql',
  'supabase/migrations/20261124_01_staff_booking_photo_galleries.sql',
+ 'supabase/migrations/20261124_02_booking_photo_read_policy.sql',
  'src/lib/staff.ts','src/lib/staff-crop.ts','src/lib/shift-portraits.ts',
 ]
 const files=await Promise.all(targets.map(path=>readFile(path,'utf8')))
@@ -23,6 +24,7 @@ const api=sourceByPath['src/lib/booking-photos.ts']
 const page=sourceByPath['src/pages/BookingPage.tsx']
 const manager=sourceByPath['src/pages/admin/BookingPhotoManager.tsx']
 const sql=sourceByPath['supabase/migrations/20261124_01_staff_booking_photo_galleries.sql']
+const policySql=sourceByPath['supabase/migrations/20261124_02_booking_photo_read_policy.sql']
 assert.ok(api.includes("const BUCKET='booking-media'")&&api.includes("from('booking_staff_photos')"),
  'Booking photos must remain isolated in their own data table and bucket')
 for(const name of ['uploadBookingPhoto','updateBookingPhotoCrop','deleteBookingGalleryPhoto',
