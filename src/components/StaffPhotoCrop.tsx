@@ -7,8 +7,8 @@ import {
 import type { StaffCrop } from '../lib/staff-crop'
 import './staff-photo-crop.css'
 
-type Props={source:string;title?:string;aspectRatio?:number;onConfirm:(crop:StaffCrop)=>void;onCancel:()=>void}
-export default function StaffPhotoCrop({source,title='名帖',aspectRatio=STAFF_CARD_RATIO,onConfirm,onCancel}:Props){
+type Props={source:string;title?:string;aspectRatio?:number;previewShape?:'omamori'|'booking';onConfirm:(crop:StaffCrop)=>void;onCancel:()=>void}
+export default function StaffPhotoCrop({source,title='名帖',aspectRatio=STAFF_CARD_RATIO,previewShape='omamori',onConfirm,onCancel}:Props){
  const [size,setSize]=useState<{width:number;height:number}|null>(null)
  const [crop,setCrop]=useState<StaffCrop|null>(null)
  const [failure,setFailure]=useState('')
@@ -63,7 +63,7 @@ export default function StaffPhotoCrop({source,title='名帖',aspectRatio=STAFF_
    </div>
    <div className="staff-crop-controls">
     <p className="staff-crop-side-title">{title}卡片預覽</p>
-    <div className="staff-crop-card-preview" style={{aspectRatio:String(aspectRatio)}}>
+    <div className={'staff-crop-card-preview'+(previewShape==='booking'?' is-booking':'')} style={{aspectRatio:String(aspectRatio)}}>
      {crop&&<img src={source} alt="目前圈選範圍的實際卡片預覽" draggable={false}
       style={{
        width:(100/crop.width)+'%',
