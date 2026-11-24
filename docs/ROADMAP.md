@@ -1,6 +1,6 @@
 # 狐隱 KOGAKURE｜功能進度與變更必要性
 
-更新：**2026-11-18**。原始碼基準：GitHub `main` 與待合併的修正。下列「已實作」不等於正式 Supabase 已套用所有 migration、Edge Function 已更新，或營運驗收完成。
+更新：**2026-11-24**。原始碼基準：GitHub `main` 與待合併的修正。下列「已實作」不等於正式 Supabase 已套用所有 migration、Edge Function 已更新，或營運驗收完成。
 
 ## 已在原始碼實作
 
