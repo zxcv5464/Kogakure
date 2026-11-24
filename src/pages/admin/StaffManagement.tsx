@@ -21,13 +21,13 @@ type Notice = { kind: 'success' | 'error' | 'info'; text: string }
 function blankStaff(sortOrder = 1024): Staff {
  return {
   id: crypto.randomUUID(), name: '', role: '接待者', tagline: '', bio: '',
-  imageUrl: '', thumbnailUrl: '', themeColor: '#82c8bc',
+  imageUrl: '', thumbnailUrl: '', photos:[], photoDisplayMode:'single', themeColor: '#82c8bc',
   effect: 'foxfire', socials: [], services: [], published: false, bookingVisible: true,
   bookingAllowedPlanIds:null,bookingAllowJoint:true,bookingPlanCaps:{},sortOrder,
  }
 }
 function cloneStaff(staff: Staff): Staff {
- return { ...staff, services: [...staff.services], socials: staff.socials.map(s => ({ ...s })) }
+ return { ...staff, services:[...staff.services], socials:staff.socials.map(s=>({...s})), photos:(staff.photos||[]).map(photo=>({...photo})) }
 }
 function parseServices(value: string): string[] {
  return [...new Set(value.split(/[，,、\n]/).map(s => s.trim()).filter(Boolean))]
@@ -53,27 +53,27 @@ export default function StaffManagement() {
  const [ordering, setOrdering] = useState(false)
  const [draggingId, setDraggingId] = useState<string | null>(null)
  const [dropTargetId, setDropTargetId] = useState<string | null>(null)
- const [photoFile, setPhotoFile] = useState<File | null>(null)
- const [confirmedCrop, setConfirmedCrop] = useState<StaffCrop | null>(null)
- const [cropEditing, setCropEditing] = useState(false)
- const [previewUrl, setPreviewUrl] = useState('')
+ const [pendingPhotos,setPendingPhotos]=useState<{id:string;file:File;url:string}[]>([])
+ const [photoCrops,setPhotoCrops]=useState<Record<string,StaffCrop>>({})
+ const [cropEditingId,setCropEditingId]=useState<string|null>(null)
+ const stagedPhotoUrls=useRef<string[]>([])
  const editorRef = useRef<HTMLDivElement>(null)
  const { setEditing } = useAdminEditGuard()
 
  const dirty = useMemo(() => Boolean(selected && baseline && (
   JSON.stringify(selected) !== JSON.stringify(baseline)
   || servicesText !== baseline.services.join('、')
-  || photoFile || confirmedCrop || cropEditing
- )), [selected, baseline, servicesText, photoFile, confirmedCrop, cropEditing])
+  || pendingPhotos.length>0 || Object.keys(photoCrops).length>0 || cropEditingId!==null
+ )), [selected,baseline,servicesText,pendingPhotos,photoCrops,cropEditingId])
 
  useEffect(() => { setEditing(dirty, busy) }, [dirty, busy, setEditing])
  useEffect(() => () => setEditing(false, false), [setEditing])
- useEffect(() => {
-  if (!photoFile) { setPreviewUrl(''); return }
-  const url = URL.createObjectURL(photoFile)
-  setPreviewUrl(url)
-  return () => URL.revokeObjectURL(url)
- }, [photoFile])
+ useEffect(()=>()=>{stagedPhotoUrls.current.forEach(url=>URL.revokeObjectURL(url))},[])
+ function resetPhotoDrafts(){
+  stagedPhotoUrls.current.forEach(url=>URL.revokeObjectURL(url))
+  stagedPhotoUrls.current=[]
+  setPendingPhotos([]);setPhotoCrops({});setCropEditingId(null)
+ }
 
  const refresh = useCallback(async () => {
   const data = await getStaff(true)
@@ -108,9 +108,7 @@ export default function StaffManagement() {
   setBaseline(cloneStaff(draft))
   setIsNew(creating)
   setServicesText(draft.services.join('、'))
-  setPhotoFile(null)
-  setConfirmedCrop(null)
-  setCropEditing(false)
+  resetPhotoDrafts()
   setNotice(null)
   setOrdering(false)
   if (window.matchMedia('(max-width: 850px)').matches) {
@@ -122,9 +120,7 @@ export default function StaffManagement() {
   setSelected(null)
   setBaseline(null)
   setIsNew(false)
-  setPhotoFile(null)
-  setConfirmedCrop(null)
-  setCropEditing(false)
+  resetPhotoDrafts()
   setNotice(null)
  }
  function patch<K extends keyof Staff>(field: K, value: Staff[K]) {
