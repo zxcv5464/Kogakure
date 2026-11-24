@@ -27,7 +27,7 @@ export default function StaffCard({staff,onOpen,index}:Props){
    <span className="omamori-body">
     <span className="omamori-border" aria-hidden="true"/>
     <span className="omamori-art">
-     <MysticPhotoGallery photos={photos} mode={staff.photoDisplayMode||'single'} alt={staff.name+'的角色照片'} className="staff-card-gallery"/>
+     <MysticPhotoGallery photos={photos} mode={staff.photoDisplayMode||'single'} alt={staff.name+'的角色照片'} className="staff-card-gallery" loading={index>1?'lazy':'eager'}/>
      <span className="photo-shadow"/>
     </span>
     <span className="effect-particles" aria-hidden="true">{[0,1,2,3,4].map(i=><i key={i}/>)}</span>
