@@ -82,7 +82,7 @@ export default function MysticPhotoGallery({
   image.src=activeSources[next]
  },[activeSources])
  useEffect(()=>{
-  if(activeSources.length<2||!nearViewport)return
+  if(activeSources.length<2||!nearViewport||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return
   const timer=window.setInterval(()=>{
    if(document.visibilityState==='visible'&&!transition.current.busy)
     requestSlide((nextIndex.current+1)%activeSources.length)
