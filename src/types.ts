@@ -1,5 +1,13 @@
 export type Effect = 'foxfire' | 'sakura' | 'starlight' | 'gold' | 'none'
 export type Social = { id: string; label: string; url: string }
+export type StaffPhoto = {
+ id:string
+ imageUrl:string
+ thumbnailUrl:string
+ imagePath:string|null
+ thumbnailPath:string|null
+}
+export type PhotoDisplayMode = 'single'|'gallery'
 export type Staff = {
  id: string
  name: string
@@ -8,6 +16,8 @@ export type Staff = {
  bio: string
  imageUrl: string
  thumbnailUrl: string
+ photos?: StaffPhoto[]
+ photoDisplayMode?: PhotoDisplayMode
  themeColor: string
  effect: Effect
  socials: Social[]
@@ -27,6 +37,8 @@ export type StaffRow = {
  bio: string
  image_url: string | null
  thumbnail_url: string | null
+ photo_gallery?: unknown
+ photo_display_mode?: string
  theme_color: string
  effect: Effect
  socials: Social[]
