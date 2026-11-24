@@ -44,6 +44,8 @@ assert.ok(!page.includes('setPhotoUrls')&&!page.includes('person.thumbnailUrl||p
 assert.ok(manager.includes('multiple')&&manager.includes('StaffPhotoCrop')&&
  manager.includes('updateBookingPhotoCrop')&&manager.includes('deleteBookingGalleryPhoto'),
  'Booking manager must upload multiple photos and retain per-photo crop/delete controls')
+assert.ok(manager.includes('previewShape="rectangle"'),
+ 'Booking crop preview must use the same rectangular shape as the front-end portrait')
 assert.ok(manager.includes('uploadBookingOverlay')&&manager.includes('deleteBookingOverlay')&&
  manager.includes('更換副圖片')&&manager.includes('刪除副圖片'),
  'Booking manager must independently add, replace and delete the floating overlay')
