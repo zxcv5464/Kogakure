@@ -255,10 +255,10 @@ try {
   const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'))
   const file=new File([blob],'upload-on-save.png',{type:'image/png'})
   const transfer=new DataTransfer();transfer.items.add(file)
-  const input=document.querySelector('.staff-editor-photo input[type=file]')
+  const input=document.querySelector('.staff-gallery-toolbar .upload-control input[type=file]')
   input.files=transfer.files;input.dispatchEvent(new Event('change',{bubbles:true}))
  })()`)
- await until('document.querySelector(".staff-editor-photo-actions .staff-admin-secondary")!==null')
+ await until('document.querySelector(".staff-gallery-photo.is-pending")!==null')
  await until('!!document.querySelector(".staff-crop-selection")')
  if(await run('window.__qa.uploads.length')!==0) throw Error('Selected photo uploaded before Save')
  // An unconfirmed crop must never upload (nor silently use object-fit:cover).
