@@ -140,6 +140,7 @@ export default function StaffManagement() {
     return {id:crypto.randomUUID(),file,url}
    })
    setPendingPhotos(previous=>[...previous,...added])
+   if((selected.photos?.length||0)+pendingPhotos.length+added.length>1)patch('photoDisplayMode','gallery')
    setCropEditingId(added[0].id)
    setNotice({kind:'info',text:'已加入 '+added.length+' 張照片，請逐張圈選名帖顯示範圍後儲存。'})
   }catch(error){setNotice({kind:'error',text:describeError(error)})}
