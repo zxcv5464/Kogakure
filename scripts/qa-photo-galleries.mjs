@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import {readFile} from 'node:fs/promises'
 import {createElement} from 'react'
 import {renderToStaticMarkup} from 'react-dom/server'
+import ts from 'typescript'
 import {createServer} from 'vite'
 
 const [galleryFile,css,staffPage,bookingPage,staffAdmin,bookingAdmin,migration]=await Promise.all([
@@ -15,7 +16,6 @@ for(const path of ['src/components/MysticPhotoGallery.tsx','src/components/Staff
  'src/pages/BookingPage.tsx','src/pages/admin/StaffManagement.tsx',
  'src/pages/admin/BookingPhotoManager.tsx']){
  const source=await readFile(path,'utf8')
- const ts=(await import('typescript')).default
  const parsed=ts.createSourceFile(path,source,ts.ScriptTarget.Latest,true,path.endsWith('.tsx')?ts.ScriptKind.TSX:ts.ScriptKind.TS)
  assert.equal(parsed.parseDiagnostics.length,0,'TSX parse error: '+path)
 }
