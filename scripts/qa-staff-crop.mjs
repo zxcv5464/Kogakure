@@ -36,6 +36,9 @@ assert.ok(bookingApi.includes('croppedWebp')&&bookingApi.includes('BOOKING_CARD_
  'Booking uploads and re-crops must persist the selected range')
 assert.ok(adminCss.includes('.staff-gallery-photo')&&adminCss.includes('staff-crop-applied'),
  'Admin must display staged, cropped and saved gallery items')
+assert.ok(adminCss.includes('grid-template-columns:repeat(4,minmax(0,1fr))')&&
+ adminCss.includes('.staff-gallery-photo>div button svg'),
+ 'Staff photo actions must remain a compact, non-wrapping icon toolbar')
 
 const vite=await createServer({server:{middlewareMode:true,hmr:false},appType:'custom'})
 try{
