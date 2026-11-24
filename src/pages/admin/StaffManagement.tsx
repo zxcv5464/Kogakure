@@ -257,9 +257,7 @@ export default function StaffManagement() {
    setRows(current => current.filter(person => person.id !== selected.id))
    setSelected(null)
    setBaseline(null)
-   setPhotoFile(null)
-   setConfirmedCrop(null)
-   setCropEditing(false)
+   resetPhotoDrafts()
    setNotice({ kind:'success', text:'名帖已刪除。已上傳的圖片暫時保留在 Storage，避免誤刪其他資料。' })
   } catch (error) {
    setNotice({ kind:'error', text:'刪除失敗：' + (describeError(error)) })
@@ -278,9 +276,7 @@ export default function StaffManagement() {
    setOrdering(false)
    setSelected(null)
    setBaseline(null)
-   setPhotoFile(null)
-   setConfirmedCrop(null)
-   setCropEditing(false)
+   resetPhotoDrafts()
    setNotice({ kind:'info', text:'清單已更新，共 ' + next.length + ' 位員工。' })
   } catch (error) {
    setNotice({ kind:'error', text:'重新整理失敗：' + (describeError(error)) })
