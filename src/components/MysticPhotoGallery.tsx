@@ -8,12 +8,12 @@ type Slides={indices:[number,number];active:Layer;previous:Layer|null;revealing:
 type Transition={token:number;busy:boolean;preloader:HTMLImageElement|null;frameOne:number;frameTwo:number;timer:number}
 type Props={
  photos:GalleryPhoto[];mode?:'single'|'gallery';useThumbnail?:boolean
- alt:string;className?:string;overlayUrl?:string;showCounter?:boolean
+ alt:string;className?:string;overlayUrl?:string;showCounter?:boolean;loading?:'eager'|'lazy'
 }
 
 /** A portrait slideshow that shares the Services page's shoji reveal and ink-gold dots. */
 export default function MysticPhotoGallery({
- photos,mode='single',useThumbnail=true,alt,className='',overlayUrl='',showCounter=true,
+ photos,mode='single',useThumbnail=true,alt,className='',overlayUrl='',showCounter=true,loading='lazy',
 }:Props){
  const sources=useMemo(()=>photos.map(photo=>useThumbnail?(photo.thumbnailUrl||photo.imageUrl):photo.imageUrl)
   .filter(Boolean).slice(0,12),[photos,useThumbnail])
@@ -102,7 +102,7 @@ export default function MysticPhotoGallery({
  return <div ref={root} className={'mystic-photo-gallery '+className} aria-label={alt}>
   <div className={'services-photo-slides'+(slides.revealing?' is-opening':'')} aria-live="off">
    {slides.indices.map((photoIndex,layer)=><img key={layer} src={activeSources[photoIndex]||activeSources[0]}
-    alt={alt+'，第 '+(photoIndex+1)+' 張'} decoding="async" loading={layer===slides.active?"eager":"lazy"}
+    alt={alt+'，第 '+(photoIndex+1)+' 張'} decoding="async" loading={layer===slides.active?loading:"lazy"}
     aria-hidden={layer!==slides.active}
     className={'services-photo-slide'+(layer===slides.active?' is-visible'+(slides.revealing?' is-revealing':''):layer===slides.previous?' is-previous':'')}/>)}
    {slides.revealing&&<span className="services-photo-shoji-edges" aria-hidden="true"><i/><i/></span>}
