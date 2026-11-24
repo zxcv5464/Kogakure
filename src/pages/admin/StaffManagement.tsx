@@ -472,7 +472,7 @@ export default function StaffManagement() {
        const pending=pendingPhotos.find(photo=>photo.id===cropEditingId)
        const existing=(selected.photos||[]).find(photo=>photo.id===cropEditingId)
        const source=pending?.url||existing?.imageUrl||''
-       return source?<StaffPhotoCrop key={cropEditingId+source} source={source} title="名帖照片"
+       return source?<StaffPhotoCrop key={cropEditingId+source} source={source} title="名帖"
         onConfirm={crop=>{setPhotoCrops(old=>({...old,[cropEditingId]:crop}));setCropEditingId(null);setNotice({kind:'info',text:'照片取景範圍已套用；請按「儲存名帖」同步前台。'})}}
         onCancel={()=>setCropEditingId(null)}/>:null
       })()}
