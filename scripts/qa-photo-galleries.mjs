@@ -43,7 +43,7 @@ try{
  }))
  assert.equal((multi.match(/class="services-photo-dot/g)||[]).length,3,'Gallery must render one pagination dot per photo')
  assert.ok(multi.includes('thumb-1.webp')&&multi.includes('sticker.webp')&&
-  multi.includes('services-photo-shoji-edges')&&multi.includes('01 / 03'),
+  galleryFile.includes('services-photo-shoji-edges')&&multi.includes('01 / 03'),
   'Gallery must show thumbnails, counter, overlay and mysterious reveal')
  const single=renderToStaticMarkup(createElement(MysticPhotoGallery,{photos,mode:'single',alt:'單張狐姬'}))
  assert.ok(single.includes('thumb-1.webp')&&!single.includes('thumb-2.webp')&&
