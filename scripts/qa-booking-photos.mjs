@@ -25,6 +25,7 @@ const page=sourceByPath['src/pages/BookingPage.tsx']
 const manager=sourceByPath['src/pages/admin/BookingPhotoManager.tsx']
 const sql=sourceByPath['supabase/migrations/20261124_01_staff_booking_photo_galleries.sql']
 const policySql=sourceByPath['supabase/migrations/20261124_02_booking_photo_read_policy.sql']
+const managerCss=sourceByPath['src/pages/admin/booking-photo-manager.css']
 assert.ok(api.includes("const BUCKET='booking-media'")&&api.includes("from('booking_staff_photos')"),
  'Booking photos must remain isolated in their own data table and bucket')
 for(const name of ['uploadBookingPhoto','updateBookingPhotoCrop','deleteBookingGalleryPhoto',
@@ -44,6 +45,11 @@ assert.ok(!page.includes('setPhotoUrls')&&!page.includes('person.thumbnailUrl||p
 assert.ok(manager.includes('multiple')&&manager.includes('StaffPhotoCrop')&&
  manager.includes('updateBookingPhotoCrop')&&manager.includes('deleteBookingGalleryPhoto'),
  'Booking manager must upload multiple photos and retain per-photo crop/delete controls')
+assert.ok(manager.includes('previewShape="rectangle"'),
+ 'Booking crop preview must use the same rectangular shape as the front-end portrait')
+assert.ok(managerCss.includes('grid-template-columns:repeat(4,minmax(0,1fr))')&&
+ managerCss.includes('.booking-gallery-item>div button svg'),
+ 'Booking photo actions must remain a compact, non-wrapping icon toolbar')
 assert.ok(manager.includes('uploadBookingOverlay')&&manager.includes('deleteBookingOverlay')&&
  manager.includes('更換副圖片')&&manager.includes('刪除副圖片'),
  'Booking manager must independently add, replace and delete the floating overlay')

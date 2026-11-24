@@ -2,22 +2,22 @@ import {useCallback,useEffect,useMemo,useRef,useState} from 'react'
 import type {MouseEvent} from 'react'
 import './mystic-photo-gallery.css'
 
-type GalleryPhoto={imageUrl:string;thumbnailUrl?:string}
+type GalleryPhoto={imageUrl:string;thumbnailUrl?:string;preserveCrop?:boolean}
 type Layer=0|1
 type Slides={indices:[number,number];active:Layer;previous:Layer|null;revealing:boolean}
 type Transition={token:number;busy:boolean;preloader:HTMLImageElement|null;frameOne:number;frameTwo:number;timer:number}
 type Props={
  photos:GalleryPhoto[];mode?:'single'|'gallery';useThumbnail?:boolean
- alt:string;className?:string;overlayUrl?:string;showCounter?:boolean;loading?:'eager'|'lazy'
+ alt:string;className?:string;overlayUrl?:string;showCounter?:boolean;showPagination?:boolean;loading?:'eager'|'lazy'
 }
 
 /** A portrait slideshow that shares the Services page's shoji reveal and ink-gold dots. */
 export default function MysticPhotoGallery({
- photos,mode='single',useThumbnail=true,alt,className='',overlayUrl='',showCounter=true,loading='lazy',
+ photos,mode='single',useThumbnail=true,alt,className='',overlayUrl='',showCounter=true,showPagination=true,loading='lazy',
 }:Props){
- const sources=useMemo(()=>photos.map(photo=>useThumbnail?(photo.thumbnailUrl||photo.imageUrl):photo.imageUrl)
-  .filter(Boolean).slice(0,12),[photos,useThumbnail])
- const activeSources=mode==='gallery'?sources:sources.slice(0,1)
+ const galleryPhotos=useMemo(()=>photos.filter(photo=>Boolean(useThumbnail?(photo.thumbnailUrl||photo.imageUrl):photo.imageUrl)).slice(0,12),[photos,useThumbnail])
+ const sources=useMemo(()=>galleryPhotos.map(photo=>useThumbnail?(photo.thumbnailUrl||photo.imageUrl):photo.imageUrl),[galleryPhotos,useThumbnail])
+ const activeSources=useMemo(()=>mode==='gallery'?sources:sources.slice(0,1),[mode,sources])
  const photoKey=activeSources.join('\n')
  const root=useRef<HTMLDivElement>(null)
  const nextIndex=useRef(0)
@@ -104,14 +104,14 @@ export default function MysticPhotoGallery({
    {slides.indices.map((photoIndex,layer)=><img key={layer} src={activeSources[photoIndex]||activeSources[0]}
     alt={alt+'，第 '+(photoIndex+1)+' 張'} decoding="async" loading={layer===slides.active?loading:"lazy"}
     aria-hidden={layer!==slides.active}
-    className={'services-photo-slide'+(layer===slides.active?' is-visible'+(slides.revealing?' is-revealing':''):layer===slides.previous?' is-previous':'')}/>)}
+    className={'services-photo-slide'+(galleryPhotos[photoIndex]?.preserveCrop?' is-manual-crop':'')+(layer===slides.active?' is-visible'+(slides.revealing?' is-revealing':''):layer===slides.previous?' is-previous':'')}/>)}
    {slides.revealing&&<span className="services-photo-shoji-edges" aria-hidden="true"><i/><i/></span>}
   </div>
   {overlayUrl&&<img className="mystic-photo-overlay" src={overlayUrl} alt="預約副圖片" loading="lazy" decoding="async"/>}
   {activeSources.length>1&&showCounter&&<span className="services-photo-counter" aria-hidden="true">
    {String(current+1).padStart(2,'0')} / {String(activeSources.length).padStart(2,'0')}
   </span>}
-  {activeSources.length>1&&<div className="services-photo-dots" role="group" aria-label={alt+'照片切換'}>
+  {activeSources.length>1&&showPagination&&<div className="services-photo-dots" role="group" aria-label={alt+'照片切換'}>
    {activeSources.map((_,index)=><button key={index} type="button"
     className={'services-photo-dot'+(index===current?' is-active':'')}
     aria-label={'觀看第 '+(index+1)+' 張照片'} aria-current={index===current?'true':undefined}

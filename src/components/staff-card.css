@@ -169,10 +169,16 @@
  transition: none;
 }
 
-.staff-entry .omamori-card[role=button]{cursor:pointer}
+/* The shared gallery must retain the original omamori portrait framing.
+   Pre-cropped thumbnails skip the extra zoom so the admin selection stays exact. */
 .staff-entry .omamori-art .mystic-photo-gallery{position:absolute;inset:0}
-.staff-entry .omamori-art .mystic-photo-gallery .services-photo-slide{transform:none;object-position:center;transition:clip-path 1450ms cubic-bezier(.62,0,.12,1)}
-.staff-entry .omamori-card:hover .omamori-art .mystic-photo-gallery .services-photo-slide{transform:none}
-.staff-entry .omamori-art .mystic-photo-gallery .services-photo-dots{bottom:43%;}
-
+.staff-entry .omamori-art .mystic-photo-gallery .services-photo-slide{
+ object-fit:cover;object-position:center 26%;transform:scale(1.16);transform-origin:center bottom;
+ transition:clip-path 1450ms cubic-bezier(.62,0,.12,1),transform 280ms ease;
+}
+.staff-entry .omamori-card:hover .omamori-art .mystic-photo-gallery .services-photo-slide:not(.is-manual-crop){transform:scale(1.19)}
+.staff-entry .omamori-art .mystic-photo-gallery .services-photo-slide.is-manual-crop{
+ object-fit:fill;object-position:center;transform:none;transform-origin:center;
+ transition:clip-path 1450ms cubic-bezier(.62,0,.12,1);
+}
 .staff-entry .photo-shadow{pointer-events:none}

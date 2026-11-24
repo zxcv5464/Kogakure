@@ -142,17 +142,17 @@ export default function BookingPhotoManager({person,value,disabled=false,onChang
     <img src={photo.thumbnailUrl||photo.imageUrl} alt={'預約照片第 '+(index+1)+' 張'} loading="lazy"/>
     <strong>第 {index+1} 張</strong>
     <div>
-     <button type="button" disabled={disabled||busy||index===0} onClick={()=>void reorder(photo.id,-1)} aria-label="照片上移"><ArrowUp size={14}/></button>
-     <button type="button" disabled={disabled||busy} onClick={()=>editCrop(photo.id,photo.imageUrl)}><Crop size={14}/>取景</button>
-     <button type="button" disabled={disabled||busy} className="is-delete" onClick={()=>void removePhoto(photo.id)}><Trash2 size={14}/></button>
-     <button type="button" disabled={disabled||busy||index===(value?.photos.length||0)-1} onClick={()=>void reorder(photo.id,1)} aria-label="照片下移"><ArrowDown size={14}/></button>
+     <button type="button" disabled={disabled||busy||index===0} onClick={()=>void reorder(photo.id,-1)} aria-label={"將預約照片第 "+(index+1)+" 張上移"} title="上移"><ArrowUp size={15}/></button>
+     <button type="button" disabled={disabled||busy} onClick={()=>editCrop(photo.id,photo.imageUrl)} aria-label={"調整預約照片第 "+(index+1)+" 張取景範圍"} title="取景"><Crop size={15}/></button>
+     <button type="button" disabled={disabled||busy} className="is-delete" onClick={()=>void removePhoto(photo.id)} aria-label={"刪除預約照片第 "+(index+1)+" 張"} title="刪除"><Trash2 size={15}/></button>
+     <button type="button" disabled={disabled||busy||index===(value?.photos.length||0)-1} onClick={()=>void reorder(photo.id,1)} aria-label={"將預約照片第 "+(index+1)+" 張下移"} title="下移"><ArrowDown size={15}/></button>
     </div>
    </article>)}
    {queue.map((photo,index)=><article key={photo.id} className="booking-gallery-item is-pending">
     <img src={photo.url} alt={'待新增預約照片 '+(index+1)} loading="lazy"/>
     <strong>待新增 · {photo.file.name}</strong>
-    <div><button type="button" disabled={disabled||busy} onClick={()=>setCropTarget({id:photo.id,source:photo.url,file:photo.file})}><Crop size={14}/>取景</button>
-     <button type="button" disabled={disabled||busy} className="is-delete" onClick={()=>removePending(photo.id)}><X size={14}/>移除</button></div>
+    <div><button type="button" disabled={disabled||busy} onClick={()=>setCropTarget({id:photo.id,source:photo.url,file:photo.file})} aria-label={"調整待新增預約照片 "+(index+1)+" 取景範圍"} title="取景"><Crop size={15}/></button>
+     <button type="button" disabled={disabled||busy} className="is-delete" onClick={()=>removePending(photo.id)} aria-label={"移除待新增預約照片 "+(index+1)} title="移除"><X size={15}/></button></div>
    </article>)}
   </div>
   {!value?.photos.length&&!queue.length&&<p className="booking-gallery-empty">尚未設定預約主照片，前台將顯示預設圖示。</p>}
@@ -174,7 +174,7 @@ export default function BookingPhotoManager({person,value,disabled=false,onChang
   </div>
   {notice&&<p className="booking-gallery-notice" role="status">{notice}</p>}
   {cropTarget&&<div className="booking-gallery-crop">
-   <StaffPhotoCrop key={cropTarget.id+cropTarget.source} source={cropTarget.source} title="指名" aspectRatio={BOOKING_CARD_RATIO}
+   <StaffPhotoCrop key={cropTarget.id+cropTarget.source} source={cropTarget.source} title="指名" aspectRatio={BOOKING_CARD_RATIO} previewShape="rectangle"
     onConfirm={crop=>void applyCrop(crop)} onCancel={()=>setCropTarget(null)}/>
   </div>}
  </section>

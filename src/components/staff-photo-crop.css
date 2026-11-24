@@ -18,6 +18,8 @@
 .staff-crop-side-title{font-family:'Noto Serif TC',serif;color:#f1d4a9;font-size:.83rem;margin:0;text-align:center}
 .staff-crop-card-preview{position:relative;width:min(100%,165px);margin:0 auto;overflow:hidden;background:#101019;clip-path:polygon(0 12%,50% 0,100% 12%,100% 100%,0 100%);box-shadow:0 5px 22px rgba(0,0,0,.35)}
 .staff-crop-card-preview img{position:absolute;max-width:none;max-height:none;object-fit:fill;transform:none;-webkit-user-drag:none}
+.staff-crop-card-preview.is-rectangle{clip-path:none;border:1px solid rgba(240,207,154,.52);border-radius:4px}
+.staff-crop-card-preview.is-rectangle .staff-crop-preview-mask{background:transparent;border:0}
 .staff-crop-preview-mask{position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,transparent 20%,rgba(10,8,16,.2) 57%,rgba(9,8,15,.88));border:1px solid rgba(240,207,154,.64)}
 .staff-crop-zoom{display:grid;gap:7px;font-size:.8rem;color:#e0c9a7}
 .staff-crop-zoom strong{float:right;color:#f4d2a0;font-variant-numeric:tabular-nums}
