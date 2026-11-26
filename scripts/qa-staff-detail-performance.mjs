@@ -89,7 +89,7 @@ try{
  await waitFor(()=>held.length>0,'paused high-resolution photo')
  await waitFor(()=>evaluate("!!document.querySelector('.staff-dialog .services-photo-slide.is-visible')"),'detail direct original image')
  await sleep(500)
- const pending=await evaluate(`(()=>{const d=document.querySelector('.dialog-shell'),p=document.querySelector('.staff-dialog .services-photo-slide.is-visible');return {animation:getComputedStyle(d).animationName,opacity:Number(getComputedStyle(d).opacity),previewCount:document.querySelectorAll('.staff-dialog .staff-detail-preview').length,original:p?.naturalWidth||0,photoOpacity:Number(getComputedStyle(p).opacity),fit:getComputedStyle(p).objectFit,photoUrl:p?.currentSrc||'',title:document.querySelector('#detail-name').textContent}})()`)
+ const pending=await evaluate(`(()=>{const d=document.querySelector('.dialog-shell'),p=document.querySelector('.staff-dialog .services-photo-slide.is-visible');return {animation:getComputedStyle(d).animationName,opacity:Number(getComputedStyle(d).opacity),previewCount:document.querySelectorAll('.staff-dialog .staff-detail-preview').length,original:p?.naturalWidth||0,photoOpacity:Number(getComputedStyle(p).opacity),fit:getComputedStyle(p).objectFit,photoUrl:p?.getAttribute('src')||'',title:document.querySelector('#detail-name').textContent}})()`)
  assert.equal(pending.title,names[1])
  assert.ok(pending.opacity>.95&&pending.previewCount===0&&pending.original===0&&pending.photoOpacity===1,
   'Detail must mount only its original source while the transfer is pending, without a thumbnail or crossfade: '+JSON.stringify(pending))
