@@ -24,7 +24,7 @@ async function waitFor(check,label,maxMs=15000){
  }
  throw Error('Timed out: '+label)
 }
-const names=['月詠','吹雪｜朝武芳乃・長姓名測試','狐隱名帖長姓名測試'.repeat(6)]
+const names=['月詠','吹雪｜朝武芳乃・狐隱名冊長姓名測試用角色','狐隱名帖長姓名測試'.repeat(6)]
 const rows=names.map((name,i)=>({id:'staff-qa-'+i,display_name:name,role:'星詠',tagline:'願今夜有幸與你同行。',bio:'名帖測試介紹。',
  image_url:'https://portrait-qa.invalid/full-'+i+'.svg',thumbnail_url:'https://portrait-qa.invalid/thumb-'+i+'.svg',
  theme_color:'#82c8bc',effect:'none',socials:[],services:[],is_published:true,is_booking_visible:true,

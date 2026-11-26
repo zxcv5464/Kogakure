@@ -54,10 +54,11 @@ try{
    if(e.some(row=>row.bottom>card.captionBottom+1))throw Error('Text overflows card at '+width)
   }
  }
- // Long labels should be elided inside the panel, never pushed over the face.
+ // Taglines remain elided; names must be fully visible. Long-name stress cases
+ // are covered by qa-staff-detail-performance.mjs with real React data.
  await run('Emulation.setDeviceMetricsOverride',{width:1024,height:768,deviceScaleFactor:1,mobile:false})
  await delay(180)
- await evaluate('document.querySelector(".card-name").textContent="測試超級長的名字以及不可換行的員工稱號測試測試";document.querySelector(".card-tagline").textContent="這是一段非常非常非常長的個人簡介文字".repeat(18)')
+ await evaluate('document.querySelector(".card-tagline").textContent="這是一段非常非常非常長的個人簡介文字".repeat(18)')
  const longCard=await evaluate(`(()=>{
   const card=document.querySelector('.staff-entry')
   const panel=card.querySelector('.card-text').getBoundingClientRect()
@@ -66,6 +67,6 @@ try{
   return {panelTop:panel.top,nameTop:name.getBoundingClientRect().top,nameBottom:name.getBoundingClientRect().bottom,taglineBottom:tagline.getBoundingClientRect().bottom,panelBottom:panel.bottom,nameEllipsis:getComputedStyle(name).textOverflow,taglineEllipsis:getComputedStyle(tagline).textOverflow,taglineWhiteSpace:getComputedStyle(tagline).whiteSpace}
  })()`)
  console.log('LONG TEXT',JSON.stringify(longCard))
- if(longCard.nameTop<longCard.panelTop || longCard.taglineBottom>longCard.panelBottom || longCard.nameEllipsis!=='ellipsis'||longCard.taglineEllipsis!=='ellipsis'||longCard.taglineWhiteSpace!=='nowrap')throw Error('Long text escapes caption panel')
+ if(longCard.nameTop<longCard.panelTop || longCard.taglineBottom>longCard.panelBottom || longCard.nameEllipsis==='ellipsis'||longCard.taglineEllipsis!=='ellipsis'||longCard.taglineWhiteSpace!=='nowrap')throw Error('Long text escapes caption panel')
  console.log('PASS: continuous portrait, soft text scrim and contained captions at five screen sizes, long labels')
 }finally{ws?.close();chrome.kill()}
