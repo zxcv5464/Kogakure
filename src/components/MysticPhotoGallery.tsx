@@ -1,4 +1,4 @@
-import {useCallback,useEffect,useLayoutEffect,useMemo,useRef,useState} from 'react'
+import {useCallback,useEffect,useMemo,useRef,useState} from 'react'
 import type {MouseEvent,CSSProperties} from 'react'
 import './mystic-photo-gallery.css'
 import type { StaffCrop } from '../lib/staff-crop'
@@ -9,42 +9,13 @@ type Layer=0|1
 type Slides={indices:[number,number];active:Layer;previous:Layer|null;revealing:boolean}
 type Transition={token:number;busy:boolean;preloader:HTMLImageElement|null;frameOne:number;frameTwo:number;timer:number}
 type Props={
- photos:GalleryPhoto[];mode?:'single'|'gallery';useThumbnail?:boolean;useMobileCrop?:boolean;progressiveDetail?:boolean
+ photos:GalleryPhoto[];mode?:'single'|'gallery';useThumbnail?:boolean;useMobileCrop?:boolean
  alt:string;className?:string;overlayUrl?:string;showCounter?:boolean;showPagination?:boolean;loading?:'eager'|'lazy'
-}
-
-// A cached card thumbnail remains visible until the full image is decoded.
-function DetailPhoto({source,preview,alt,active,crop,classes}:{source:string;preview?:string;alt:string;active:boolean;crop:StaffCrop|null;classes:string}){
- const [ready,setReady]=useState(false)
- const [previewDone,setPreviewDone]=useState(false)
- const [failed,setFailed]=useState(false)
- const image=useRef<HTMLImageElement>(null)
- const fallback=preview&&preview!==source?preview:''
- useLayoutEffect(()=>{
-  const node=image.current
-  let current=true
-  const mark=()=>{if(current&&node?.naturalWidth)setReady(true)}
-  const loaded=()=>{if(node?.decode)void node.decode().then(mark,mark);else mark()}
-  if(node?.complete&&node.naturalWidth){setReady(true);setPreviewDone(true)}
-  node?.addEventListener('load',loaded)
-  return()=>{current=false;node?.removeEventListener('load',loaded)}
- },[source])
- useEffect(()=>{
-  if(!ready)return
-  const timer=window.setTimeout(()=>setPreviewDone(true),300)
-  return()=>window.clearTimeout(timer)
- },[ready])
- const style=crop?{'--mobile-crop-width':(100/crop.width)+'%','--mobile-crop-height':(100/crop.height)+'%','--mobile-crop-left':(-crop.x/crop.width*100)+'%','--mobile-crop-top':(-crop.y/crop.height*100)+'%'} as CSSProperties:undefined
- return <div className={classes+' staff-detail-photo-layer'+(crop?' has-mobile-crop':' is-mobile-full-image')+(ready?' is-detail-ready':'')+(!fallback?' is-without-preview':'')} style={style} aria-hidden={!active}>
-  {fallback&&!previewDone&&<img className="staff-detail-preview" src={fallback} alt="" aria-hidden="true" decoding="async" loading={active?'eager':'lazy'}/>}
-  {!failed&&<img ref={image} className="staff-detail-original" src={source} alt={alt} decoding="async" loading={active?'eager':'lazy'} fetchPriority={active?'high':'auto'} onError={()=>setFailed(true)}/>}
-  {failed&&!fallback&&<div className="staff-detail-unavailable" role="status">照片暫時無法載入</div>}
- </div>
 }
 
 /** A portrait slideshow that shares the Services page's shoji reveal and ink-gold dots. */
 export default function MysticPhotoGallery({
- photos,mode='single',useThumbnail=true,useMobileCrop=false,progressiveDetail=false,alt,className='',overlayUrl='',showCounter=true,showPagination=true,loading='lazy',
+ photos,mode='single',useThumbnail=true,useMobileCrop=false,alt,className='',overlayUrl='',showCounter=true,showPagination=true,loading='lazy',
 }:Props){
  const galleryPhotos=useMemo(()=>photos.filter(photo=>Boolean(useThumbnail?(photo.thumbnailUrl||photo.imageUrl):photo.imageUrl)).slice(0,12),[photos,useThumbnail])
  const sources=useMemo(()=>galleryPhotos.map(photo=>useThumbnail?(photo.thumbnailUrl||photo.imageUrl):photo.imageUrl),[galleryPhotos,useThumbnail])
@@ -133,15 +104,13 @@ export default function MysticPhotoGallery({
  return <div ref={root} className={'mystic-photo-gallery '+className} aria-label={alt}>
   <div className={'services-photo-slides'+(slides.revealing?' is-opening':'')} aria-live="off">
    {slides.indices.map((photoIndex,layer)=>{
+    // A single portrait is one direct original image, not two duplicate layers.
+    if(activeSources.length===1&&layer!==slides.active)return null
     const source=activeSources[photoIndex]||activeSources[0]
     const photo=galleryPhotos[photoIndex]||galleryPhotos[0]
     const crop=useMobileCrop?reframeMobileStaffCrop(photo?.mobileCrop):null
     const classes='services-photo-slide'+(photo?.preserveCrop?' is-manual-crop':'')+(layer===slides.active?' is-visible'+(slides.revealing?' is-revealing':''):layer===slides.previous?' is-previous':'')
     const imageProps={src:source,alt:alt+'，第 '+(photoIndex+1)+' 張',decoding:'async' as const,loading:layer===slides.active?loading:'lazy' as const}
-    if(progressiveDetail){
-     if(layer!==slides.active&&layer!==slides.previous&&photoIndex===slides.indices[slides.active])return null
-     return <DetailPhoto key={layer+':'+source} source={source} preview={photo?.thumbnailUrl} alt={imageProps.alt} active={layer===slides.active} crop={crop} classes={classes}/>
-    }
     return crop?<div key={layer} className={classes+' has-mobile-crop'} aria-hidden={layer!==slides.active}
      style={{'--mobile-crop-width':(100/crop.width)+'%','--mobile-crop-height':(100/crop.height)+'%','--mobile-crop-left':(-crop.x/crop.width*100)+'%','--mobile-crop-top':(-crop.y/crop.height*100)+'%'} as CSSProperties}>
      <img {...imageProps}/></div>:<img key={layer} {...imageProps} aria-hidden={layer!==slides.active} className={classes+(useMobileCrop?' is-mobile-full-image':'')}/>

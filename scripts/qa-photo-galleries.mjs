@@ -45,11 +45,20 @@ try{
   {imageUrl:'https://example.invalid/full-3.webp',thumbnailUrl:'https://example.invalid/thumb-3.webp'},
  ]
  const detail=renderToStaticMarkup(createElement(MysticPhotoGallery,{
-  photos,mode:'gallery',useThumbnail:false,useMobileCrop:true,progressiveDetail:true,showCounter:false,showPagination:false,loading:'eager',alt:'詳細名帖',
+  photos,mode:'gallery',useThumbnail:false,useMobileCrop:true,showCounter:false,showPagination:false,loading:'eager',alt:'詳細名帖',
  }))
- assert.ok(detail.includes('staff-detail-preview')&&detail.includes('thumb-1.webp')&&detail.includes('staff-detail-original')&&detail.includes('full-1.webp'),'Detail must have a thumbnail fallback and high-resolution source')
- assert.equal((detail.match(/class="staff-detail-original"/g)||[]).length,1,'Initial detail must not mount duplicate original layers')
+ assert.ok(detail.includes('full-1.webp')&&!detail.includes('staff-detail-preview')&&
+  !detail.includes('staff-detail-original')&&!detail.includes('thumb-1.webp'),
+  'Staff detail must directly render originals without preview thumbnails or a progressive swap')
+ assert.ok(!galleryFile.includes('progressiveDetail')&&!galleryFile.includes('DetailPhoto')&&
+  !css.includes('transition:opacity .24s ease')&&!css.includes('staff-detail-photo-layer'),
+  'Remove obsolete original-vs-thumbnail transition states and 0.24-second crossfade')
  assert.ok(staffCard.includes('ResizeObserver(fit)')&&staffCard.includes('document.fonts')&&staffCard.includes('text.offsetWidth')&&staffCard.includes('prefetchStaffDetailPhoto'),'Full names must fit actual rendered glyphs and preload on intent')
+ const singleDetail=renderToStaticMarkup(createElement(MysticPhotoGallery,{
+  photos,mode:'single',useThumbnail:false,useMobileCrop:true,alt:'單張詳細名帖',
+ }))
+ assert.equal((singleDetail.match(/full-1.webp/g)||[]).length,1,
+  'Single staff detail must mount exactly one original image rather than duplicate layers')
  const multi=renderToStaticMarkup(createElement(MysticPhotoGallery,{
   photos,mode:'gallery',alt:'測試狐姬',overlayUrl:'https://example.invalid/sticker.webp',
  }))
