@@ -44,6 +44,12 @@ try{
   {imageUrl:'https://example.invalid/full-2.webp',thumbnailUrl:'https://example.invalid/thumb-2.webp'},
   {imageUrl:'https://example.invalid/full-3.webp',thumbnailUrl:'https://example.invalid/thumb-3.webp'},
  ]
+ const detail=renderToStaticMarkup(createElement(MysticPhotoGallery,{
+  photos,mode:'gallery',useThumbnail:false,useMobileCrop:true,progressiveDetail:true,showCounter:false,showPagination:false,loading:'eager',alt:'詳細名帖',
+ }))
+ assert.ok(detail.includes('staff-detail-preview')&&detail.includes('thumb-1.webp')&&detail.includes('staff-detail-original')&&detail.includes('full-1.webp'),'Detail must have a thumbnail fallback and high-resolution source')
+ assert.equal((detail.match(/class="staff-detail-original"/g)||[]).length,1,'Initial detail must not mount duplicate original layers')
+ assert.ok(staffCard.includes('ResizeObserver(fit)')&&staffCard.includes('document.fonts')&&staffCard.includes('text.offsetWidth')&&staffCard.includes('prefetchStaffDetailPhoto'),'Full names must fit actual rendered glyphs and preload on intent')
  const multi=renderToStaticMarkup(createElement(MysticPhotoGallery,{
   photos,mode:'gallery',alt:'測試狐姬',overlayUrl:'https://example.invalid/sticker.webp',
  }))

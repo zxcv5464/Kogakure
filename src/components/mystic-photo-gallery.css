@@ -46,3 +46,19 @@
 @media(max-width:570px){
  .dialog-photo .mystic-photo-gallery .services-photo-slide.is-mobile-full-image{object-fit:contain;object-position:center}
 }
+
+/* The preview never receives full-source crop coordinates. Only the decoded
+   original is reframed; the outer layer keeps the existing shoji transition. */
+.dialog-photo .mystic-photo-gallery .staff-detail-photo-layer{overflow:hidden}
+.dialog-photo .mystic-photo-gallery .staff-detail-photo-layer>.staff-detail-preview,
+.dialog-photo .mystic-photo-gallery .staff-detail-photo-layer>.staff-detail-original{position:absolute;inset:0;width:100%;height:100%;max-width:none;max-height:none;object-fit:cover;object-position:center}
+.dialog-photo .mystic-photo-gallery .staff-detail-photo-layer>.staff-detail-original{opacity:0;transition:opacity .24s ease}
+.dialog-photo .mystic-photo-gallery .staff-detail-photo-layer.is-detail-ready>.staff-detail-original,
+.dialog-photo .mystic-photo-gallery .staff-detail-photo-layer.is-without-preview>.staff-detail-original{opacity:1}
+.staff-detail-unavailable{position:absolute;inset:0;display:grid;place-items:center;color:#c9b79d;font-size:.8rem}
+@media(max-width:570px){
+ .dialog-photo .mystic-photo-gallery .staff-detail-photo-layer>.staff-detail-preview,
+ .dialog-photo .mystic-photo-gallery .staff-detail-photo-layer.is-mobile-full-image>.staff-detail-original{object-fit:contain;object-position:center}
+ .dialog-photo .mystic-photo-gallery .staff-detail-photo-layer.has-mobile-crop>.staff-detail-original{inset:auto;left:var(--mobile-crop-left);top:var(--mobile-crop-top);width:var(--mobile-crop-width);height:var(--mobile-crop-height);object-fit:fill}
+}
+@media(prefers-reduced-motion:reduce){.dialog-photo .mystic-photo-gallery .staff-detail-photo-layer>.staff-detail-original{transition:none}}

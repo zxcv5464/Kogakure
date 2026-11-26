@@ -24,13 +24,13 @@ export default function StaffDialog({staff,onClose}:{staff:Staff;onClose:()=>voi
   return()=>{observer.disconnect();window.removeEventListener('resize',check);cancelAnimationFrame(frame)}
  },[staff])
  useEffect(()=>{
-  closeRef.current?.focus()
+  closeRef.current?.focus({preventScroll:true})
   function escape(e:KeyboardEvent){if(e.key==='Escape')onClose()}
   document.addEventListener('keydown',escape)
   const old=document.body.style.overflow; document.body.style.overflow='hidden'
   return ()=>{document.removeEventListener('keydown',escape);document.body.style.overflow=old}
  },[onClose])
- return <div className="dialog-overlay" onMouseDown={e=>{if(e.target===e.currentTarget)onClose()}}>
+ return <div className="dialog-overlay staff-dialog-overlay" onMouseDown={e=>{if(e.target===e.currentTarget)onClose()}}>
   <div className="dialog-shell">
    <div className="dialog-mobile-header">
     <span className="dialog-mobile-label">狐姬名冊 <small>KOGAKURE</small></span>
@@ -39,7 +39,7 @@ export default function StaffDialog({staff,onClose}:{staff:Staff;onClose:()=>voi
   <section ref={dialogRef} tabIndex={0} onScroll={()=>{const area=scrollingElement();setHasMore(Boolean(area&&area.scrollHeight-area.scrollTop-area.clientHeight>26))}} className="staff-dialog" role="dialog" aria-modal="true" aria-labelledby="detail-name" style={{'--accent':staff.themeColor} as CSSProperties}>
    <div className="dialog-photo"><MysticPhotoGallery
     photos={staff.photos?.length?staff.photos:[{imageUrl:staff.imageUrl||staff.thumbnailUrl,thumbnailUrl:staff.thumbnailUrl||staff.imageUrl}]}
-    mode={staff.photoDisplayMode||'single'} useThumbnail={false} useMobileCrop alt={staff.name+'的角色照片'} showCounter={false} showPagination={false} loading="eager"/><span/></div>
+    mode={staff.photoDisplayMode||'single'} useThumbnail={false} useMobileCrop progressiveDetail alt={staff.name+'的角色照片'} showCounter={false} showPagination={false} loading="eager"/><span/></div>
    <div ref={contentRef} tabIndex={0} role="region" aria-label="完整員工介紹，可捲動" className="dialog-content" onScroll={()=>{const area=scrollingElement();setHasMore(Boolean(area&&area.scrollHeight-area.scrollTop-area.clientHeight>26))}}>
     <div className="detail-stamp" aria-hidden="true">狐<br/>隱</div>
     <p className="detail-role">{staff.role||'接待者'}</p>

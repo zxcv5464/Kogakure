@@ -54,7 +54,7 @@
   border-radius: 8px;
   background: #1c1a21;
   box-shadow: 0 25px 90px rgba(0,0,0,.7);
-  animation: dialogIn .25s ease;
+  animation: none;
  }
  .dialog-overlay .dialog-mobile-header {
   position: relative;
@@ -177,4 +177,16 @@
 /* Match the mobile detail crop editor exactly, regardless of device width. */
 @media(max-width:570px){
  .dialog-overlay .staff-dialog .dialog-photo{width:100%;height:auto;min-height:0;aspect-ratio:4/5}
+}
+
+/* Animate the shell once, independently of network/image loading. Avoid a
+   live blurred backdrop on mobile GPUs; retain the deep translucent veil. */
+.staff-dialog-overlay{backdrop-filter:none;-webkit-backdrop-filter:none;animation:staffDialogVeil .18s ease-out both}
+.staff-dialog-overlay .dialog-shell{animation:staffDialogEntrance .38s cubic-bezier(.2,.72,.25,1) both}
+.staff-dialog-overlay .staff-dialog{animation:none}
+@keyframes staffDialogVeil{from{opacity:0}to{opacity:1}}
+@keyframes staffDialogEntrance{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
+.staff-dialog-overlay .dialog-content h2{overflow-wrap:anywhere}
+@media(prefers-reduced-motion:reduce){
+ .staff-dialog-overlay,.staff-dialog-overlay .dialog-shell{animation:none}
 }

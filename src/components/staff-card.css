@@ -88,9 +88,9 @@
  font-weight: 600;
  line-height: 1.35;
  letter-spacing: .12em;
- overflow: hidden;
- white-space: nowrap;
- text-overflow: ellipsis;
+ overflow: visible;
+ white-space: normal;
+ text-overflow: clip;
  text-shadow: 0 2px 13px rgba(0,0,0,.94),0 0 3px rgba(0,0,0,.75);
 }
 .staff-entry .card-tagline {
@@ -182,3 +182,7 @@
  transition:clip-path 1450ms cubic-bezier(.62,0,.12,1);
 }
 .staff-entry .photo-shadow{pointer-events:none}
+
+/* Fit the actual glyph widths; use a readable wrapped fallback for very long names. */
+.staff-entry .card-name-text{display:inline-block;max-width:none;white-space:normal;overflow-wrap:anywhere;line-height:1.35;vertical-align:top}
+.staff-entry .card-name-text[style*="white-space: normal"]{max-width:100%}
