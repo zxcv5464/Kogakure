@@ -1,3 +1,4 @@
+import type { StaffCrop } from './lib/staff-crop'
 export type Effect = 'foxfire' | 'sakura' | 'starlight' | 'gold' | 'none'
 export type Social = { id: string; label: string; url: string }
 export type StaffPhoto = {
@@ -6,6 +7,7 @@ export type StaffPhoto = {
  thumbnailUrl:string
  imagePath:string|null
  thumbnailPath:string|null
+ mobileCrop?:StaffCrop|null
 }
 export type PhotoDisplayMode = 'single'|'gallery'
 export type Staff = {

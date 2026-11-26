@@ -1,19 +1,20 @@
 import {useCallback,useEffect,useMemo,useRef,useState} from 'react'
-import type {MouseEvent} from 'react'
+import type {MouseEvent,CSSProperties} from 'react'
 import './mystic-photo-gallery.css'
+import type { StaffCrop } from '../lib/staff-crop'
 
-type GalleryPhoto={imageUrl:string;thumbnailUrl?:string;preserveCrop?:boolean}
+type GalleryPhoto={imageUrl:string;thumbnailUrl?:string;preserveCrop?:boolean;mobileCrop?:StaffCrop|null}
 type Layer=0|1
 type Slides={indices:[number,number];active:Layer;previous:Layer|null;revealing:boolean}
 type Transition={token:number;busy:boolean;preloader:HTMLImageElement|null;frameOne:number;frameTwo:number;timer:number}
 type Props={
- photos:GalleryPhoto[];mode?:'single'|'gallery';useThumbnail?:boolean
+ photos:GalleryPhoto[];mode?:'single'|'gallery';useThumbnail?:boolean;useMobileCrop?:boolean
  alt:string;className?:string;overlayUrl?:string;showCounter?:boolean;showPagination?:boolean;loading?:'eager'|'lazy'
 }
 
 /** A portrait slideshow that shares the Services page's shoji reveal and ink-gold dots. */
 export default function MysticPhotoGallery({
- photos,mode='single',useThumbnail=true,alt,className='',overlayUrl='',showCounter=true,showPagination=true,loading='lazy',
+ photos,mode='single',useThumbnail=true,useMobileCrop=false,alt,className='',overlayUrl='',showCounter=true,showPagination=true,loading='lazy',
 }:Props){
  const galleryPhotos=useMemo(()=>photos.filter(photo=>Boolean(useThumbnail?(photo.thumbnailUrl||photo.imageUrl):photo.imageUrl)).slice(0,12),[photos,useThumbnail])
  const sources=useMemo(()=>galleryPhotos.map(photo=>useThumbnail?(photo.thumbnailUrl||photo.imageUrl):photo.imageUrl),[galleryPhotos,useThumbnail])
@@ -101,10 +102,16 @@ export default function MysticPhotoGallery({
  const current=slides.indices[slides.active]
  return <div ref={root} className={'mystic-photo-gallery '+className} aria-label={alt}>
   <div className={'services-photo-slides'+(slides.revealing?' is-opening':'')} aria-live="off">
-   {slides.indices.map((photoIndex,layer)=><img key={layer} src={activeSources[photoIndex]||activeSources[0]}
-    alt={alt+'，第 '+(photoIndex+1)+' 張'} decoding="async" loading={layer===slides.active?loading:"lazy"}
-    aria-hidden={layer!==slides.active}
-    className={'services-photo-slide'+(galleryPhotos[photoIndex]?.preserveCrop?' is-manual-crop':'')+(layer===slides.active?' is-visible'+(slides.revealing?' is-revealing':''):layer===slides.previous?' is-previous':'')}/>)}
+   {slides.indices.map((photoIndex,layer)=>{
+    const source=activeSources[photoIndex]||activeSources[0]
+    const photo=galleryPhotos[photoIndex]||galleryPhotos[0]
+    const crop=useMobileCrop?photo?.mobileCrop:null
+    const classes='services-photo-slide'+(photo?.preserveCrop?' is-manual-crop':'')+(layer===slides.active?' is-visible'+(slides.revealing?' is-revealing':''):layer===slides.previous?' is-previous':'')
+    const imageProps={src:source,alt:alt+'，第 '+(photoIndex+1)+' 張',decoding:'async' as const,loading:layer===slides.active?loading:'lazy' as const}
+    return crop?<div key={layer} className={classes+' has-mobile-crop'} aria-hidden={layer!==slides.active}
+     style={{'--mobile-crop-width':(100/crop.width)+'%','--mobile-crop-height':(100/crop.height)+'%','--mobile-crop-left':(-crop.x/crop.width*100)+'%','--mobile-crop-top':(-crop.y/crop.height*100)+'%'} as CSSProperties}>
+     <img {...imageProps}/></div>:<img key={layer} {...imageProps} aria-hidden={layer!==slides.active} className={classes}/>
+   })}
    {slides.revealing&&<span className="services-photo-shoji-edges" aria-hidden="true"><i/><i/></span>}
   </div>
   {overlayUrl&&<img className="mystic-photo-overlay" src={overlayUrl} alt="預約副圖片" loading="lazy" decoding="async"/>}

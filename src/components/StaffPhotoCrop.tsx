@@ -7,8 +7,8 @@ import {
 import type { StaffCrop } from '../lib/staff-crop'
 import './staff-photo-crop.css'
 
-type Props={source:string;title?:string;aspectRatio?:number;previewShape?:'omamori'|'rectangle';onConfirm:(crop:StaffCrop)=>void;onCancel:()=>void}
-export default function StaffPhotoCrop({source,title='名帖',aspectRatio=STAFF_CARD_RATIO,previewShape='omamori',onConfirm,onCancel}:Props){
+type Props={source:string;title?:string;aspectRatio?:number;initialCrop?:StaffCrop|null;previewShape?:'omamori'|'rectangle';onConfirm:(crop:StaffCrop)=>void;onCancel:()=>void}
+export default function StaffPhotoCrop({source,title='名帖',aspectRatio=STAFF_CARD_RATIO,initialCrop,previewShape='omamori',onConfirm,onCancel}:Props){
  const [size,setSize]=useState<{width:number;height:number}|null>(null)
  const [crop,setCrop]=useState<StaffCrop|null>(null)
  const [failure,setFailure]=useState('')
@@ -20,7 +20,7 @@ export default function StaffPhotoCrop({source,title='名帖',aspectRatio=STAFF_
   const el=event.currentTarget
   if(!el.naturalWidth||!el.naturalHeight){setFailure('圖片尺寸無效，請重新選擇');return}
   setSize({width:el.naturalWidth,height:el.naturalHeight})
-  setCrop(defaultStaffCrop(el.naturalWidth,el.naturalHeight,aspectRatio))
+  setCrop(initialCrop||defaultStaffCrop(el.naturalWidth,el.naturalHeight,aspectRatio))
  }
  function pointerDown(event:PointerEvent<HTMLDivElement>){
   if(!crop||event.button!==0)return

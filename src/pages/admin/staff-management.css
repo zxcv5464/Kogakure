@@ -420,3 +420,7 @@
  .staff-gallery-photo>div button{min-width:0;padding:5px 0}
  .staff-gallery-photo.is-pending>div{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+.staff-gallery-photo>.staff-mobile-crop-button,.staff-gallery-photo>.staff-mobile-crop-reset{display:flex;justify-content:center;align-items:center;gap:5px;min-height:36px;width:100%;padding:6px;border:1px solid rgba(216,181,129,.35);border-radius:4px;background:#262530;color:#e9d5b7;font-size:.72rem}
+.staff-gallery-photo>.staff-mobile-crop-reset{min-height:28px;border:0;background:transparent;color:#b6a58f;font-size:.67rem}
+.staff-gallery-photo>.staff-mobile-crop-button:hover,.staff-gallery-photo>.staff-mobile-crop-reset:hover{color:#fff0d6;border-color:#e5c28d}

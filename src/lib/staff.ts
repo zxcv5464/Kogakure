@@ -1,5 +1,6 @@
 import type { Staff, StaffRow } from '../types'
 import { supabase } from './supabase'
+import { normalizeStaffCrop } from './staff-crop'
 import type { StaffOrderChange } from './staff-order'
 function normalizePhotos(value:unknown,staffId:string,imageUrl:string,thumbnailUrl:string){
  const raw=Array.isArray(value)?value:[]
@@ -12,7 +13,8 @@ function normalizePhotos(value:unknown,staffId:string,imageUrl:string,thumbnailU
   return [{id:typeof photo.id==='string'?photo.id:'legacy-'+staffId+'-'+index,
    imageUrl:full||thumb,thumbnailUrl:thumb||full,
    imagePath:typeof photo.image_path==='string'?photo.image_path:null,
-   thumbnailPath:typeof photo.thumbnail_path==='string'?photo.thumbnail_path:null}]
+   thumbnailPath:typeof photo.thumbnail_path==='string'?photo.thumbnail_path:null,
+   mobileCrop:normalizeStaffCrop(photo.mobile_crop)}]
  })
  if(photos.length)return photos
  if(imageUrl||thumbnailUrl)return [{id:'legacy-'+staffId,imageUrl:imageUrl||thumbnailUrl,
@@ -36,7 +38,7 @@ export function staffToRow(s: Staff): StaffRow {
  image_url:s.photos?.[0]?.imageUrl||s.imageUrl||null,
  thumbnail_url:s.photos?.[0]?.thumbnailUrl||s.thumbnailUrl||null,
  photo_gallery:(s.photos||[]).map(photo=>({id:photo.id,image_url:photo.imageUrl,
-  thumbnail_url:photo.thumbnailUrl,image_path:photo.imagePath,thumbnail_path:photo.thumbnailPath})),
+  thumbnail_url:photo.thumbnailUrl,image_path:photo.imagePath,thumbnail_path:photo.thumbnailPath,mobile_crop:photo.mobileCrop||null})),
  photo_display_mode:s.photoDisplayMode==='gallery'?'gallery':'single',
  theme_color:s.themeColor,effect:s.effect,socials:s.socials,services:s.services,
  is_published:s.published,is_booking_visible:s.bookingVisible,

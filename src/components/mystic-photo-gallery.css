@@ -33,3 +33,10 @@
  .mystic-photo-gallery .services-photo-shoji-edges{display:none}
  .mystic-photo-gallery .services-photo-dot::before{transition:none}
 }
+
+/* Clip the viewport layer, not the enlarged source, so the reveal animation stays consistent. */
+.mystic-photo-gallery .services-photo-slide.has-mobile-crop{overflow:hidden}
+.mystic-photo-gallery .services-photo-slide.has-mobile-crop>img{position:absolute;inset:0;width:100%;height:100%;max-width:none;max-height:none;object-fit:cover;object-position:center}
+@media(max-width:570px){
+ .dialog-photo .mystic-photo-gallery .services-photo-slide.has-mobile-crop>img{inset:auto;left:var(--mobile-crop-left);top:var(--mobile-crop-top);width:var(--mobile-crop-width);height:var(--mobile-crop-height);object-fit:fill}
+}

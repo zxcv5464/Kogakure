@@ -34,3 +34,12 @@ export function cropPixels(crop:StaffCrop,sourceWidth:number,sourceHeight:number
  if(Math.abs(aspect-aspectRatio)>0.01)throw new Error('圈選比例與照片顯示框不符，請重新設定')
  return {x:crop.x*sourceWidth,y:crop.y*sourceHeight,width:crop.width*sourceWidth,height:crop.height*sourceHeight}
 }
+
+// Match the mobile detail photo viewport and the rectangular admin preview.
+export const STAFF_MOBILE_DETAIL_RATIO = 10/7
+export function normalizeStaffCrop(value:unknown):StaffCrop|null{
+ if(!value||typeof value!=='object')return null
+ const {x,y,width,height}=value as StaffCrop
+ if(![x,y,width,height].every(Number.isFinite)||x<0||y<0||width<=0||height<=0||x+width>1.000001||y+height>1.000001)return null
+ return {x,y,width,height}
+}
