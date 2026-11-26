@@ -117,6 +117,8 @@ jobs:
         run: node scripts/qa-booking-photos.mjs
       - name: Verify profile and booking galleries, mysterious reveal, dots, crops and floating sticker
         run: node scripts/qa-photo-galleries.mjs
+      - name: Verify full staff names and detail opening on slow photo requests in Chromium
+        run: node scripts/qa-staff-detail-performance.mjs
       - name: Verify nomination visibility moved to booking management with scoped permissions
         env:
           VITE_OFFLINE_PREVIEW: 'true'
