@@ -16,6 +16,7 @@ type Props={
 // A cached card thumbnail remains visible until the full image is decoded.
 function DetailPhoto({source,preview,alt,active,crop,classes}:{source:string;preview?:string;alt:string;active:boolean;crop:StaffCrop|null;classes:string}){
  const [ready,setReady]=useState(false)
+ const [previewDone,setPreviewDone]=useState(false)
  const [failed,setFailed]=useState(false)
  const image=useRef<HTMLImageElement>(null)
  const fallback=preview&&preview!==source?preview:''
@@ -28,9 +29,14 @@ function DetailPhoto({source,preview,alt,active,crop,classes}:{source:string;pre
   node?.addEventListener('load',loaded)
   return()=>{current=false;node?.removeEventListener('load',loaded)}
  },[source])
+ useEffect(()=>{
+  if(!ready)return
+  const timer=window.setTimeout(()=>setPreviewDone(true),300)
+  return()=>window.clearTimeout(timer)
+ },[ready])
  const style=crop?{'--mobile-crop-width':(100/crop.width)+'%','--mobile-crop-height':(100/crop.height)+'%','--mobile-crop-left':(-crop.x/crop.width*100)+'%','--mobile-crop-top':(-crop.y/crop.height*100)+'%'} as CSSProperties:undefined
  return <div className={classes+' staff-detail-photo-layer'+(crop?' has-mobile-crop':' is-mobile-full-image')+(ready?' is-detail-ready':'')+(!fallback?' is-without-preview':'')} style={style} aria-hidden={!active}>
-  {fallback&&!ready&&<img className="staff-detail-preview" src={fallback} alt="" aria-hidden="true" decoding="async" loading={active?'eager':'lazy'}/>}
+  {fallback&&!previewDone&&<img className="staff-detail-preview" src={fallback} alt="" aria-hidden="true" decoding="async" loading={active?'eager':'lazy'}/>}
   {!failed&&<img ref={image} className="staff-detail-original" src={source} alt={alt} decoding="async" loading={active?'eager':'lazy'} fetchPriority={active?'high':'auto'} onError={()=>setFailed(true)}/>}
   {failed&&!fallback&&<div className="staff-detail-unavailable" role="status">照片暫時無法載入</div>}
  </div>

@@ -62,3 +62,6 @@
  .dialog-photo .mystic-photo-gallery .staff-detail-photo-layer.has-mobile-crop>.staff-detail-original{inset:auto;left:var(--mobile-crop-left);top:var(--mobile-crop-top);width:var(--mobile-crop-width);height:var(--mobile-crop-height);object-fit:fill}
 }
 @media(prefers-reduced-motion:reduce){.dialog-photo .mystic-photo-gallery .staff-detail-photo-layer>.staff-detail-original{transition:none}}
+
+/* Keep the thumbnail underneath for the entire cross-fade, including letterbox areas. */
+.dialog-photo .mystic-photo-gallery .staff-detail-photo-layer>.staff-detail-original{background:#211d2a}
