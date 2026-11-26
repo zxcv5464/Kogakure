@@ -28,7 +28,7 @@ const names=['月詠','吹雪｜朝武芳乃・狐隱名冊長姓名測試用角
 const rows=names.map((name,i)=>({id:'staff-qa-'+i,display_name:name,role:'星詠',tagline:'願今夜有幸與你同行。',bio:'名帖測試介紹。',
  image_url:'https://portrait-qa.invalid/full-'+i+'.svg',thumbnail_url:'https://portrait-qa.invalid/thumb-'+i+'.svg',
  theme_color:'#82c8bc',effect:'none',socials:[],services:[],is_published:true,is_booking_visible:true,
- booking_allowed_plan_ids:null,booking_allow_joint:true,booking_plan_caps:{},sort_order:i,photo_display_mode:'single'}))
+ booking_allowed_plan_ids:null,booking_allow_joint:true,booking_plan_caps:{},sort_order:i,photo_display_mode:i===0?'gallery':'single',photo_gallery:i===0?[{id:'first',image_url:'https://portrait-qa.invalid/full-0.svg',thumbnail_url:'https://portrait-qa.invalid/thumb-0.svg'},{id:'second',image_url:'https://portrait-qa.invalid/full-0-extra.svg',thumbnail_url:'https://portrait-qa.invalid/thumb-0-extra.svg'}]:[]}))
 const svg=Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="300" height="450"><rect width="300" height="450" fill="#756689"/><circle cx="150" cy="110" r="65" fill="#ddc7a5"/></svg>').toString('base64')
 try{
  await waitFor(async()=>(await fetch(origin+'/Kogakure/')).ok,'Vite server')
@@ -37,7 +37,7 @@ try{
  const tab=await waitFor(async()=>(await (await fetch('http://127.0.0.1:'+debugPort+'/json/list')).json()).find(t=>t.type==='page'&&t.webSocketDebuggerUrl),'browser')
  socket=new WebSocket(tab.webSocketDebuggerUrl)
  await new Promise((resolve,reject)=>{socket.addEventListener('open',resolve,{once:true});socket.addEventListener('error',reject,{once:true})})
- let id=0;const handlers=new Map(),held=[]
+ let id=0;const handlers=new Map(),held=[],requested=new Set()
  let releaseOriginal=false
  const send=(method,params={})=>new Promise((resolve,reject)=>{const next=++id;handlers.set(next,{resolve,reject});socket.send(JSON.stringify({id:next,method,params}))})
  const fulfill=requestId=>send('Fetch.fulfillRequest',{requestId,responseCode:200,responseHeaders:[
@@ -47,6 +47,7 @@ try{
   if(packet.id!==undefined){const h=handlers.get(packet.id);if(h){handlers.delete(packet.id);packet.error?h.reject(Error(packet.error.message)):h.resolve(packet.result)}}
   if(packet.method==='Fetch.requestPaused'){
    const {requestId,request}=packet.params
+   requested.add(request.url)
    if(!releaseOriginal&&request.url.includes('full-1.svg'))held.push(requestId)
    else void fulfill(requestId).catch(()=>{})
   }
@@ -65,6 +66,9 @@ try{
  await waitFor(()=>evaluate("!!document.querySelector('.intro-entry-action:not(:disabled)')"),'entry')
  await evaluate("document.querySelector('.intro-entry-action').click()")
  await waitFor(()=>evaluate("!document.querySelector('.entry-intro') && document.querySelectorAll('.card-name-text').length===3"),'staff cards')
+ await waitFor(()=>[0,1,2].every(i=>requested.has('https://portrait-qa.invalid/full-'+i+'.svg')),'all staff originals prefetched before any profile click')
+ await waitFor(()=>requested.has('https://portrait-qa.invalid/full-0-extra.svg'),'gallery extra original prefetched before profile click')
+ assert.equal(await evaluate("!!document.querySelector('.staff-dialog')"),false)
  for(const [width,height] of [[320,640],[390,844],[768,900],[1440,900]]){
   await send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<571})
   await sleep(400)
@@ -92,7 +96,7 @@ try{
  await waitFor(()=>evaluate("document.querySelector('.staff-detail-original')?.naturalWidth>0 && Number(getComputedStyle(document.querySelector('.staff-detail-original')).opacity)>.98 && !document.querySelector('.staff-detail-preview')"),'decoded original crossfade')
  await evaluate("document.querySelector('.dialog-close').click()")
  await waitFor(()=>evaluate("!document.querySelector('.staff-dialog') && document.body.style.overflow!=='hidden'"),'dialog closed')
- console.log('PASS: complete responsive staff names at four viewports, readable wrapped fallback, dialog opens while full image is held, cached thumbnail remains until decoded original fades in')
+ console.log('PASS: all roster originals and gallery extras preloaded before profile clicks, complete responsive staff names at four viewports, readable wrapped fallback, dialog opens while full image is held, cached thumbnail remains until decoded original fades in')
 }finally{
  socket?.close();const closed=chrome&&chrome.exitCode===null?new Promise(resolve=>chrome.once('close',resolve)):Promise.resolve()
  chrome?.kill();vite.kill();await Promise.race([closed,sleep(1800)])

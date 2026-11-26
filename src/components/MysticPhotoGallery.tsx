@@ -1,4 +1,4 @@
-import {useCallback,useEffect,useMemo,useRef,useState} from 'react'
+import {useCallback,useEffect,useLayoutEffect,useMemo,useRef,useState} from 'react'
 import type {MouseEvent,CSSProperties} from 'react'
 import './mystic-photo-gallery.css'
 import type { StaffCrop } from '../lib/staff-crop'
@@ -20,12 +20,12 @@ function DetailPhoto({source,preview,alt,active,crop,classes}:{source:string;pre
  const [failed,setFailed]=useState(false)
  const image=useRef<HTMLImageElement>(null)
  const fallback=preview&&preview!==source?preview:''
- useEffect(()=>{
+ useLayoutEffect(()=>{
   const node=image.current
   let current=true
   const mark=()=>{if(current&&node?.naturalWidth)setReady(true)}
   const loaded=()=>{if(node?.decode)void node.decode().then(mark,mark);else mark()}
-  if(node?.complete&&node.naturalWidth)loaded()
+  if(node?.complete&&node.naturalWidth){setReady(true);setPreviewDone(true)}
   node?.addEventListener('load',loaded)
   return()=>{current=false;node?.removeEventListener('load',loaded)}
  },[source])

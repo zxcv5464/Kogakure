@@ -7,6 +7,7 @@ import StaffLoading from '../components/StaffLoading'
 import { demoStaff } from '../data/demo'
 import { configured } from '../lib/config'
 import { getCachedPublicStaff, loadPublicStaff } from '../lib/public-staff'
+import { prefetchStaffRosterPhotos } from '../lib/staff-detail-photo'
 import { STAFF_PAGE_READY_EVENT } from '../lib/route-events'
 import './staff-page.css'
 export default function StaffPage(){
@@ -20,6 +21,10 @@ export default function StaffPage(){
  const close=useCallback(()=>setOpened(null),[])
  useEffect(()=>{if(!configured)return;let mounted=true;loadPublicStaff().then(rows=>{if(mounted)setStaff(rows)}).catch(e=>{if(mounted)setError('無法載入員工資料：'+e.message)}).finally(()=>{if(mounted)setLoading(false)});return()=>{mounted=false}},[])
  useEffect(()=>{if(!loading)window.dispatchEvent(new Event(STAFF_PAGE_READY_EVENT))},[loading])
+ useEffect(()=>{
+  if(!staff.length)return
+  return prefetchStaffRosterPhotos(staff)
+ },[staff])
  const categories=useMemo(()=>['全部',...Array.from(new Set(staff.flatMap(x=>x.services)))],[staff])
  const allowTools=staff.length>=6
  const visible=useMemo(()=>staff.filter(s=>(filter==='全部'||s.services.includes(filter))&&[s.name,s.role,s.tagline,...s.services].join(' ').toLocaleLowerCase().includes(query.toLocaleLowerCase())),[staff,query,filter])

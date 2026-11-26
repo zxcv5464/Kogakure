@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { ChevronRight } from 'lucide-react'
 import type { CSSProperties, MouseEvent } from 'react'
 import type { Staff } from '../types'
@@ -53,15 +53,6 @@ export default function StaffCard({staff,onOpen,index}:Props){
   [staff.photos,staff.id,staff.imageUrl,staff.thumbnailUrl])
  const firstFull=photos[0]?.imageUrl||''
  function warmDetail(){prefetchStaffDetailPhoto(firstFull)}
- useEffect(()=>{
-  // Only the first card warms its full portrait proactively; other cards
-  // load on actual pointer/focus intent, avoiding a gallery-wide download.
-  if(index!==0||!firstFull)return
-  const connection=(navigator as Navigator&{connection?:{saveData?:boolean;effectiveType?:string}}).connection
-  if(connection?.saveData||connection?.effectiveType?.includes('2g'))return
-  const timer=window.setTimeout(()=>prefetchStaffDetailPhoto(firstFull),700)
-  return()=>window.clearTimeout(timer)
- },[firstFull,index])
  return <article className={'staff-entry effect-'+staff.effect} style={{'--accent':accent,'--delay':String(index*80)+'ms',...style} as CSSProperties}>
   <button ref={ref} type="button" className="omamori-card"
    onPointerMove={move} onPointerLeave={leave} onPointerEnter={warmDetail} onPointerDown={warmDetail} onFocus={warmDetail} onClick={()=>{warmDetail();onOpen(staff)}}
