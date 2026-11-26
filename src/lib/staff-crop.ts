@@ -2,7 +2,7 @@
 // omamori portrait aspect ratio, so the final WebP needs no CSS auto-cropping.
 export const STAFF_CARD_RATIO = 0.655
 export const BOOKING_CARD_RATIO = 0.55
-export type StaffCrop = { x:number; y:number; width:number; height:number }
+export type StaffCrop = { x:number; y:number; width:number; height:number; aspectRatio?:number }
 const clamp=(value:number,min:number,max:number)=>Math.min(max,Math.max(min,value))
 export function defaultStaffCrop(imageWidth:number,imageHeight:number,aspectRatio=STAFF_CARD_RATIO):StaffCrop{
  if(imageWidth<=0||imageHeight<=0)throw new Error('無效的照片尺寸')
@@ -36,10 +36,28 @@ export function cropPixels(crop:StaffCrop,sourceWidth:number,sourceHeight:number
 }
 
 // Match the mobile detail photo viewport and the rectangular admin preview.
-export const STAFF_MOBILE_DETAIL_RATIO = 10/7
+export const STAFF_MOBILE_DETAIL_RATIO = 4/5
+const LEGACY_MOBILE_DETAIL_RATIO = 10/7
 export function normalizeStaffCrop(value:unknown):StaffCrop|null{
  if(!value||typeof value!=='object')return null
- const {x,y,width,height}=value as StaffCrop
+ const {x,y,width,height,aspectRatio}=value as StaffCrop
  if(![x,y,width,height].every(Number.isFinite)||x<0||y<0||width<=0||height<=0||x+width>1.000001||y+height>1.000001)return null
- return {x,y,width,height}
+ return {x,y,width,height,...(typeof aspectRatio==='number'&&Number.isFinite(aspectRatio)&&aspectRatio>0?{aspectRatio}:{})}
+}
+
+// Older mobile crops used a wide 10:7 viewport. Recover the source aspect
+// from the saved rectangle and expand vertically around its previous center.
+// If the image boundary is reached, slide the crop inward without stretching.
+export function reframeMobileStaffCrop(value:StaffCrop|null|undefined):StaffCrop|null{
+ const crop=normalizeStaffCrop(value)
+ if(!crop)return null
+ const oldRatio=crop.aspectRatio||LEGACY_MOBILE_DETAIL_RATIO
+ const ratio=STAFF_MOBILE_DETAIL_RATIO
+ if(Math.abs(oldRatio-ratio)<1e-9)return {...crop,aspectRatio:ratio}
+ const sourceRatio=oldRatio*crop.height/crop.width
+ const width=Math.min(crop.width,1,ratio/sourceRatio)
+ const height=width*sourceRatio/ratio
+ return {x:clamp(crop.x+crop.width/2-width/2,0,Math.max(0,1-width)),
+  y:clamp(crop.y+crop.height/2-height/2,0,Math.max(0,1-height)),
+  width,height,aspectRatio:ratio}
 }

@@ -43,11 +43,24 @@ assert.ok(adminCss.includes('grid-template-columns:repeat(4,minmax(0,1fr))')&&
 const vite=await createServer({server:{middlewareMode:true,hmr:false},appType:'custom'})
 try{
  const {STAFF_CARD_RATIO,BOOKING_CARD_RATIO,defaultStaffCrop,moveStaffCrop,
-  resizeStaffCrop,cropPixels,cropScale}=await vite.ssrLoadModule('/src/lib/staff-crop.ts')
+  resizeStaffCrop,cropPixels,cropScale,STAFF_MOBILE_DETAIL_RATIO,reframeMobileStaffCrop,normalizeStaffCrop}=await vite.ssrLoadModule('/src/lib/staff-crop.ts')
  assert.equal(STAFF_CARD_RATIO,.655)
  assert.equal(BOOKING_CARD_RATIO,.55)
+ assert.equal(STAFF_MOBILE_DETAIL_RATIO,4/5)
+ assert.equal(reframeMobileStaffCrop(null),null)
+ const mobileCss=await readFile('src/components/mystic-photo-gallery.css','utf8')
+ const dialogCss=await readFile('src/components/staff-dialog-scroll.css','utf8')
+ assert.ok(mobileCss.includes('.services-photo-slide.is-mobile-full-image{object-fit:contain'))
+ assert.ok(dialogCss.includes('aspect-ratio:4/5'))
+ assert.ok(admin.includes('顯示完整原圖')&&admin.includes('reframeMobileStaffCrop'))
  const epsilon=1e-6
  for(const [w,h] of [[1920,1080],[1000,1600],[1080,1920],[1200,800],[640,640],[100,220]]){
+  const oldMobile=resizeStaffCrop(defaultStaffCrop(w,h,10/7),.6,w,h,10/7)
+  const mobile=reframeMobileStaffCrop(oldMobile)
+  const mobilePixels=cropPixels(mobile,w,h,STAFF_MOBILE_DETAIL_RATIO)
+  assert.ok(Math.abs(mobilePixels.width/mobilePixels.height-STAFF_MOBILE_DETAIL_RATIO)<epsilon)
+  assert.ok(mobile.height>=oldMobile.height-epsilon,'The taller crop must retain at least the old vertical range')
+  assert.deepEqual(reframeMobileStaffCrop(normalizeStaffCrop(mobile)),mobile,'New crop must not be converted twice')
   const source=defaultStaffCrop(w,h)
   const px=cropPixels(source,w,h)
   assert.ok(Math.abs(px.width/px.height-.655)<epsilon,'Staff card aspect mismatch '+w+'x'+h)

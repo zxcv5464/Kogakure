@@ -40,3 +40,9 @@
 @media(max-width:570px){
  .dialog-photo .mystic-photo-gallery .services-photo-slide.has-mobile-crop>img{inset:auto;left:var(--mobile-crop-left);top:var(--mobile-crop-top);width:var(--mobile-crop-width);height:var(--mobile-crop-height);object-fit:fill}
 }
+
+/* Unconfigured mobile detail photos show the complete original. Other galleries
+   and desktop details still use their previous cover framing. */
+@media(max-width:570px){
+ .dialog-photo .mystic-photo-gallery .services-photo-slide.is-mobile-full-image{object-fit:contain;object-position:center}
+}

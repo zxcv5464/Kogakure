@@ -2,6 +2,7 @@ import {useCallback,useEffect,useMemo,useRef,useState} from 'react'
 import type {MouseEvent,CSSProperties} from 'react'
 import './mystic-photo-gallery.css'
 import type { StaffCrop } from '../lib/staff-crop'
+import { reframeMobileStaffCrop } from '../lib/staff-crop'
 
 type GalleryPhoto={imageUrl:string;thumbnailUrl?:string;preserveCrop?:boolean;mobileCrop?:StaffCrop|null}
 type Layer=0|1
@@ -105,12 +106,12 @@ export default function MysticPhotoGallery({
    {slides.indices.map((photoIndex,layer)=>{
     const source=activeSources[photoIndex]||activeSources[0]
     const photo=galleryPhotos[photoIndex]||galleryPhotos[0]
-    const crop=useMobileCrop?photo?.mobileCrop:null
+    const crop=useMobileCrop?reframeMobileStaffCrop(photo?.mobileCrop):null
     const classes='services-photo-slide'+(photo?.preserveCrop?' is-manual-crop':'')+(layer===slides.active?' is-visible'+(slides.revealing?' is-revealing':''):layer===slides.previous?' is-previous':'')
     const imageProps={src:source,alt:alt+'，第 '+(photoIndex+1)+' 張',decoding:'async' as const,loading:layer===slides.active?loading:'lazy' as const}
     return crop?<div key={layer} className={classes+' has-mobile-crop'} aria-hidden={layer!==slides.active}
      style={{'--mobile-crop-width':(100/crop.width)+'%','--mobile-crop-height':(100/crop.height)+'%','--mobile-crop-left':(-crop.x/crop.width*100)+'%','--mobile-crop-top':(-crop.y/crop.height*100)+'%'} as CSSProperties}>
-     <img {...imageProps}/></div>:<img key={layer} {...imageProps} aria-hidden={layer!==slides.active} className={classes}/>
+     <img {...imageProps}/></div>:<img key={layer} {...imageProps} aria-hidden={layer!==slides.active} className={classes+(useMobileCrop?' is-mobile-full-image':'')}/>
    })}
    {slides.revealing&&<span className="services-photo-shoji-edges" aria-hidden="true"><i/><i/></span>}
   </div>

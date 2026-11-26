@@ -176,5 +176,5 @@
 
 /* Match the mobile detail crop editor exactly, regardless of device width. */
 @media(max-width:570px){
- .dialog-overlay .staff-dialog .dialog-photo{width:100%;height:auto;min-height:0;aspect-ratio:10/7}
+ .dialog-overlay .staff-dialog .dialog-photo{width:100%;height:auto;min-height:0;aspect-ratio:4/5}
 }

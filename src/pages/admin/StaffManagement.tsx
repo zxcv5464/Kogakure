@@ -11,7 +11,7 @@ import { safeExternalUrl } from '../../lib/url'
 import { removeUploadedStaffImages, uploadStaffCrop, uploadStaffImage, validateStaffImage } from '../../lib/upload'
 import StaffPhotoCrop from '../../components/StaffPhotoCrop'
 import ScrollCue from '../../components/ScrollCue'
-import { STAFF_MOBILE_DETAIL_RATIO } from '../../lib/staff-crop'
+import { STAFF_MOBILE_DETAIL_RATIO, reframeMobileStaffCrop } from '../../lib/staff-crop'
 import type { StaffCrop } from '../../lib/staff-crop'
 import { useAdminEditGuard } from './AdminEditGuard'
 import './staff-management.css'
@@ -462,8 +462,8 @@ export default function StaffManagement() {
           <button type="button" disabled={index===(selected.photos||[]).length-1} onClick={()=>movePhoto(photo.id,1)} aria-label={"將名帖照片第 "+(index+1)+" 張下移"} title="下移"><ArrowDown size={15}/></button>
          </div>
          <button className="staff-mobile-crop-button" type="button" onClick={()=>editPhotoCrop(photo.id,'mobile')}><Crop size={15}/> 手機詳情取景</button>
-         {(Object.prototype.hasOwnProperty.call(mobileCrops,photo.id)?mobileCrops[photo.id]:photo.mobileCrop)&&<button className="staff-mobile-crop-reset" type="button" onClick={()=>resetMobileCrop(photo.id)}>恢復自動裁切</button>}
-         <small>{Object.prototype.hasOwnProperty.call(mobileCrops,photo.id)?'手機取景待儲存':photo.mobileCrop?'已設定手機取景':'手機使用自動裁切'}</small>
+         {(Object.prototype.hasOwnProperty.call(mobileCrops,photo.id)?mobileCrops[photo.id]:photo.mobileCrop)&&<button className="staff-mobile-crop-reset" type="button" onClick={()=>resetMobileCrop(photo.id)}>顯示完整原圖</button>}
+         <small>{Object.prototype.hasOwnProperty.call(mobileCrops,photo.id)?'手機取景待儲存':photo.mobileCrop?'已設定手機取景':'手機顯示完整原圖'}</small>
          {photoCrops[photo.id]&&<small className="staff-crop-applied">已調整範圍，儲存後生效</small>}
         </article>)}
         {pendingPhotos.map((photo,index)=><article key={photo.id} className="staff-gallery-photo is-pending">
@@ -474,12 +474,12 @@ export default function StaffManagement() {
           <button type="button" className="is-delete" onClick={()=>removePhoto(photo.id)} aria-label={"移除待新增名帖照片 "+(index+1)} title="移除"><X size={15}/></button>
          </div>
          <button className="staff-mobile-crop-button" type="button" onClick={()=>editPhotoCrop(photo.id,'mobile')}><Crop size={15}/> 手機詳情取景</button>
-         {mobileCrops[photo.id]&&<button className="staff-mobile-crop-reset" type="button" onClick={()=>resetMobileCrop(photo.id)}>恢復自動裁切</button>}
-         <small>{photoCrops[photo.id]?'已完成名帖卡片取景':'尚未完成名帖卡片取景'} · {mobileCrops[photo.id]?'已設定手機取景':'手機使用自動裁切'}</small>
+         {mobileCrops[photo.id]&&<button className="staff-mobile-crop-reset" type="button" onClick={()=>resetMobileCrop(photo.id)}>顯示完整原圖</button>}
+         <small>{photoCrops[photo.id]?'已完成名帖卡片取景':'尚未完成名帖卡片取景'} · {mobileCrops[photo.id]?'已設定手機取景':'手機顯示完整原圖'}</small>
         </article>)}
        </div>
        {!selected.photos?.length&&!pendingPhotos.length&&<p className="staff-gallery-empty">尚未上傳照片，前台會顯示預設圖示。</p>}
-       <small className="staff-field-note">原始照片會完整保留；名帖卡片使用你圈選的縮圖；手機詳情取景獨立設定，不影響電腦詳情或名帖卡片。多張模式會以神祕揭幕效果自動輪播，不顯示分頁點與照片數量。</small>
+       <small className="staff-field-note">原始照片會完整保留；名帖卡片使用你圈選的縮圖；手機詳情採 4:5 直向照片框，預設完整顯示原圖；可逐張設定取景，不影響電腦詳情或名帖卡片。多張模式會以神祕揭幕效果自動輪播，不顯示分頁點與照片數量。</small>
       </div>
       {cropEditingId&&(()=>{
        const pending=pendingPhotos.find(photo=>photo.id===cropEditingId)
@@ -489,8 +489,8 @@ export default function StaffManagement() {
         title={cropTarget==='mobile'?'手機名帖詳情':'名帖卡片'}
         aspectRatio={cropTarget==='mobile'?STAFF_MOBILE_DETAIL_RATIO:undefined}
         previewShape={cropTarget==='mobile'?'rectangle':'omamori'}
-        initialCrop={cropTarget==='mobile'?(Object.prototype.hasOwnProperty.call(mobileCrops,cropEditingId)?mobileCrops[cropEditingId]:existing?.mobileCrop):photoCrops[cropEditingId]}
-        onConfirm={crop=>{if(cropTarget==='mobile')setMobileCrops(old=>({...old,[cropEditingId]:crop}));else setPhotoCrops(old=>({...old,[cropEditingId]:crop}));setCropEditingId(null);setNotice({kind:'info',text:'照片取景範圍已套用；請按「儲存變更」同步前台。'})}}
+        initialCrop={cropTarget==='mobile'?reframeMobileStaffCrop(Object.prototype.hasOwnProperty.call(mobileCrops,cropEditingId)?mobileCrops[cropEditingId]:existing?.mobileCrop):photoCrops[cropEditingId]}
+        onConfirm={crop=>{if(cropTarget==='mobile')setMobileCrops(old=>({...old,[cropEditingId]:{...crop,aspectRatio:STAFF_MOBILE_DETAIL_RATIO}}));else setPhotoCrops(old=>({...old,[cropEditingId]:crop}));setCropEditingId(null);setNotice({kind:'info',text:'照片取景範圍已套用；請按「儲存變更」同步前台。'})}}
         onCancel={()=>setCropEditingId(null)}/>:null
       })()}
       <div className="editor-block staff-editor-social"><div className="editor-block-header"><h3>社群連結</h3><button type="button" className="text-button" onClick={() => patch('socials', [...selected.socials, { id:crypto.randomUUID(), label:'Threads', url:'' }])}><Plus size={17}/> 新增社群</button></div><p>支援 Threads、X、Instagram 或個人網站，網址須包含 https://。</p>
