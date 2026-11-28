@@ -101,6 +101,19 @@ try{
  assert.equal(initial.plans,3)
  assert.equal(initial.blur,'none')
  assert.ok(initial.photoCount>0,'Background photos should still appear, just not rotate while choosing')
+ const modalMotion=await evaluate("(()=>{const selectors=['.booking-modal-shade','.booking-modal','.booking-modal-header','.booking-modal-header .booking-eyebrow','.booking-form','.booking-form select'];return selectors.flatMap(s=>Array.from(document.querySelectorAll(s)).map(e=>{const c=getComputedStyle(e);return {selector:s,animation:c.animationName,transition:c.transitionDuration,opacity:c.opacity,transform:c.transform}}))})()")
+ assert.ok(modalMotion.length>=7)
+ for(const style of modalMotion){
+  assert.equal(style.animation,'none',style.selector+' must have no entrance animation')
+  assert.equal(style.transition,'0s',style.selector+' must have no transition delay')
+ }
+ const eyebrow=modalMotion.find(x=>x.selector==='.booking-modal-header .booking-eyebrow')
+ assert.equal(eyebrow.opacity,'1','English eyebrow should appear immediately')
+ assert.equal(eyebrow.transform,'none','English eyebrow must not slide in')
+ await evaluate("document.querySelector('.booking-form select').focus()")
+ assert.equal(await evaluate("getComputedStyle(document.querySelector('.booking-form select')).transitionDuration"),'0s',
+  'Focusing the native dropdown must not start a CSS transition')
+
 
  const startWorld=Date.now()
  await evaluate("(()=>{const select=document.querySelectorAll('.booking-form select')[0];const setter=Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype,'value').set;setter.call(select,'利維坦');select.dispatchEvent(new Event('change',{bubbles:true}))})()")

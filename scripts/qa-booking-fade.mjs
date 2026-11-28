@@ -32,4 +32,10 @@ assert.ok(motion.includes('@media(prefers-reduced-motion:reduce){.route-stage,.r
  'Reduced-motion support must remain intact')
 assert.ok(transition.includes('BOOKING_PAGE_READY_EVENT')&&bookingPage.includes('window.requestAnimationFrame(()=>window.dispatchEvent(new Event(BOOKING_PAGE_READY_EVENT)))'),
  'Curtain should reveal the stable reservation shell on first paint, not after three queries')
-console.log('PASS: booking matches other public pages in staged fades, first-paint curtain and reduced-motion support')
+assert.ok(motion.includes('.route-stage .booking-hero .booking-eyebrow,.route-stage .booking-hero .booking-emblem{animation:quietRise')&&
+ !motion.includes('.route-stage .booking-eyebrow,'),
+ 'Only the page hero may fade; the nomination modal eyebrow must not inherit the route animation')
+assert.ok(bookingCss.includes('.booking-modal-header .booking-eyebrow{opacity:1;transform:none}')&&
+ bookingCss.includes('.booking-form select,.booking-form select option{\n animation:none;transition:none;'),
+ 'Nomination header and native select controls must appear immediately')
+console.log('PASS: booking page staged fades preserved; nomination header and select controls have no animation')

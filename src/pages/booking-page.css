@@ -75,6 +75,17 @@
 .booking-modal>.shared-scroll-cue.is-sticky:hover{background:transparent;color:#fff0d5}
 .booking-modal-header{display:flex;justify-content:space-between;gap:14px;align-items:start;padding-bottom:18px;border-bottom:1px solid rgba(213,174,121,.25)}
 .booking-modal-header>div{flex:1;min-width:0}
+/* Opening the nomination form and its native choices must be immediate.
+   Keep the page's staged entrance and the independent scroll cue intact. */
+.booking-modal-shade,.booking-modal,
+.booking-modal-header,.booking-modal-header .booking-eyebrow,
+.booking-modal-header h2,.booking-form,.booking-form label,
+.booking-form select,.booking-form select option{
+ animation:none;transition:none;
+}
+.booking-modal-header .booking-eyebrow{opacity:1;transform:none}
+.booking-form select{touch-action:manipulation;cursor:pointer}
+
 .booking-modal-header h2{font-family:'Noto Serif TC',serif;font-size:clamp(1.25rem,3vw,1.64rem);color:#f1d8ad;margin:9px 0 0;overflow-wrap:anywhere}
 .booking-modal-close{display:grid;place-items:center;width:41px;height:41px;border-radius:6px;border:1px solid rgba(224,190,143,.25);color:#f2d8b1;background:rgba(0,0,0,.14)}
 .booking-modal-close:disabled{opacity:.4}

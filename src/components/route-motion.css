@@ -152,7 +152,7 @@
 ){animation-play-state:paused}
 /* 預約名片：與狐姬名冊共用 staffReveal 節奏，先題字、再介紹、
    最後按名帖同樣的延遲和緩動方式逐張浮現。 */
-.route-stage .booking-eyebrow,.route-stage .booking-emblem{animation:quietRise 1.12s var(--public-reveal-ease) .16s both}
+.route-stage .booking-hero .booking-eyebrow,.route-stage .booking-hero .booking-emblem{animation:quietRise 1.12s var(--public-reveal-ease) .16s both}
 .route-stage .booking-hero h1{animation:quietRise 1.26s var(--public-reveal-ease) .34s both}
 .route-stage .booking-hero-label{animation:quietRise 1.18s var(--public-reveal-ease) .54s both}
 .route-stage .booking-hero-verse{animation:quietRise 1.28s var(--public-reveal-ease) .72s both}
@@ -163,7 +163,7 @@
 .route-stage .booking-notice+.booking-notice{animation-delay:.96s}
 .route-stage .booking-profile{animation:staffReveal 1.1s var(--public-reveal-ease) both;animation-delay:calc(.84s + min(var(--booking-delay,0ms),640ms))}
 .route-stage .booking-footnote{animation:quietFade .88s ease-out .94s both}
-.route-stage:is(.is-covering,.intro-waiting) :is(.booking-eyebrow,.booking-emblem,.booking-hero h1,.booking-hero-label,.booking-hero-verse,.booking-legend,.booking-notice,.booking-profile,.booking-footnote){animation-play-state:paused}
+.route-stage:is(.is-covering,.intro-waiting) :is(.booking-hero .booking-eyebrow,.booking-hero .booking-emblem,.booking-hero h1,.booking-hero-label,.booking-hero-verse,.booking-legend,.booking-notice,.booking-profile,.booking-footnote){animation-play-state:paused}
 /* Match the unhurried entrance of the other public pages.
    Pause the directory while the route curtain covers it; otherwise slow
    Supabase loads can finish the animations before visitors see the page. */
