@@ -38,7 +38,7 @@ const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms))
 async function waitFor(check,label,maxMs=16000){
  const since=Date.now()
  while(Date.now()-since<maxMs){
-  try{if(await check())return}catch{}
+  try{const result=await check();if(result)return result}catch{}
   await sleep(65)
  }
  throw Error('Timed out: '+label)
