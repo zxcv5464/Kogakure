@@ -9,13 +9,13 @@ type Layer=0|1
 type Slides={indices:[number,number];active:Layer;previous:Layer|null;revealing:boolean}
 type Transition={token:number;busy:boolean;preloader:HTMLImageElement|null;frameOne:number;frameTwo:number;timer:number}
 type Props={
- photos:GalleryPhoto[];mode?:'single'|'gallery';useThumbnail?:boolean;useMobileCrop?:boolean
+ photos:GalleryPhoto[];mode?:'single'|'gallery';useThumbnail?:boolean;useMobileCrop?:boolean;paused?:boolean
  alt:string;className?:string;overlayUrl?:string;showCounter?:boolean;showPagination?:boolean;loading?:'eager'|'lazy'
 }
 
 /** A portrait slideshow that shares the Services page's shoji reveal and ink-gold dots. */
 export default function MysticPhotoGallery({
- photos,mode='single',useThumbnail=true,useMobileCrop=false,alt,className='',overlayUrl='',showCounter=true,showPagination=true,loading='lazy',
+ photos,mode='single',useThumbnail=true,useMobileCrop=false,paused=false,alt,className='',overlayUrl='',showCounter=true,showPagination=true,loading='lazy',
 }:Props){
  const galleryPhotos=useMemo(()=>photos.filter(photo=>Boolean(useThumbnail?(photo.thumbnailUrl||photo.imageUrl):photo.imageUrl)).slice(0,12),[photos,useThumbnail])
  const sources=useMemo(()=>galleryPhotos.map(photo=>useThumbnail?(photo.thumbnailUrl||photo.imageUrl):photo.imageUrl),[galleryPhotos,useThumbnail])
@@ -84,13 +84,13 @@ export default function MysticPhotoGallery({
   image.src=activeSources[next]
  },[activeSources])
  useEffect(()=>{
-  if(activeSources.length<2||!nearViewport||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return
+  if(activeSources.length<2||!nearViewport||paused||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return
   const timer=window.setInterval(()=>{
    if(document.visibilityState==='visible'&&!transition.current.busy)
     requestSlide((nextIndex.current+1)%activeSources.length)
   },5000)
   return()=>window.clearInterval(timer)
- },[activeSources.length,nearViewport,requestSlide,navigationEpoch])
+ },[activeSources.length,nearViewport,requestSlide,navigationEpoch,paused])
  function choose(index:number,event:MouseEvent<HTMLButtonElement>){
   event.stopPropagation()
   setNavigationEpoch(value=>value+1)

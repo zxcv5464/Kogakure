@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { CSSProperties, FormEvent } from 'react'
 import { Check, Clock3, Send, Sparkles, X } from 'lucide-react'
 import { configured } from '../lib/config'
@@ -98,11 +98,23 @@ export default function BookingPage(){
   }
   const unwatch=watchBookingChanges(refresh)
   const poll=window.setInterval(()=>{if(document.visibilityState==='visible')refresh()},15000)
-  const clock=window.setInterval(()=>setNow(Date.now()),1000)
-  const onVisible=()=>{if(document.visibilityState==='visible')refresh()}
+  const onVisible=()=>{if(document.visibilityState==='visible'){setNow(Date.now());refresh()}}
   document.addEventListener('visibilitychange',onVisible)
-  return()=>{live=false;unwatch();window.clearInterval(poll);window.clearInterval(clock);document.removeEventListener('visibilitychange',onVisible)}
+  return()=>{live=false;unwatch();window.clearInterval(poll);document.removeEventListener('visibilitychange',onVisible)}
  },[loading])
+
+ // Busy status is a deadline, not a countdown. Updating once per second used
+ // to re-render every portrait AND the open native select menu on mobile.
+ // Wake only when the next actual booking expires (plus tab focus above).
+ useEffect(()=>{
+  const current=Date.now()
+  const deadlines=presence.map(p=>p.busyUntil?Date.parse(p.busyUntil):NaN)
+   .filter(time=>Number.isFinite(time)&&time>current)
+  if(!deadlines.length)return
+  const delay=Math.min(2147483647,Math.max(1,Math.min(...deadlines)-current+35))
+  const timer=window.setTimeout(()=>setNow(Date.now()),delay)
+  return()=>window.clearTimeout(timer)
+ },[presence,now])
 
  const statusByStaff=useMemo(()=>new Map(presence.map(p=>[p.staffId,p.busyUntil])),[presence])
  const bookingPhotosByStaff=useMemo(()=>new Map(bookingPhotos.map(photo=>[photo.staffId,photo])),[bookingPhotos])
@@ -117,12 +129,12 @@ export default function BookingPage(){
  const canAddOthers=Boolean(activePlan?.allowJoint&&selected?.bookingAllowJoint&&chosenPlanId&&
   people.some(p=>p.id!==selected?.id&&staffCanJoinBooking(selected!,p,chosenPlanId,activePlan.allowJoint)&&quotaAvailable(activePlan,p,quotaUsage)))
 
- function openBooking(person:Staff){
+ const openBooking=useCallback((person:Staff)=>{
   if(isStaffBusy(statusByStaff.get(person.id),Date.now()))return
   returnFocus.current=document.activeElement as HTMLElement
   setSelected(person);setPlanId(plans.find(p=>staffAcceptsPlan(person,p.id)&&quotaAvailable(p,person,quotaUsage))?.id||'')
   setOthers([]);setWithOthers(false);setResult('');setFormError('');setSubmittedNominees([])
- }
+ },[statusByStaff,plans,quotaUsage])
  function close(){
   if(sending)return
   setSelected(null);setResult('');setFormError('');setSubmittedNominees([])
@@ -183,22 +195,10 @@ export default function BookingPage(){
   finally{setSending(false)}
  }
 
- return <section className="booking-page" aria-label="狐隱館員指名預約">
-  <header className="booking-hero">
-   <p className="booking-eyebrow">狐隱 · KOGAKURE</p>
-   <span className="booking-emblem" aria-hidden="true">◇</span>
-   <h1>狐隱指名</h1>
-   <p className="booking-hero-label">RESERVATIONS · 旅人預約帖</p>
-   <p className="booking-hero-verse">一盞狐火，靜候相逢。請選擇想與之締結緣分的館中之人。</p>
-  </header>
-  <div className="booking-content">
-   <div className="booking-legend"><span><i className="booking-dot is-free"/>空閒中</span><span><i className="booking-dot is-busy"/>指名中</span><small>即時指名申請 · 以館方接取為準</small></div>
-   {loading&&<div className="booking-loading-stage" aria-busy="true"><BookingLoading /></div>}
-   {error&&<div className="booking-notice is-error" role="alert">無法取得預約資訊：{error}</div>}
-   {!loading&&!error&&!plans.length&&<div className="booking-notice">館方尚未啟用指名方案，角色名帖可先行欣賞；請待館方開放預約。</div>}
-   {!loading&&!error&&!people.length&&<div className="booking-notice">目前沒有開放指名的館員，敬請期待。</div>}
-   {!loading&&!error&&people.length>0&&<div className="booking-grid">
-    {people.map((person,index)=>{
+ // Memoize background cards while a guest edits the modal: typing or
+ // selecting a world/plan must not re-render every image slideshow.
+ const isDialogOpen=selected!==null
+ const bookingCards=useMemo(()=>people.map((person,index)=>{
      const busyUntil=statusByStaff.get(person.id)
      const busy=isStaffBusy(busyUntil,now)
      const acceptsAnyPlan=plans.some(plan=>staffAcceptsPlan(person,plan.id)&&quotaAvailable(plan,person,quotaUsage))
@@ -213,7 +213,7 @@ export default function BookingPage(){
        aria-label={person.name+(busy?'指名中，暫不開放預約':acceptsAnyPlan?'空閒中，點選預約':'目前沒有可接受的指名方案')}>
        <span className="booking-portrait">
         {photo?.photos.length
-         ? <MysticPhotoGallery photos={photo.photos} mode={photo.displayMode} alt={person.name+'的預約形象照片'} overlayUrl={photo.secondaryImageUrl} loading={index>2?'lazy':'eager'}/>
+         ? <MysticPhotoGallery photos={photo.photos} mode={photo.displayMode} alt={person.name+'的預約形象照片'} overlayUrl={photo.secondaryImageUrl} paused={isDialogOpen} loading={index>2?'lazy':'eager'}/>
          : <span className="booking-photo-placeholder"><Sparkles size={32}/></span>}
        </span>
        <span className="booking-card-details">
@@ -229,7 +229,26 @@ export default function BookingPage(){
        </span>
       </div>
      </article>
-    })}
+    }),[
+  people,plans,quotaUsage,statusByStaff,now,bookingPhotosByStaff,openBooking,isDialogOpen,
+ ])
+
+ return <section className="booking-page" aria-label="狐隱館員指名預約">
+  <header className="booking-hero">
+   <p className="booking-eyebrow">狐隱 · KOGAKURE</p>
+   <span className="booking-emblem" aria-hidden="true">◇</span>
+   <h1>狐隱指名</h1>
+   <p className="booking-hero-label">RESERVATIONS · 旅人預約帖</p>
+   <p className="booking-hero-verse">一盞狐火，靜候相逢。請選擇想與之締結緣分的館中之人。</p>
+  </header>
+  <div className="booking-content">
+   <div className="booking-legend"><span><i className="booking-dot is-free"/>空閒中</span><span><i className="booking-dot is-busy"/>指名中</span><small>即時指名申請 · 以館方接取為準</small></div>
+   {loading&&<div className="booking-loading-stage" aria-busy="true"><BookingLoading /></div>}
+   {error&&<div className="booking-notice is-error" role="alert">無法取得預約資訊：{error}</div>}
+   {!loading&&!error&&!plans.length&&<div className="booking-notice">館方尚未啟用指名方案，角色名帖可先行欣賞；請待館方開放預約。</div>}
+   {!loading&&!error&&!people.length&&<div className="booking-notice">目前沒有開放指名的館員，敬請期待。</div>}
+   {!loading&&!error&&people.length>0&&<div className="booking-grid">
+    {bookingCards}
    </div>}
    {!loading&&!error&&<p className="booking-footnote">
     <span>當館方接取申請後，相關館員將同步顯示為「指名中」。</span>
